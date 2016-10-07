@@ -1,1 +1,1 @@
-# 3D-geometry
+#Digital 3D Geometry Processing
