@@ -5,6 +5,8 @@
 #include <OpenGP/GL/SegmentsRenderer.h>
 #include <random>
 
+# define M_PI           3.14159265358979323846  /* pi */
+
 using namespace OpenGP;
 
 struct MainWindow : public TrackballWindow {
@@ -24,8 +26,32 @@ struct MainWindow : public TrackballWindow {
 // ============================================================================
   void reconstructCurveStep() {
       //every time you press space, a new point of the curve is added, so the number of points increases
+      //std::cerr << "points = " << points << "\n";
       points.conservativeResize(2, points.cols() + 1);
       int n = points.cols() - 1;
+
+      double curvature = 1; // first curve
+      //double curvature = epsilon; // first curve
+      //double curvature = (pow(s,2)-2.19); // first curve
+
+      // angle = integral of k(s) on s + angle0
+      double angle = atan((points(1,n-1) - tangent(1)) /(points(0,n-1) - tangent(0)));
+      angle = epsilon + angle*180/M_PI;// first curve k(s) = 1
+      // double angle = 1/2 * pow(epsilon,2); // second curve k(s) = s
+      // double angle = 1/3 * pow(epsilon,3) - 2,19*epsilon; // third curve k(s) = s^2 - 2.19
+
+      //angle = angle * 180 / M_PI;
+
+      std::cerr << "angle = " << angle << "\n";
+      angle = angle*M_PI/180;
+      points(0, n) = points(0,n-1) + cos(angle);
+      points(1, n) = points(1,n-1) + sin(angle);
+      tangent(0) = points(0,n-1) + curvature;
+      tangent(1) = points(1,n-1) + curvature;
+
+      std::cerr << "last Point x = " << points(0,n) << "\n";
+      std::cerr << "last Point y = " << points(1,n) << "\n";
+      std::cerr << "tangent = " << tangent << "\n";
   }
 // ============================================================================
 // END OF Exercise 2 (do not thouch the rest of the code except to uncomment
