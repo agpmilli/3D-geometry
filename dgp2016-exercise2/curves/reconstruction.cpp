@@ -29,20 +29,20 @@ struct MainWindow : public TrackballWindow {
       points.conservativeResize(2, points.cols() + 1);
       int n = points.cols() - 1;
 
-      // Curvature k(s)
-      double curvature = 1; // first curvature
-      //double curvature = n; // second curvature
-      //double curvature = pow(epsilon*n,2) - 2.19; // third curvature
+      // Compute s using epsilon and n
+      double s = epsilon * n;
 
-      // Angle = integral of k(s) on s + angle0
-      double phi = n; // first curvature k(s) = 1;
-      //double angle = (double)1/2 * pow(n,2); // second curvature k(s) = s
-      //double angle = (double)1/3 * pow(epsilon*n,3) - 2.19*epsilon*n; // third curvature k(s) = s^2 - 2.19
+      // phi is the integral of k(s) on s
+      double phi = s; // first curvature k(s) = 1;
+      //double phi = (double)1/2 * pow(s,2); // second curvature k(s) = s
+      //double phi = (double)1/3 * pow(s,3) - 2.19*s; // third curvature k(s) = s^2 - 2.19
 
-      std::cerr << "n = " << n << "\n";
-      std::cerr << "angle = " << phi << "\n";
-      points(0, n) = (double)1/curvature * sin(epsilon * phi);
-      points(1, n) = (double)1/curvature * -cos(epsilon * phi);
+      // Compute next point
+      points(0, n) = points(0,n-1) + tangent(0);
+      points(1, n) = points(1,n-1) + tangent(1);
+
+      // Compute tangent for next point
+      tangent=Vec2(cos(phi), sin(phi));
 
   }
 // ============================================================================
@@ -76,7 +76,7 @@ struct MainWindow : public TrackballWindow {
 
     tangent = Vec2 (1.0, 0.0);
 
-    epsilon = 0.1;
+    epsilon = 0.05;
 
     this->scene.add(render_points);
     this->scene.add(render_segments);
