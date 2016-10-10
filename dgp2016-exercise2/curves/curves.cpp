@@ -33,19 +33,19 @@ struct MainWindow : public TrackballWindow {
       double L = 0;
       // After transformation length
       double L1 = 0;
-      // tmp matrix containing points
+      // Tmp matrix containing points
       MatMxN points_tmp = points;
 
     for (int i = 1; i < num_points-1; i++)
     {
-      // get size of each line
+      // Get size of each line
       L += sqrt(pow(points(0,i+1)-points(0,i),2) + pow(points(1,i+1)-points(1,i),2));
       // Do the transformation for current point and store it in tmp matrix
       points_tmp(0, i) = (1-epsilon1) * points(0, i) + (epsilon1*((points(0, i-1)+points(0, i+1))/2));
       points_tmp(1, i) = (1-epsilon1) * points(1, i) + (epsilon1*((points(1, i-1)+points(1, i+1))/2));
     }
 
-    // Special case for last and first points (same as in the for loop)
+    // Special case for last and first points
     L += sqrt(pow(points(0,1)-points(0,0),2) + pow(points(1,1)-points(1,0),2));
     points_tmp(0, 0) = (1-epsilon1) * points(0, 0) + (epsilon1*((points(0, num_points-1)+points(0, 1))/2));
     points_tmp(1, 0) = (1-epsilon1) * points(1, 0) + (epsilon1*((points(1, num_points-1)+points(1, 1))/2));
@@ -54,15 +54,16 @@ struct MainWindow : public TrackballWindow {
     points_tmp(0, num_points-1) = (1-epsilon1) * points(0, num_points-1) + (epsilon1*((points(0, num_points-2)+points(0, 0))/2));
     points_tmp(1, num_points-1) = (1-epsilon1) * points(1, num_points-1) + (epsilon1*((points(1, num_points-2)+points(1, 0))/2));
 
-    // get size of each line after transformation
+    // Get size of each line after transformation
     for (int i = 1; i < num_points-1; i++)
     {
       L1+= sqrt(pow(points_tmp(0,i+1)-points_tmp(0,i),2) + pow(points_tmp(1,i+1)-points_tmp(1,i),2));
     }
+    // Special case for last and first points
     L1+= sqrt(pow(points_tmp(0,1)-points_tmp(0,0),2) + pow(points_tmp(1,1)-points_tmp(1,0),2));
     L1+= sqrt(pow(points_tmp(0,0)-points_tmp(0,num_points-1),2) + pow(points_tmp(1,0)-points_tmp(1,num_points-1),2));
 
-    // uniformly scale the curve back to its original length
+    // Uniformly scale the curve back to its original length
     points = points_tmp * L/L1;
   }
 
@@ -73,17 +74,21 @@ struct MainWindow : public TrackballWindow {
       double L = 0;
       // After transformation length
       double L1 = 0;
-      // tmp matrix containing points
+      // Tmp matrix containing points
       MatMxN points_tmp = points;
 
       for (int i = 0; i < num_points; i++)
       {
-        // get the coordinates of current point
+        // Get the coordinates of current point
         Vec2 point = Vec2(points(0,i), points(1,i));
-        // create variables for coordinates of 3 points used to find the circumscribed circle
+        // Create variables for coordinates of 3 points used to find the circumscribed circle
         double point0x, point0y, point1x, point1y, point2x, point2y;
+
+        // Current point to be modified
         point1x = points(0,i);
         point1y = points(1,i);
+
+        // Special cases for i+1 when i=num_points-1
         if(i==num_points-1){
             // get size of each line
             L+= sqrt(pow(points(0,0)-points(0,i),2) + pow(points(1,0)-points(1,i),2));
@@ -95,6 +100,8 @@ struct MainWindow : public TrackballWindow {
             point2x = points(0,i+1);
             point2y = points(1,i+1);
         }
+
+        // Special cases for i-1 when i=0
         if(i==0){
             point0x = points(0,num_points-1);
             point0y = points(1,num_points-1);
@@ -103,7 +110,7 @@ struct MainWindow : public TrackballWindow {
             point0y = points(1,i-1);
         }
 
-        // find center of the circumscribed circle
+        // Find center of the circumscribed circle
         double D = 2 * ((point0x*(point1y-point2y)) + (point1x*(point2y-point0y)) + (point2x*(point0y-point1y)));
         double Cx=(((pow(point0x,2) + pow(point0y,2))*(point1y - point2y)) + ((pow(point1x,2) + pow(point1y,2))*(point2y - point0y)) + ((pow(point2x,2) + pow(point2y,2))*(point0y - point1y))) / D;
         double Cy=(((pow(point0x,2) + pow(point0y,2))*(point2x - point1x)) + ((pow(point1x,2) + pow(point1y,2))*(point0x - point2x)) + ((pow(point2x,2) + pow(point2y,2))*(point1x - point0x))) / D;
@@ -120,16 +127,18 @@ struct MainWindow : public TrackballWindow {
 
       }
 
-      // get size of each line after transformation
+      // Get size of each line after transformation (using points_tmp)
       for (int i = 0; i < num_points; i++)
       {
+          // Special cases for i+1 when i=num_points-1
           if(i==num_points-1){
               L1+= sqrt(pow(points_tmp(0,0)-points_tmp(0,i),2) + pow(points_tmp(1,0)-points_tmp(1,i),2));
           } else {
               L1+= sqrt(pow(points_tmp(0,i+1)-points_tmp(0,i),2) + pow(points_tmp(1,i+1)-points_tmp(1,i),2));
           }
       }
-      // uniformly scale the curve back to its original length
+
+      // Uniformly scale the curve back to its original length
       points = points_tmp * (L/L1);
   }
 

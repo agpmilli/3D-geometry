@@ -26,23 +26,23 @@ struct MainWindow : public TrackballWindow {
 // ============================================================================
   void reconstructCurveStep() {
       //every time you press space, a new point of the curve is added, so the number of points increases
-      //std::cerr << "points = " << points << "\n";
       points.conservativeResize(2, points.cols() + 1);
       int n = points.cols() - 1;
 
-      // angle = integral of k(s) on s + angle0
-      double angle = n; // first curvation k(s) = 1;
-      //double angle = (double)1/2 * pow(n,2); // second curvation k(s) = s
-      //double angle = (double)1/3 * pow(epsilon*n,3) - 2.19*epsilon*n; // third curvation k(s) = s^2 - 2.19
+      // Curvature k(s)
+      double curvature = 1; // first curvature
+      //double curvature = n; // second curvature
+      //double curvature = pow(epsilon*n,2) - 2.19; // third curvature
 
-      double internal_int = 1; // first curvation
-      //double internal_int = n; // second curvation
-      //double internal_int = pow(epsilon*n,2) - 2.19; // third curvation
+      // Angle = integral of k(s) on s + angle0
+      double phi = n; // first curvature k(s) = 1;
+      //double angle = (double)1/2 * pow(n,2); // second curvature k(s) = s
+      //double angle = (double)1/3 * pow(epsilon*n,3) - 2.19*epsilon*n; // third curvature k(s) = s^2 - 2.19
 
       std::cerr << "n = " << n << "\n";
-      std::cerr << "angle = " << angle << "\n";
-      points(0, n) = (double)1/internal_int * sin(epsilon * angle);
-      points(1, n) = (double)1/internal_int * -cos(epsilon * angle);
+      std::cerr << "angle = " << phi << "\n";
+      points(0, n) = (double)1/curvature * sin(epsilon * phi);
+      points(1, n) = (double)1/curvature * -cos(epsilon * phi);
 
   }
 // ============================================================================
@@ -70,8 +70,8 @@ struct MainWindow : public TrackballWindow {
     points = MatMxN(2, 1);
 
     // First, second, third curve
-    //points.col(0) = Vec2 (0, -1.0); // first
-    points.col (0) = Vec2 (0, 0.0); // second
+    points.col(0) = Vec2 (0, -1.0); // first
+    //points.col (0) = Vec2 (0, 0.0); // second
     // points.col (0) = Vec2 (0, 0.0); // third
 
     tangent = Vec2 (1.0, 0.0);
