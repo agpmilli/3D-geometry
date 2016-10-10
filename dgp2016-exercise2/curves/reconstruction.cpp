@@ -30,28 +30,20 @@ struct MainWindow : public TrackballWindow {
       points.conservativeResize(2, points.cols() + 1);
       int n = points.cols() - 1;
 
-      double curvature = 1; // first curve
-      //double curvature = epsilon; // first curve
-      //double curvature = (pow(s,2)-2.19); // first curve
-
       // angle = integral of k(s) on s + angle0
-      double angle = atan((points(1,n-1) - tangent(1)) /(points(0,n-1) - tangent(0)));
-      angle = epsilon + angle*180/M_PI;// first curve k(s) = 1
-      // double angle = 1/2 * pow(epsilon,2); // second curve k(s) = s
-      // double angle = 1/3 * pow(epsilon,3) - 2,19*epsilon; // third curve k(s) = s^2 - 2.19
+      double angle = n; // first curvation k(s) = 1;
+      //double angle = (double)1/2 * pow(n,2); // second curvation k(s) = s
+      //double angle = (double)1/3 * pow(epsilon*n,3) - 2.19*epsilon*n; // third curvation k(s) = s^2 - 2.19
 
-      //angle = angle * 180 / M_PI;
+      double internal_int = 1; // first curvation
+      //double internal_int = n; // second curvation
+      //double internal_int = pow(epsilon*n,2) - 2.19; // third curvation
 
+      std::cerr << "n = " << n << "\n";
       std::cerr << "angle = " << angle << "\n";
-      angle = angle*M_PI/180;
-      points(0, n) = points(0,n-1) + cos(angle);
-      points(1, n) = points(1,n-1) + sin(angle);
-      tangent(0) = points(0,n-1) + curvature;
-      tangent(1) = points(1,n-1) + curvature;
+      points(0, n) = (double)1/internal_int * sin(epsilon * angle);
+      points(1, n) = (double)1/internal_int * -cos(epsilon * angle);
 
-      std::cerr << "last Point x = " << points(0,n) << "\n";
-      std::cerr << "last Point y = " << points(1,n) << "\n";
-      std::cerr << "tangent = " << tangent << "\n";
   }
 // ============================================================================
 // END OF Exercise 2 (do not thouch the rest of the code except to uncomment
@@ -78,8 +70,8 @@ struct MainWindow : public TrackballWindow {
     points = MatMxN(2, 1);
 
     // First, second, third curve
-    points.col(0) = Vec2 (0, -1.0); // first
-    // points.col (0) = Vec2 (0, 0.0); // second
+    //points.col(0) = Vec2 (0, -1.0); // first
+    points.col (0) = Vec2 (0, 0.0); // second
     // points.col (0) = Vec2 (0, 0.0); // third
 
     tangent = Vec2 (1.0, 0.0);

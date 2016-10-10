@@ -33,33 +33,37 @@ struct MainWindow : public TrackballWindow {
       double L = 0;
       // After transformation length
       double L1 = 0;
+      // tmp matrix containing points
+      MatMxN points_tmp = points;
 
     for (int i = 1; i < num_points-1; i++)
     {
       // get size of each line
-      L+= sqrt(pow(points(0,i+1)-points(0,i),2) + pow(points(1,i+1)-points(1,i),2));
-      // Do the transformation for current point
-      points(0, i) = (1-epsilon1) * points(0, i) + (epsilon1*((points(0, i-1)+points(0, i+1))/2));
-      points(1, i) = (1-epsilon1) * points(1, i) + (epsilon1*((points(1, i-1)+points(1, i+1))/2));
-      // get size of each line after transformation
-      L1+= sqrt(pow(points(0,i+1)-points(0,i),2) + pow(points(1,i+1)-points(1,i),2));
+      L += sqrt(pow(points(0,i+1)-points(0,i),2) + pow(points(1,i+1)-points(1,i),2));
+      // Do the transformation for current point and store it in tmp matrix
+      points_tmp(0, i) = (1-epsilon1) * points(0, i) + (epsilon1*((points(0, i-1)+points(0, i+1))/2));
+      points_tmp(1, i) = (1-epsilon1) * points(1, i) + (epsilon1*((points(1, i-1)+points(1, i+1))/2));
     }
 
-    // Special for last and first points (same as in the for loop)
-    L+= sqrt(pow(points(0,1)-points(0,0),2) + pow(points(1,1)-points(1,0),2));
-    points(0, 0) = (1-epsilon1) * points(0, 0) + (epsilon1*((points(0, num_points-1)+points(0, 1))/2));
-    points(1, 0) = (1-epsilon1) * points(1, 0) + (epsilon1*((points(1, num_points-1)+points(1, 1))/2));
-    L1+= sqrt(pow(points(0,1)-points(0,0),2) + pow(points(1,1)-points(1,0),2));
+    // Special case for last and first points (same as in the for loop)
+    L += sqrt(pow(points(0,1)-points(0,0),2) + pow(points(1,1)-points(1,0),2));
+    points_tmp(0, 0) = (1-epsilon1) * points(0, 0) + (epsilon1*((points(0, num_points-1)+points(0, 1))/2));
+    points_tmp(1, 0) = (1-epsilon1) * points(1, 0) + (epsilon1*((points(1, num_points-1)+points(1, 1))/2));
 
-    L+= sqrt(pow(points(0,num_points-1)-points(0,num_points-1),2) + pow(points(1,0)-points(1,0),2));
-    points(0, num_points-1) = (1-epsilon1) * points(0, num_points-1) + (epsilon1*((points(0, num_points-2)+points(0, 0))/2));
-    points(1, num_points-1) = (1-epsilon1) * points(1, num_points-1) + (epsilon1*((points(1, num_points-2)+points(1, 0))/2));
-    L1+= sqrt(pow(points(0,num_points-1)-points(0,num_points-1),2) + pow(points(1,0)-points(1,0),2));
+    L += sqrt(pow(points(0,0)-points(0,num_points-1),2) + pow(points(1,0)-points(1,num_points-1),2));
+    points_tmp(0, num_points-1) = (1-epsilon1) * points(0, num_points-1) + (epsilon1*((points(0, num_points-2)+points(0, 0))/2));
+    points_tmp(1, num_points-1) = (1-epsilon1) * points(1, num_points-1) + (epsilon1*((points(1, num_points-2)+points(1, 0))/2));
+
+    // get size of each line after transformation
+    for (int i = 1; i < num_points-1; i++)
+    {
+      L1+= sqrt(pow(points_tmp(0,i+1)-points_tmp(0,i),2) + pow(points_tmp(1,i+1)-points_tmp(1,i),2));
+    }
+    L1+= sqrt(pow(points_tmp(0,1)-points_tmp(0,0),2) + pow(points_tmp(1,1)-points_tmp(1,0),2));
+    L1+= sqrt(pow(points_tmp(0,0)-points_tmp(0,num_points-1),2) + pow(points_tmp(1,0)-points_tmp(1,num_points-1),2));
 
     // uniformly scale the curve back to its original length
-    std::cerr << "L = " << L << " and L1 = " << L1;
-    points = points * (L/L1);
-
+    points = points_tmp * L/L1;
   }
 
   void osculatingCircle() {
@@ -69,7 +73,8 @@ struct MainWindow : public TrackballWindow {
       double L = 0;
       // After transformation length
       double L1 = 0;
-      double L_after = 0;
+      // tmp matrix containing points
+      MatMxN points_tmp = points;
 
       for (int i = 0; i < num_points; i++)
       {
@@ -103,36 +108,29 @@ struct MainWindow : public TrackballWindow {
         double Cx=(((pow(point0x,2) + pow(point0y,2))*(point1y - point2y)) + ((pow(point1x,2) + pow(point1y,2))*(point2y - point0y)) + ((pow(point2x,2) + pow(point2y,2))*(point0y - point1y))) / D;
         double Cy=(((pow(point0x,2) + pow(point0y,2))*(point2x - point1x)) + ((pow(point1x,2) + pow(point1y,2))*(point0x - point2x)) + ((pow(point2x,2) + pow(point2y,2))*(point1x - point0x))) / D;
         Vec2 C = Vec2(Cx, Cy);
+        // Compute C-Vi
         Vec2 C_P = C-point;
+        // Compute norm of C-Vi
         double C_P_norm = sqrt(pow(C_P(0),2) + pow(C_P(1),2));
+        // Compute new point
         point = point + (epsilon2 * (C_P / pow(C_P_norm,2)));
-        points(0, i) = point(0);
-        points(1, i) = point(1);
-
-        if(i==num_points-1){
-            // get size of each line after transformation
-            L1+= sqrt(pow(points(0,0)-points(0,i),2) + pow(points(1,0)-points(1,i),2));
-        } else {
-            // get size of each line after transformation
-            L1+= sqrt(pow(points(0,i+1)-points(0,i),2) + pow(points(1,i+1)-points(1,i),2));
-        }
+        // Store it in the tmp matrix
+        points_tmp(0, i) = point(0);
+        points_tmp(1, i) = point(1);
 
       }
-      // uniformly scale the curve back to its original length
-      std::cerr << "L = " << L << " and L1 = " << L1 << " L/L1 = " << L/L1;
-      //std::cerr << "pointx = " << points(0,0) << " pointy = " << points(1,0);
-      points = points * (L/L1);
-      //std::cerr << "pointx = " << points(0,0) << " pointy = " << points(1,0);
 
-      // TODO why doesn't it scale back to initial size??? (TODO PAPER WORK)
-      for (int i = 0; i < num_points; i++){
+      // get size of each line after transformation
+      for (int i = 0; i < num_points; i++)
+      {
           if(i==num_points-1){
-              L_after += sqrt(pow(points(0,0)-points(0,i),2) + pow(points(1,0)-points(1,i),2));
+              L1+= sqrt(pow(points_tmp(0,0)-points_tmp(0,i),2) + pow(points_tmp(1,0)-points_tmp(1,i),2));
           } else {
-              L_after += sqrt(pow(points(0,i+1)-points(0,i),2) + pow(points(1,i+1)-points(1,i),2));
+              L1+= sqrt(pow(points_tmp(0,i+1)-points_tmp(0,i),2) + pow(points_tmp(1,i+1)-points_tmp(1,i),2));
           }
       }
-      std::cerr << " L after points * L/L1 = " << L_after;
+      // uniformly scale the curve back to its original length
+      points = points_tmp * (L/L1);
   }
 
 // ============================================================================
