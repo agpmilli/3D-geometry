@@ -45,7 +45,7 @@ struct MainWindow : public TrackballWindow {
       points_tmp(1, i) = (1-epsilon1) * points(1, i) + (epsilon1*((points(1, i-1)+points(1, i+1))/2));
     }
 
-    // Special case for last and first points
+    // Special cases for last and first points (avoid invalid indexes access)
     L += sqrt(pow(points(0,1)-points(0,0),2) + pow(points(1,1)-points(1,0),2));
     points_tmp(0, 0) = (1-epsilon1) * points(0, 0) + (epsilon1*((points(0, num_points-1)+points(0, 1))/2));
     points_tmp(1, 0) = (1-epsilon1) * points(1, 0) + (epsilon1*((points(1, num_points-1)+points(1, 1))/2));
@@ -88,7 +88,7 @@ struct MainWindow : public TrackballWindow {
         point1x = points(0,i);
         point1y = points(1,i);
 
-        // Special cases for i+1 when i=num_points-1
+        // Special cases for i+1 when i=num_points-1 (avoid invalid indexes access)
         if(i==num_points-1){
             // get size of each line
             L+= sqrt(pow(points(0,0)-points(0,i),2) + pow(points(1,0)-points(1,i),2));
