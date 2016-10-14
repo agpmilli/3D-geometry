@@ -12,6 +12,36 @@ void computeValence(Surface_mesh *mesh) {
 
     // TODO TASK 1
     // compute the valence for each vertex v and store it inside vertex_valence[v]
+
+    //setup vertex iterator
+    Surface_mesh::Vertex_iterator v_it, v_begin, v_end;
+    v_begin = mesh->vertices_begin();
+    v_end = mesh->vertices_end();
+
+    //setup neighbors iterator
+    Surface_mesh::Vertex_around_vertex_circulator vc, vc_end;
+
+    //iterate over all vertices
+    for(v_it=v_begin; v_it != v_end; ++v_it){
+        Surface_mesh::Vertex v = *v_it;
+        //iterate over v's neighbors
+        vc = mesh->vertices(v);
+        vc_end = vc;
+        unsigned int valence = 0;
+        //TODO while instead of do while? check
+        do{
+            ++valence;
+        }while(++vc != vc_end);
+        //store v's valence in the array
+        vertex_valence[v] = valence;
+
+    }
+
+
+    //for vertex in vertices:
+    //valence = 0
+    //count the number of neighbors of vertex and assign it to valence
+    //vertex_valence[vertex] = valence
 }
 
 void computeNormalsWithConstantWeights(Surface_mesh *mesh) {
