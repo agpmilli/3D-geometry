@@ -32,7 +32,7 @@ struct MainWindow : public TrackballWindow {
       // Compute s using epsilon and n
       double s = epsilon * n;
 
-      // phi is the integral of k(s) on s
+      // phi is the integral of k(s) on s (uncomment the one you want)
       double phi = s; // first curvature k(s) = 1;
       //double phi = (double)1/2 * pow(s,2); // second curvature k(s) = s
       //double phi = (double)1/3 * pow(s,3) - 2.19*s; // third curvature k(s) = s^2 - 2.19
