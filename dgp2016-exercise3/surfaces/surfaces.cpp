@@ -75,18 +75,27 @@ void computeNormalsByAreaWeights(Surface_mesh *mesh) {
         // TODO should we initialize the sum with default_normal?
         Normal sum_n_T((0.0, 0.0, 0.0));
         for(Surface_mesh::Face f: mesh->faces(v)){
-            // TODO determine weight, i.e. find a way to compute face area
-            // TODO idea: this iterator iterates over the 3 vertices composing the triangle. Get these vertices and compute the area with them.
+            //initialize empty array
+            std::vector<Surface_mesh::Vertex> corners;
+            // store the three corners of the triangle and use them to compute the area
             for(auto triangle_corner:  mesh->vertices(f)){
-                //TODO here store the three corners of the triangle and use them to compute the area
+                corners.push_back(triangle_corner);
             }
-            //TODO compute the area => weight <- area
-            double weight = 1;
+            assert(corners.size() == 3);
+            // compute the position of the three corners, then the vectors AB and AC of the edges
+            auto a = mesh->position(corners[0]);
+            auto b = mesh->position(corners[1]);
+            auto c = mesh->position(corners[2]);
+            auto AB = b-a;
+            auto AC = c-a;
+            // half cross-product formula: gives the area of a triangle ABC given vectors AB and AC
+            double weight = 0.5 * sqrt(pow(AB[1]*AC[2]-AB[2]*AC[1], 2) + pow(AB[2]*AC[0]-AB[0]*AC[2],2) + pow(AB[0]*AC[1]-AB[1]*AC[0],2));
+
             sum_n_T = sum_n_T + weight * (mesh->compute_face_normal(f));
         }
         auto n_v = sum_n_T.normalize();
         // store vertex normal in the array
-        //v_cste_weights_n[v] = n_v;
+        v_area_weights_n[v] = n_v;
     }
 }
 
