@@ -1,0 +1,106 @@
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/BIN/cl.exe 
+Build flags: 
+Id flags: 
+
+The output was:
+2
+Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24215.1 for x86
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+CMakeCXXCompilerId.cpp
+Microsoft (R) Incremental Linker Version 14.00.24215.1
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+/out:CMakeCXXCompilerId.exe 
+CMakeCXXCompilerId.obj 
+LINK : error LNK2001: unresolved external symbol _mainCRTStartup
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB\amd64\LIBCMT.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+CMakeCXXCompilerId.exe : fatal error LNK1120: 1 unresolved externals
+
+
+Determining if the CXX compiler works failed with the following output:
+Change Dir: C:/Users/rbsteinm/Google Drive/EPFL/MA1/D3DGP/3D-geometry/Ex3/CMakeFiles/CMakeTmp
+
+Run Build Command:"nmake" "/NOLOGO" "cmTC_6f6f2\fast"
+	"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\BIN\amd64\nmake.exe" -f CMakeFiles\cmTC_6f6f2.dir\build.make /nologo -L                  CMakeFiles\cmTC_6f6f2.dir\build
+Building CXX object CMakeFiles/cmTC_6f6f2.dir/testCXXCompiler.cxx.obj
+	C:\PROGRA~2\MICROS~1.0\VC\BIN\cl.exe  @C:\Users\rbsteinm\AppData\Local\Temp\nmC65A.tmp
+testCXXCompiler.cxx
+Linking CXX executable cmTC_6f6f2.exe
+	"C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\cmTC_6f6f2.dir --manifests  -- C:\PROGRA~2\MICROS~1.0\VC\bin\amd64\link.exe /nologo @CMakeFiles\cmTC_6f6f2.dir\objects1.rsp @C:\Users\rbsteinm\AppData\Local\Temp\nmC81F.tmp
+testCXXCompiler.cxx.obj : error LNK2001: unresolved external symbol __RTC_InitBase
+testCXXCompiler.cxx.obj : error LNK2001: unresolved external symbol __RTC_Shutdown
+LINK : error LNK2001: unresolved external symbol _mainCRTStartup
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\kernel32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\user32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\gdi32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\winspool.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\shell32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\ole32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\oleaut32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\uuid.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\comdlg32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\advapi32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB\amd64\MSVCRTD.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+cmTC_6f6f2.exe : fatal error LNK1120: 3 unresolved externals
+LINK Pass 1 failed. with 1120
+NMAKE : fatal error U1077: '"C:\Program Files\CMake\bin\cmake.exe"' : return code '0xffffffff'
+Stop.
+NMAKE : fatal error U1077: '"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\BIN\amd64\nmake.exe"' : return code '0x2'
+Stop.
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/BIN/cl.exe 
+Build flags: /DWIN32;/D_WINDOWS;/W3;/GR;/EHsc
+Id flags: 
+
+The output was:
+2
+Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24215.1 for x86
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+CMakeCXXCompilerId.cpp
+Microsoft (R) Incremental Linker Version 14.00.24215.1
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+/out:CMakeCXXCompilerId.exe 
+CMakeCXXCompilerId.obj 
+LINK : error LNK2001: unresolved external symbol _mainCRTStartup
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB\amd64\LIBCMT.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+CMakeCXXCompilerId.exe : fatal error LNK1120: 1 unresolved externals
+
+
+Determining if the CXX compiler works failed with the following output:
+Change Dir: C:/Users/rbsteinm/Google Drive/EPFL/MA1/D3DGP/3D-geometry/Ex3/CMakeFiles/CMakeTmp
+
+Run Build Command:"nmake" "/NOLOGO" "cmTC_a65d3\fast"
+	"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\BIN\amd64\nmake.exe" -f CMakeFiles\cmTC_a65d3.dir\build.make /nologo -L                  CMakeFiles\cmTC_a65d3.dir\build
+Building CXX object CMakeFiles/cmTC_a65d3.dir/testCXXCompiler.cxx.obj
+	C:\PROGRA~2\MICROS~1.0\VC\BIN\cl.exe  @C:\Users\rbsteinm\AppData\Local\Temp\nmD641.tmp
+testCXXCompiler.cxx
+Linking CXX executable cmTC_a65d3.exe
+	"C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\cmTC_a65d3.dir --manifests  -- C:\PROGRA~2\MICROS~1.0\VC\bin\amd64\link.exe /nologo @CMakeFiles\cmTC_a65d3.dir\objects1.rsp @C:\Users\rbsteinm\AppData\Local\Temp\nmD6DE.tmp
+testCXXCompiler.cxx.obj : error LNK2001: unresolved external symbol __RTC_InitBase
+testCXXCompiler.cxx.obj : error LNK2001: unresolved external symbol __RTC_Shutdown
+LINK : error LNK2001: unresolved external symbol _mainCRTStartup
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\kernel32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\user32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\gdi32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\winspool.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\shell32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\ole32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\oleaut32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\uuid.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\comdlg32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64\advapi32.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB\amd64\MSVCRTD.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'X86'
+cmTC_a65d3.exe : fatal error LNK1120: 3 unresolved externals
+LINK Pass 1 failed. with 1120
+NMAKE : fatal error U1077: '"C:\Program Files\CMake\bin\cmake.exe"' : return code '0xffffffff'
+Stop.
+NMAKE : fatal error U1077: '"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\BIN\amd64\nmake.exe"' : return code '0x2'
+Stop.
+
+
