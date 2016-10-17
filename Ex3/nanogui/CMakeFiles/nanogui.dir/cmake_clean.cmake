@@ -1,0 +1,41 @@
+file(REMOVE_RECURSE
+  "nanogui_resources.cpp"
+  "nanogui_resources.h"
+  "CMakeFiles/nanogui.dir/ext/nanovg/src/nanovg.c.obj"
+  "CMakeFiles/nanogui.dir/ext/glad/src/glad.c.obj"
+  "CMakeFiles/nanogui.dir/nanogui_resources.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/glutil.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/common.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/widget.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/theme.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/layout.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/screen.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/label.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/window.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/popup.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/checkbox.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/button.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/popupbutton.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/combobox.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/progressbar.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/slider.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/messagedialog.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/textbox.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/imagepanel.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/imageview.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/vscrollpanel.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/colorwheel.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/colorpicker.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/graph.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/stackedwidget.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/tabheader.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/tabwidget.cpp.obj"
+  "CMakeFiles/nanogui.dir/src/serializer.cpp.obj"
+  "nanogui.pdb"
+  "nanogui.lib"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C CXX)
+  include(CMakeFiles/nanogui.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
