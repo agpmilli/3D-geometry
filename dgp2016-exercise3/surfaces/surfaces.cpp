@@ -28,7 +28,6 @@ void computeValence(Surface_mesh *mesh) {
         vc = mesh->vertices(v);
         vc_end = vc;
         unsigned int valence = 0;
-        //TODO while instead of do while? check
         do{
             ++valence;
         }while(++vc != vc_end);
@@ -36,22 +35,30 @@ void computeValence(Surface_mesh *mesh) {
         vertex_valence[v] = valence;
 
     }
-
-
-    //for vertex in vertices:
-    //valence = 0
-    //count the number of neighbors of vertex and assign it to valence
-    //vertex_valence[vertex] = valence
 }
 
 void computeNormalsWithConstantWeights(Surface_mesh *mesh) {
     Point default_normal(0.0, 1.0, 0.0);
     Surface_mesh::Vertex_property<Point> v_cste_weights_n =
             mesh->vertex_property<Point>("v:cste_weights_n", default_normal);
-
+    // initialize constant weight
+    unsigned int weight = 1;
+    // iterate over all vertices
+    for(Surface_mesh::Vertex v: mesh->vertices()){
+        // iterate over all triangles incident to v and calculate normal vector multiplied by weight
+        // TODO should we initialize the sum with default_normal?
+        Normal sum_n_T((0.0, 0.0, 0.0));
+        for(Surface_mesh::Face f: mesh->faces(v)){
+            sum_n_T = sum_n_T + weight * (mesh->compute_face_normal(f));
+        }
+        auto n_v = sum_n_T.normalize();
+        // store vertex normal in the array
+        v_cste_weights_n[v] = n_v;
+    }
     // TODO TASK 2
     // Compute the normals for each vertex v in the mesh using the constant weights
     // technique (see .pdf) and store it inside v_cste_weights_n[v]
+
 }
 
 void computeNormalsByAreaWeights(Surface_mesh *mesh) {
@@ -62,6 +69,20 @@ void computeNormalsByAreaWeights(Surface_mesh *mesh) {
     // TODO TASK 3
     // Compute the normals for each vertex v in the mesh using the weights proportionals
     // to the areas technique (see .pdf) and store inside v_area_weights_n[v]
+    // iterate over all vertices
+    for(Surface_mesh::Vertex v: mesh->vertices()){
+        // iterate over all triangles incident to v and calculate normal vector multiplied by weight
+        // TODO should we initialize the sum with default_normal?
+        Normal sum_n_T((0.0, 0.0, 0.0));
+        for(Surface_mesh::Face f: mesh->faces(v)){
+            // TODO determine weight, i.e. find a way to compute face area
+            //double weight =
+            sum_n_T = sum_n_T + weight * (mesh->compute_face_normal(f));
+        }
+        auto n_v = sum_n_T.normalize();
+        // store vertex normal in the array
+        v_cste_weights_n[v] = n_v;
+    }
 }
 
 void computeNormalsWithAngleWeights(Surface_mesh *mesh) {
