@@ -76,12 +76,17 @@ void computeNormalsByAreaWeights(Surface_mesh *mesh) {
         Normal sum_n_T((0.0, 0.0, 0.0));
         for(Surface_mesh::Face f: mesh->faces(v)){
             // TODO determine weight, i.e. find a way to compute face area
-            //double weight =
+            // TODO idea: this iterator iterates over the 3 vertices composing the triangle. Get these vertices and compute the area with them.
+            for(auto triangle_corner:  mesh->vertices(f)){
+                //TODO here store the three corners of the triangle and use them to compute the area
+            }
+            //TODO compute the area => weight <- area
+            double weight = 1;
             sum_n_T = sum_n_T + weight * (mesh->compute_face_normal(f));
         }
         auto n_v = sum_n_T.normalize();
         // store vertex normal in the array
-        v_cste_weights_n[v] = n_v;
+        //v_cste_weights_n[v] = n_v;
     }
 }
 
