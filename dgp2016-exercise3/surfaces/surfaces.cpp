@@ -93,7 +93,6 @@ void computeNormalsWithConstantWeights(Surface_mesh *mesh) {
     // iterate over all vertices
     for(Surface_mesh::Vertex v: mesh->vertices()){
         // iterate over all triangles incident to v and calculate normal vector multiplied by weight
-        // TODO should we initialize the sum with default_normal?
         Normal sum_n_T(0.0,0.0,0.0);
         for(Surface_mesh::Face f: mesh->faces(v)){
             sum_n_T = sum_n_T + weight * (mesh->compute_face_normal(f));
