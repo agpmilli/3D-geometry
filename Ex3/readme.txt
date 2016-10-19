@@ -1,5 +1,9 @@
 Group members: Thomas Batschelet, Alain Milliet, Raphaël Steinmann
 
+1: Theory Exercise
+
+The answer for the theory exercise is written in the pdf file "ex3-theory.pdf"
+
 2: Coding exercise
 
 2.1: Vertex valence of a triangle mesh
