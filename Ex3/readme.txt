@@ -1,8 +1,4 @@
-1: Theory Exercise
-
-
-
-
+Group members: Thomas Batschelet, Alain Milliet, Raphaël Steinmann
 
 2: Coding exercise
 
