@@ -1,8 +1,6 @@
 1: Theory Exercise
 
-
-
-
+The answer for the theory exercise is written in the pdf file "ex3-theory.pdf"
 
 2: Coding exercise
 
