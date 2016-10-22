@@ -1,4 +1,5 @@
 Group members: Thomas Batschelet, Alain Milliet, Raphaël Steinmann
+Each one of us did 1/3 of the work.
 
 1: Theory Exercise
 

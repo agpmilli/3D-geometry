@@ -36,6 +36,22 @@ void Viewer::calc_uniform_mean_curvature() {
     // For each non-boundary vertex, approximate mean curvature using
     // the length of the uniform Laplacian approximation
     // Save your approximation in unicurvature vertex property of the mesh.
+
+    // iterate over all non-boundary vertices v
+    unsigned int N;
+    Point sum;
+    for(auto v: mesh.vertices()){
+        if(!mesh.is_boundary(v)){
+            unsigned int N = 0;
+            sum = (0.0, 0.0, 0.0);
+            // iterate over all neighbors of v
+            for(auto neighbor: mesh.vertices(v)){
+                N++;
+                sum += (mesh.position(neighbor) - mesh.position(v));
+            }
+            v_unicurvature[v] = (norm(sum)/(double)N);
+        }
+    }
     // ------------- IMPLEMENT HERE ---------
 }
 // ========================================================================
