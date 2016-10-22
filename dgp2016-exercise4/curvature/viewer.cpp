@@ -38,12 +38,10 @@ void Viewer::calc_uniform_mean_curvature() {
     // Save your approximation in unicurvature vertex property of the mesh.
 
     // iterate over all non-boundary vertices v
-    unsigned int N;
-    Point sum;
     for(auto v: mesh.vertices()){
         if(!mesh.is_boundary(v)){
-            N = mesh.valence(v);
-            sum = (0.0, 0.0, 0.0);
+            unsigned int N = mesh.valence(v);
+            Point sum(0.0, 0.0, 0.0);
             // iterate over all neighbors of v
             for(auto neighbor: mesh.vertices(v)){
                 sum += (mesh.position(neighbor) - mesh.position(v));
@@ -65,6 +63,24 @@ void Viewer::calc_mean_curvature() {
     // the length of the Laplace-Beltrami approximation.
     // Save your approximation in v_curvature vertex property of the mesh.
     // Use the weights from calc_weights(): e_weight and v_weight
+    //run calc_weights function to fill e_weight and v_weight arrays
+    calc_weights();
+    //iterate over each vertex v
+    for(auto v: mesh.vertices()){
+        if(!mesh.is_boundary(v)){
+            Point sum(0.0, 0.0, 0.0);
+            double w = v_weight[v];
+            // iterate over each neighbor vi
+            for(auto vi: mesh.vertices(v)){
+                // get the edge between v and vi and get its weight from e_weight
+                auto ei = mesh.find_edge(v, vi);
+                double wi = e_weight[ei];
+                sum += wi*(mesh.position(vi)-mesh.position(v));
+            }
+            sum *= w;
+            v_curvature[v] = norm(sum);
+        }
+    }
 
     // ------------- IMPLEMENT HERE ---------
 }
