@@ -120,10 +120,14 @@ void Viewer::calc_gauss_curvature() {
                         Vector<Scalar,3> vec1 = mesh.position(v)-mesh.position(v1);
                         Vector<Scalar,3> vec2 = mesh.position(v)-mesh.position(v2);
 
-                        angle_sum += asin(double(cross(vec1, vec2).size()/mesh.edge_length(e1)*mesh.edge_length(e2)));
+                        Vector<Scalar,3> result = cross(vec1,vec2);
+                        double res = sqrt(pow(result[0],2)+pow(result[1],2)+pow(result[2],2));
+
+                        angle_sum += asin(double(res/mesh.edge_length(e1)*mesh.edge_length(e2)));
                     }
                 }
             }
+
             v_gauss_curvature[v] = (2*w)*(2.0* M_PI - angle_sum);
         }
     }
