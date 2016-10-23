@@ -13,6 +13,9 @@
 #include "viewer.h"
 #include <surface_mesh/Surface_mesh.h>
 
+#include <cmath>
+
+
 using std::min;
 using std::max;
 using namespace surface_mesh;
@@ -63,7 +66,7 @@ void Viewer::calc_mean_curvature() {
     // the length of the Laplace-Beltrami approximation.
     // Save your approximation in v_curvature vertex property of the mesh.
     // Use the weights from calc_weights(): e_weight and v_weight
-    //run calc_weights function to fill e_weight and v_weight arrays
+    // run calc_weights function to fill e_weight and v_weight arrays
     calc_weights();
     //iterate over each vertex v
     for(auto v: mesh.vertices()){
@@ -96,6 +99,28 @@ void Viewer::calc_gauss_curvature() {
     // Hint: When calculating angles out of cross products make sure the value
     // you pass to the acos function is between -1.0 and 1.0.
     // Use the v_weight property for the area weight.
+    // run calc_weights function to fill e_weight and v_weight arrays
+    calc_weights();
+    // Iterate over each vertex v
+    for(auto v: mesh.vertices()){
+        if(!mesh.is_boundary(v)){
+            double angle_sum = 0;
+            double w = v_weight[v];
+            // iterate over all neighbors of v
+            for(auto v1: mesh.vertices(v)){
+                // get the edge between v and vi and get its weight from e_weight
+                auto e1 = mesh.find_edge(v, v1);
+                for(auto v2: mesh.vertices(v)){
+                    auto e2 = mesh.find_edge(v,v2);
+                    if(mesh.find_edge(v1,v2)!=Surface_mesh::Edge()){
+                        /* TODO how to get cross product of e1 and e2 ?
+                         * angle_sum += acos(e1 * e2);*/
+                    }
+                }
+            }
+            v_gauss_curvature[v] = (2*w)*(2.0* M_PI - angle_sum);
+        }
+    }
     // ------------- IMPLEMENT HERE ---------
 }
 
