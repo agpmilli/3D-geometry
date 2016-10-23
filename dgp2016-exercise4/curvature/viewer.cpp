@@ -101,7 +101,9 @@ void Viewer::calc_gauss_curvature() {
     // Use the v_weight property for the area weight.
     // run calc_weights function to fill e_weight and v_weight arrays
     calc_weights();
+
     // Iterate over each vertex v
+
     for(auto v: mesh.vertices()){
         if(!mesh.is_boundary(v)){
             double angle_sum = 0;
@@ -115,6 +117,10 @@ void Viewer::calc_gauss_curvature() {
                     if(mesh.find_edge(v1,v2)!=Surface_mesh::Edge()){
                         /* TODO how to get cross product of e1 and e2 ?
                          * angle_sum += acos(e1 * e2);*/
+                        Vector<Scalar,3> vec1 = mesh.position(v)-mesh.position(v1);
+                        Vector<Scalar,3> vec2 = mesh.position(v)-mesh.position(v2);
+
+                        angle_sum += asin(double(cross(vec1, vec2).size()/mesh.edge_length(e1)*mesh.edge_length(e2)));
                     }
                 }
             }
