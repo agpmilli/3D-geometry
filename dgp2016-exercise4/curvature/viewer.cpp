@@ -215,20 +215,16 @@ void Viewer::uniform_laplacian_enhance_feature(int enhancement_smoothing_iterati
     // ------------- IMPLEMENT HERE ---------
     std::vector<Point> vs_before;
     for(auto v: mesh.vertices()){
-        if(!mesh.is_boundary(v)){
             // save the position of the vertices before the smoothing
             vs_before.push_back(mesh.position(v));
-        }
     }
     // perform uniform Laplacian smoothing for enhancement_smoothing_iterations iterations
     uniform_smooth(enhancement_smoothing_iterations);
     int i = 0;
     for(auto v: mesh.vertices()){
-        if(!mesh.is_boundary(v)){
-            // compute the new position of the current vertex
-            mesh.position(v) = mesh.position(v) + enhancement_coef * (vs_before[i] - mesh.position(v));
-            i+=1;
-        }
+        // compute the new position of the current vertex
+        mesh.position(v) = mesh.position(v) + enhancement_coef * (vs_before[i] - mesh.position(v));
+        i+=1;
     }
 
     mesh.update_face_normals();
@@ -247,20 +243,16 @@ void Viewer::laplace_beltrami_enhance_feature(int enhancement_smoothing_iteratio
     // ------------- IMPLEMENT HERE ---------
     std::vector<Point> vs_before;
     for(auto v: mesh.vertices()){
-        if(!mesh.is_boundary(v)){
             // save the position of the vertices before the smoothing
             vs_before.push_back(mesh.position(v));
-        }
     }
     // perform Laplace-Beltrami smoothing for enhancement_smoothing_iterations iterations
     smooth(enhancement_smoothing_iterations);
     int i = 0;
     for(auto v: mesh.vertices()){
-        if(!mesh.is_boundary(v)){
             // compute the new position of the current vertex
             mesh.position(v) = mesh.position(v) + enhancement_coef * (vs_before[i] - mesh.position(v));
             i+=1;
-        }
     }
 
     mesh.update_face_normals();
