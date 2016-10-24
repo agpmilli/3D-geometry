@@ -118,16 +118,14 @@ void Viewer::calc_gauss_curvature() {
                         // create vectors from points
                         Vector<Scalar,3> vec1 = mesh.position(v1)-mesh.position(v);
                         Vector<Scalar,3> vec2 = mesh.position(v2)-mesh.position(v);
-                        /* THOMAS IMPLEMENTATION
-                         *
-                         * Vector<Scalar,3> result = cross(vec1,vec2);
-                         * double res = sqrt(pow(result[0],2)+pow(result[1],2)+pow(result[2],2));
-                         * angle_sum += asin(double(res/mesh.edge_length(e1)*mesh.edge_length(e2)));
-                         * */
-                        // compute asin(cross(A,B) / (norm(A) * norm(B)))
+
+                        Vector<Scalar,3> result = cross(vec1,vec2);
+                        double res = sqrt(pow(result[0],2)+pow(result[1],2)+pow(result[2],2));
+                        angle_sum += asin(double(res/norm(vec1)*norm(vec2)));
+                        /*// compute asin(cross(A,B) / (norm(A) * norm(B)))
                         double current_angle =  asin(double(norm(cross(vec1, vec2)))/double(norm(vec1)*norm(vec2)));
                         // add it to the angle of current vertex v
-                        angle_sum += current_angle;
+                        angle_sum += current_angle;*/
                     }
                 }
             }
@@ -173,25 +171,27 @@ void Viewer::uniform_smooth(unsigned int n_iters) {
 // ========================================================================
 void Viewer::smooth(unsigned int n_iters) {
     Mesh::Edge_property<Scalar> e_weight = mesh.edge_property<Scalar>("e:weight", 0);
-    calc_edges_weights();
     for (unsigned int iter=0; iter<n_iters; ++iter) {
         // ------------- IMPLEMENT HERE ---------
         // Perform Laplace-Beltrami smoothing:
         // 1) precompute edge weights using calc_edge_weights()
         // 2) for each non-boundary vertex, update its position using the normalized Laplace-Beltrami operator
         //    (Hint: use the precomputed edge weights in the edge property "e:weight")
+
+        // precompute edge weights using calc_edge_weights()
+        calc_edges_weights();
         for(auto v: mesh.vertices()){
             if(!mesh.is_boundary(v)){
                 Point sum(0.0, 0.0, 0.0);
                 double sum_wi = 0.0;
-                // iterate over each neighbor vi
-                for(auto vi: mesh.vertices(v)){
+                // iterate over all neighbors of v
+                for(auto neighbor: mesh.vertices(v)){
                     // get the edge between v and vi and get its weight from e_weight
-                    auto ei = mesh.find_edge(v, vi);
+                    auto ei = mesh.find_edge(v, neighbor);
                     double wi = e_weight[ei];
-                    // compute the sum of wi
+                    // compute the sum of wi and the sum wi * (pos(neighbor) - pos(v))
                     sum_wi += wi;
-                    sum += wi*(mesh.position(vi)-mesh.position(v));
+                    sum += wi*(mesh.position(neighbor)-mesh.position(v));
                 }
                 Vector<Scalar,3> vec = 1/sum_wi * sum;
                 // compute the new position of the current vertex
@@ -218,6 +218,23 @@ void Viewer::uniform_laplacian_enhance_feature(int enhancement_smoothing_iterati
     // 2) update the vertex positions according to the difference between the original and the smoothed mesh,
     //    using enhancement_coef as the value of alpha in the feature enhancement formula
     // ------------- IMPLEMENT HERE ---------
+    std::vector<Point> vs_before;
+    for(auto v: mesh.vertices()){
+        if(!mesh.is_boundary(v)){
+            // save the position of the vertices before the smoothing
+            vs_before.push_back(mesh.position(v));
+        }
+    }
+    // perform uniform Laplacian smoothing for enhancement_smoothing_iterations iterations
+    uniform_smooth(enhancement_smoothing_iterations);
+    int i = 0;
+    for(auto v: mesh.vertices()){
+        if(!mesh.is_boundary(v)){
+            // compute the new position of the current vertex
+            mesh.position(v) = mesh.position(v) + enhancement_coef * (vs_before[i] - mesh.position(v));
+            i+=1;
+        }
+    }
 
     mesh.update_face_normals();
     mesh.update_vertex_normals();
@@ -233,6 +250,24 @@ void Viewer::laplace_beltrami_enhance_feature(int enhancement_smoothing_iteratio
     // 2) update the vertex positions according to the difference between the original and the smoothed mesh,
     //    using enhancement_coef as the value of alpha in the feature enhancement formula
     // ------------- IMPLEMENT HERE ---------
+    std::vector<Point> vs_before;
+    for(auto v: mesh.vertices()){
+        if(!mesh.is_boundary(v)){
+            // save the position of the vertices before the smoothing
+            vs_before.push_back(mesh.position(v));
+        }
+    }
+    // perform Laplace-Beltrami smoothing for enhancement_smoothing_iterations iterations
+    smooth(enhancement_smoothing_iterations);
+    int i = 0;
+    for(auto v: mesh.vertices()){
+        if(!mesh.is_boundary(v)){
+            // compute the new position of the current vertex
+            mesh.position(v) = mesh.position(v) + enhancement_coef * (vs_before[i] - mesh.position(v));
+            i+=1;
+        }
+    }
+
     mesh.update_face_normals();
     mesh.update_vertex_normals();
 }
