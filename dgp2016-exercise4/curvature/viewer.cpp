@@ -99,28 +99,39 @@ void Viewer::calc_gauss_curvature() {
     // Hint: When calculating angles out of cross products make sure the value
     // you pass to the acos function is between -1.0 and 1.0.
     // Use the v_weight property for the area weight.
-    // run calc_weights function to fill e_weight and v_weight arrays
-    calc_weights();
+    // run calc_verices_weights function to fill v_weight arrays
+    calc_vertices_weights();
     // Iterate over each vertex v
+
     for(auto v: mesh.vertices()){
         if(!mesh.is_boundary(v)){
             double angle_sum = 0;
             double w = v_weight[v];
+            // as w = 1/2A then A = 1/2w
+            double area = 0.5*w;
             // iterate over all neighbors of v
             for(auto v1: mesh.vertices(v)){
-                // get the edge between v and vi and get its weight from e_weight
-                auto e1 = mesh.find_edge(v, v1);
-                for(auto v2: mesh.vertices(v)){
-                    auto e2 = mesh.find_edge(v,v2);
-                    if(mesh.find_edge(v1,v2)!=Surface_mesh::Edge()){
-                        /* TODO how to get cross product of e1 and e2 ?
-                         * angle_sum += acos(e1 * e2);*/
+                // iterate over all neighbors of v1
+                for(auto v2: mesh.vertices(v1)){
+                    // if there exists an edge between a neighbor of v1 and v then we have to take this angle
+                    if(mesh.find_edge(v,v2).is_valid()==1){
+                        // create vectors from points
+                        Vector<Scalar,3> vec1 = mesh.position(v1)-mesh.position(v);
+                        Vector<Scalar,3> vec2 = mesh.position(v2)-mesh.position(v);
+                        // compute asin(cross(A,B) / (norm(A) * norm(B)))
+                        double current_angle =  asin(double(norm(cross(vec1, vec2)))/double(norm(vec1)*norm(vec2)));
+                        // add it to the angle of current vertex v
+                        angle_sum += current_angle;
                     }
                 }
             }
-            v_gauss_curvature[v] = (2*w)*(2.0* M_PI - angle_sum);
+            // divide the sum of angle by 2 because each angle is added twice in our sum
+            angle_sum = angle_sum/2;
+            // compute curvature using formula given
+            v_gauss_curvature[v] = (2.0 * M_PI - angle_sum)/area;
         }
     }
+
     // ------------- IMPLEMENT HERE ---------
 }
 
@@ -128,10 +139,22 @@ void Viewer::calc_gauss_curvature() {
 // EXERCISE 2.1
 // ========================================================================
 void Viewer::uniform_smooth(unsigned int n_iters) {
-
     for (unsigned int iter=0; iter<n_iters; ++iter) {
         // ------------- IMPLEMENT HERE ---------
         // For each non-boundary vertex, update its position according to the uniform Laplacian operator
+        for(auto v: mesh.vertices()){
+            if(!mesh.is_boundary(v)){
+                unsigned int N = mesh.valence(v);
+                Point sum(0.0, 0.0, 0.0);
+                // iterate over all neighbors of v
+                for(auto neighbor: mesh.vertices(v)){
+                    sum += mesh.position(neighbor);
+                }
+                Vector<Scalar,3> vec = (sum/(double)N) - mesh.position(v);
+                // compute the new position of the current vertex
+                mesh.position(v) = mesh.position(v) + 0.5 * vec;
+            }
+        }
         // ------------- IMPLEMENT HERE ---------
     }
 
@@ -143,13 +166,32 @@ void Viewer::uniform_smooth(unsigned int n_iters) {
 // EXERCISE 2.2
 // ========================================================================
 void Viewer::smooth(unsigned int n_iters) {
-
+    Mesh::Edge_property<Scalar> e_weight = mesh.edge_property<Scalar>("e:weight", 0);
+    calc_edges_weights();
     for (unsigned int iter=0; iter<n_iters; ++iter) {
         // ------------- IMPLEMENT HERE ---------
         // Perform Laplace-Beltrami smoothing:
         // 1) precompute edge weights using calc_edge_weights()
         // 2) for each non-boundary vertex, update its position using the normalized Laplace-Beltrami operator
         //    (Hint: use the precomputed edge weights in the edge property "e:weight")
+        for(auto v: mesh.vertices()){
+            if(!mesh.is_boundary(v)){
+                Point sum(0.0, 0.0, 0.0);
+                double sum_wi = 0.0;
+                // iterate over each neighbor vi
+                for(auto vi: mesh.vertices(v)){
+                    // get the edge between v and vi and get its weight from e_weight
+                    auto ei = mesh.find_edge(v, vi);
+                    double wi = e_weight[ei];
+                    // compute the sum of wi
+                    sum_wi += wi;
+                    sum += wi*(mesh.position(vi)-mesh.position(v));
+                }
+                Vector<Scalar,3> vec = 1/sum_wi * sum;
+                // compute the new position of the current vertex
+                mesh.position(v) = mesh.position(v) + 0.5 * vec;
+            }
+        }
         // ------------- IMPLEMENT HERE ---------
     }
 
