@@ -1,8 +1,16 @@
-1.1
-TODO
+1.1 Uniform Laplace Curvature
+TO do this we iterate over all vertices v, check if v is a boundary vertex. If that's the case we proceed to the next vertex. If v's not a boundary vertex, we iterate
+over all its neighbors to calculate the sum of the uniform Laplace approximation formula. Once the sum is computed, we just have to calculate its norm and divide it by N.
+N is the valence of v, which we computed before iterating over v's neighbors.
+Then we just store the result in the v_unicurvature property array.
 
-1.2
-TODO
+1.2 Laplace-Beltrami Curvature
+- fill in the e_weight and v_weight property arrays with the calc_weights() function
+- iterate over each vertex v of the mesh
+- iterate over every neighbor vi of v, if vi is a boundary vertex proceed to the next neighbor
+- get the edge e between v and vi with "find_edge" and the the edge-weight of e from the correct weight property array of the mesh
+- compute the sum as expressed in the laplace beltrami operator formula. At the end we multiply the sum by w (as in the formula) which is the vertex-weight of v
+- store the norm of the sum in the v_curvature property array
 
 1.3
 TODO
