@@ -108,7 +108,7 @@ void Viewer::calc_gauss_curvature() {
             double angle_sum = 0;
             double w = v_weight[v];
             // as w = 1/2A then A = 1/2w
-            double area = 0.5*w;
+            double area = 2*w;
             // iterate over all neighbors of v
             for(auto v1: mesh.vertices(v)){
                 // iterate over all neighbors of v1

@@ -12,8 +12,13 @@ Then we just store the result in the v_unicurvature property array.
 - compute the sum as expressed in the laplace beltrami operator formula. At the end we multiply the sum by w (as in the formula) which is the vertex-weight of v
 - store the norm of the sum in the v_curvature property array
 
-1.3
-TODO
+1.3 Gaussian curvature
+- We first compute the vertices weights
+- We iterate over the non-boundary vertices of the mesh
+- for each vertices, we calculate 1/area around v by multiplying its v_weight by 2, as the v_weight represent 1/2A.
+- we iterate over all the vertices vi around v and find the edges(v,vi).
+- We then, compute the dot product in order to retrieve the sum of the angles between all the edges around v.
+- we update the property of each vertex by apllying the formula in using the sum aof the anlges around each vertex and 1/2A.
 
 2.1 Uniform_smooth
 We iterate over the non-boundary vertices of the mesh
