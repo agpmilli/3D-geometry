@@ -51,9 +51,22 @@ with after being the current position.
 Image 1 : bunny -> 2 x enhancement laplace_beltrami(n_iter = 10, alpha = 5) -> 1 x enhancement uniform_laplacian(n_iter=10, alpha=2)
 -> 2 x smooth laplace_beltrami(n_iter=10)
 
+From a signal processing point of view:
+-
+
 Image 2 :
+
+From a signal processing point of view:
+-
 
 Image 3 :
 
+From a signal processing point of view:
+-
+
 
 From a signal processing point of view, what are the effects of the operations you apply, and why do they produce the results you show?
+- In general, when we apply a smoothing method on an image, we try to reduce the high frequencies of the images. This refers to the strong changes 
+  in the shape, i.e if the angle between two susuccesive faces connected by their common edge is sharp. the smoothing will reduce this angle.
+  In result, applying the smooth function many times will result in a ovalish form. 
+- In oppostie, the enhencement, will improve the irregularities in the connected faces.
