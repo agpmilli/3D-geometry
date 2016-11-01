@@ -66,5 +66,5 @@ From a signal processing point of view, what are the effects of the operations y
   in the shape, i.e if the angle between two susuccesive faces connected by their common edge is sharp. the smoothing will reduce this angle.
   In result, applying the smooth function many times will result in a ovalish form. 
 - In opposite, the enhencement, will improve the irregularities in the connected faces. It will accentuate in the oppsoite way what a smooting would have done.
-- Note that if we do smoothing first , we won't be able to recover entirely the images detail with th enhanced image as if too much smoothing is done
+- Note that if we do smoothing first , we won't be able to recover entirely the images detail with the enhanced image as if too much smoothing is done
  it will eradicate completely some irregularites and since enhancement improves irregularities, it won't perform much on a smooth shape.
