@@ -13,6 +13,10 @@
 #include "mesh_processing.h"
 #include <set>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 namespace mesh_processing {
 
 using surface_mesh::Point;
@@ -41,6 +45,7 @@ void MeshProcessing::implicit_smoothing(const double timestep) {
     calc_weights ();
     auto cotan = mesh_.edge_property<Scalar>("e:weight");
     auto area_inv = mesh_.vertex_property<Scalar>("v:weight");
+    Mesh::Vertex_property<Scalar> v_weight = mesh_.vertex_property<Scalar>("v:weight", 0);
 
     // A*X = B
     Eigen::SparseMatrix<double> A(n,n);
@@ -52,6 +57,15 @@ void MeshProcessing::implicit_smoothing(const double timestep) {
     // ========================================================================
     // TODO: IMPLEMENTATION FOR EXERCISE 5.1 HERE
     // ========================================================================
+    // TODO define Mij and D
+    auto D = area_inv;
+    std::cout << "area_inv : " << area_inv << std::endl;
+    std::cout << "v_weight : " << v_weight << std::endl;
+
+    for(auto vertex: mesh_.vertices()){
+
+    }
+    // TODO Solve the system (D^(-1)-lambda*M)*P^(t+1) = D^(-1)*P^(t)
 
     // build sparse matrix from triplets
     A.setFromTriplets(triplets.begin(), triplets.end());
@@ -134,13 +148,13 @@ void MeshProcessing::calc_uniform_mean_curvature() {
     // Save your approximation in unicurvature vertex property of the mesh.
 
     // iterate over all non-boundary vertices v
-    for(auto v: mesh.vertices()){
-        if(!mesh.is_boundary(v)){
-            unsigned int N = mesh.valence(v);
+    for(auto v: mesh_.vertices()){
+        if(!mesh_.is_boundary(v)){
+            unsigned int N = mesh_.valence(v);
             Point sum(0.0, 0.0, 0.0);
             // iterate over all neighbors of v
-            for(auto neighbor: mesh.vertices(v)){
-                sum += (mesh.position(neighbor) - mesh.position(v));
+            for(auto neighbor: mesh_.vertices(v)){
+                sum += (mesh_.position(neighbor) - mesh_.position(v));
             }
             v_unicurvature[v] = (norm(sum)/(double)N);
         }
@@ -162,16 +176,16 @@ void MeshProcessing::calc_mean_curvature() {
     // run calc_weights function to fill e_weight and v_weight arrays
     calc_weights();
     //iterate over each vertex v
-    for(auto v: mesh.vertices()){
-        if(!mesh.is_boundary(v)){
+    for(auto v: mesh_.vertices()){
+        if(!mesh_.is_boundary(v)){
             Point sum(0.0, 0.0, 0.0);
             double w = v_weight[v];
             // iterate over each neighbor vi
-            for(auto vi: mesh.vertices(v)){
+            for(auto vi: mesh_.vertices(v)){
                 // get the edge between v and vi and get its weight from e_weight
-                auto ei = mesh.find_edge(v, vi);
+                auto ei = mesh_.find_edge(v, vi);
                 double wi = e_weight[ei];
-                sum += wi*(mesh.position(vi)-mesh.position(v));
+                sum += wi*(mesh_.position(vi)-mesh_.position(v));
             }
             sum *= w;
             v_curvature[v] = norm(sum);
@@ -194,21 +208,21 @@ void MeshProcessing::calc_gauss_curvature() {
     calc_vertices_weights();
     // Iterate over each vertex v
 
-    for(auto v: mesh.vertices()){
-        if(!mesh.is_boundary(v)){
+    for(auto v: mesh_.vertices()){
+        if(!mesh_.is_boundary(v)){
             double angle_sum = 0;
             double w = v_weight[v];
             // as w = 1/2A then A = 1/2w
             double area = 2*w;
             // iterate over all neighbors of v
-            for(auto v1: mesh.vertices(v)){
+            for(auto v1: mesh_.vertices(v)){
                 // iterate over all neighbors of v1
-                for(auto v2: mesh.vertices(v1)){
+                for(auto v2: mesh_.vertices(v1)){
                     // if there exists an edge between a neighbor of v1 and v then we have to take this angle
-                    if(mesh.find_edge(v,v2).is_valid()==1){
+                    if(mesh_.find_edge(v,v2).is_valid()==1){
                         // create vectors from points
-                        Vector<Scalar,3> vec1 = mesh.position(v1)-mesh.position(v);
-                        Vector<Scalar,3> vec2 = mesh.position(v2)-mesh.position(v);
+                        auto vec1 = mesh_.position(v1)-mesh_.position(v);
+                        auto vec2 = mesh_.position(v2)-mesh_.position(v);
                         // compute the dot product between two adjacent vectors
                         double result = dot(vec1,vec2);
                         // compute acos(dot(A,B) / (norm(A) * norm(B)))
@@ -228,26 +242,27 @@ void MeshProcessing::uniform_smooth(const unsigned int iterations) {
     for (unsigned int iter=0; iter<iterations; ++iter) {
     // ------------- COPY YOUR FUNCTION FROM EXERCISE 4 ---------
         // For each non-boundary vertex, update its position according to the uniform Laplacian operator
-        for(auto v: mesh.vertices()){
-            if(!mesh.is_boundary(v)){
-                unsigned int N = mesh.valence(v);
+        for(auto v: mesh_.vertices()){
+            if(!mesh_.is_boundary(v)){
+                unsigned int N = mesh_.valence(v);
                 Point sum(0.0, 0.0, 0.0);
                 // iterate over all neighbors of v
-                for(auto neighbor: mesh.vertices(v)){
-                    sum += mesh.position(neighbor);
+                for(auto neighbor: mesh_.vertices(v)){
+                    sum += mesh_.position(neighbor);
                 }
-                Vector<Scalar,3> vec = (sum/(double)N) - mesh.position(v);
+                auto vec = (sum/(double)N) - mesh_.position(v);
                 // compute the new position of the current vertex
-                mesh.position(v) = mesh.position(v) + 0.5 * vec;
+                mesh_.position(v) = mesh_.position(v) + 0.5 * vec;
             }
         }
     }
     // update face and vertex normals
-    mesh.update_face_normals();
-    mesh.update_vertex_normals();
+    mesh_.update_face_normals();
+    mesh_.update_vertex_normals();
 }
 
 void MeshProcessing::smooth(const unsigned int iterations) {
+    Mesh::Edge_property<Scalar> e_weight = mesh_.edge_property<Scalar>("e:weight", 0);
 
     for (unsigned int iter=0; iter<iterations; ++iter) {
     // ------------- COPY YOUR FUNCTION FROM EXERCISE 4 ---------
@@ -258,28 +273,28 @@ void MeshProcessing::smooth(const unsigned int iterations) {
 
         // precompute edge weights using calc_edge_weights()
         calc_edges_weights();
-        for(auto v: mesh.vertices()){
-            if(!mesh.is_boundary(v)){
+        for(auto v: mesh_.vertices()){
+            if(!mesh_.is_boundary(v)){
                 Point sum(0.0, 0.0, 0.0);
                 double sum_wi = 0.0;
                 // iterate over all neighbors of v
-                for(auto neighbor: mesh.vertices(v)){
+                for(auto neighbor: mesh_.vertices(v)){
                     // get the edge between v and vi and get its weight from e_weight
-                    auto ei = mesh.find_edge(v, neighbor);
+                    auto ei = mesh_.find_edge(v, neighbor);
                     double wi = e_weight[ei];
                     // compute the sum of wi and the sum wi * (pos(neighbor) - pos(v))
                     sum_wi += wi;
-                    sum += wi*(mesh.position(neighbor)-mesh.position(v));
+                    sum += wi*(mesh_.position(neighbor)-mesh_.position(v));
                 }
-                Vector<Scalar,3> vec = 1/sum_wi * sum;
+                auto vec = 1/sum_wi * sum;
                 // compute the new position of the current vertex
-                mesh.position(v) = mesh.position(v) + 0.5 * vec;
+                mesh_.position(v) = mesh_.position(v) + 0.5 * vec;
             }
         }
     }
     // update face and vertex normals
-    mesh.update_face_normals();
-    mesh.update_vertex_normals();
+    mesh_.update_face_normals();
+    mesh_.update_vertex_normals();
 }
 
 void MeshProcessing::uniform_laplacian_enhance_feature(const unsigned int iterations,
@@ -290,20 +305,20 @@ void MeshProcessing::uniform_laplacian_enhance_feature(const unsigned int iterat
     // 2) update the vertex positions according to the difference between the original and the smoothed mesh,
     //    using enhancement_coef as the value of alpha in the feature enhancement formula
     std::vector<Point> vs_before;
-    for(auto v: mesh.vertices()){
+    for(auto v: mesh_.vertices()){
             // save the position of the vertices before the smoothing
-            vs_before.push_back(mesh.position(v));
+            vs_before.push_back(mesh_.position(v));
     }
     // perform uniform Laplacian smoothing for enhancement_smoothing_iterations iterations
-    uniform_smooth(enhancement_smoothing_iterations);
+    uniform_smooth(iterations);
     int i = 0;
-    for(auto v: mesh.vertices()){
+    for(auto v: mesh_.vertices()){
         // compute the new position of the current vertex
-        mesh.position(v) = mesh.position(v) + enhancement_coef * (vs_before[i] - mesh.position(v));
+        mesh_.position(v) = mesh_.position(v) + coefficient * (vs_before[i] - mesh_.position(v));
         i+=1;
     }
-    mesh.update_face_normals();
-    mesh.update_vertex_normals();
+    mesh_.update_face_normals();
+    mesh_.update_vertex_normals();
 }
 
 void MeshProcessing::laplace_beltrami_enhance_feature(const unsigned int iterations,
@@ -314,20 +329,20 @@ void MeshProcessing::laplace_beltrami_enhance_feature(const unsigned int iterati
     // 2) update the vertex positions according to the difference between the original and the smoothed mesh,
     //    using enhancement_coef as the value of alpha in the feature enhancement formula
     std::vector<Point> vs_before;
-    for(auto v: mesh.vertices()){
+    for(auto v: mesh_.vertices()){
             // save the position of the vertices before the smoothing
-            vs_before.push_back(mesh.position(v));
+            vs_before.push_back(mesh_.position(v));
     }
     // perform Laplace-Beltrami smoothing for enhancement_smoothing_iterations iterations
-    smooth(enhancement_smoothing_iterations);
+    smooth(iterations);
     int i = 0;
-    for(auto v: mesh.vertices()){
+    for(auto v: mesh_.vertices()){
             // compute the new position of the current vertex
-            mesh.position(v) = mesh.position(v) + enhancement_coef * (vs_before[i] - mesh.position(v));
+            mesh_.position(v) = mesh_.position(v) + coefficient * (vs_before[i] - mesh_.position(v));
             i+=1;
     }
-    mesh.update_face_normals();
-    mesh.update_vertex_normals();
+    mesh_.update_face_normals();
+    mesh_.update_vertex_normals();
 }
 
 void MeshProcessing::calc_weights() {
