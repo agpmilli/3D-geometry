@@ -56,16 +56,35 @@ void MeshProcessing::implicit_smoothing(const double timestep) {
     // ========================================================================
     // TODO: IMPLEMENTATION FOR EXERCISE 5.1 HERE
     // ========================================================================
-    // TODO define Mij and D
-    for(auto v: mesh_.vertices()){
-        auto i = v.idx();
-        A.coeffRef(i,i)=area_inv[v];
-    }
-    std::cout << A << std::endl;
+    // define Mij and D
+    Eigen::SparseMatrix<double> D_inv(n,n);
+    Eigen::SparseMatrix<double> M(n,n);
 
-    for(auto vertex: mesh_.vertices()){
+    typedef Eigen::Triplet<double> T;
 
+    for(auto v1: mesh_.vertices()){
+        auto i = v1.idx();
+        auto v_pos = mesh_.position(v1);
+        D_inv.coeffRef(i,i)=1/area_inv[v1];
+        B.row(i)=Eigen::RowVector3d(v_pos[0], v_pos[1], v_pos[2]);
+        std::cout << "vertex n° : " << i << std::endl;
+        for(auto v2: mesh_.vertices()){
+            auto j = v2.idx();
+            if(i==j){
+                double sum = 0;
+                for(auto vn: mesh_.vertices(v2)){
+                   sum+=cotan[mesh_.find_edge(v2,vn)];
+                }
+                M.coeffRef(i,j)=-sum;
+            } else if(i!=j & mesh_.find_edge(v1,v2).is_valid()){
+                M.coeffRef(i,j) = cotan[mesh_.find_edge(v1,v2)];
+            }
+            auto value = D_inv.coeff(i,j)-(timestep*M.coeff(i,j));
+            triplets.push_back(T(i,j,value));
+        }
     }
+    B = D_inv * B;
+
     // TODO Solve the system (D^(-1)-lambda*M)*P^(t+1) = D^(-1)*P^(t)
 
     // build sparse matrix from triplets
