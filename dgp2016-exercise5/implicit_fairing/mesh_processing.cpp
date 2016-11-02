@@ -45,7 +45,6 @@ void MeshProcessing::implicit_smoothing(const double timestep) {
     calc_weights ();
     auto cotan = mesh_.edge_property<Scalar>("e:weight");
     auto area_inv = mesh_.vertex_property<Scalar>("v:weight");
-    Mesh::Vertex_property<Scalar> v_weight = mesh_.vertex_property<Scalar>("v:weight", 0);
 
     // A*X = B
     Eigen::SparseMatrix<double> A(n,n);
@@ -58,9 +57,11 @@ void MeshProcessing::implicit_smoothing(const double timestep) {
     // TODO: IMPLEMENTATION FOR EXERCISE 5.1 HERE
     // ========================================================================
     // TODO define Mij and D
-    auto D = area_inv;
-    std::cout << "area_inv : " << area_inv << std::endl;
-    std::cout << "v_weight : " << v_weight << std::endl;
+    for(auto v: mesh_.vertices()){
+        auto i = v.idx();
+        A.coeffRef(i,i)=area_inv[v];
+    }
+    std::cout << A << std::endl;
 
     for(auto vertex: mesh_.vertices()){
 
