@@ -37,6 +37,7 @@ MeshProcessing::MeshProcessing(const string& filename) {
 void MeshProcessing::implicit_smoothing(const double timestep) {
 
     const int n = mesh_.n_vertices();
+    //std::cout << n << std::endl;
 
     // get vertex position
     auto points = mesh_.vertex_property<Point>("v:point");
@@ -56,36 +57,53 @@ void MeshProcessing::implicit_smoothing(const double timestep) {
     // ========================================================================
     // TODO: IMPLEMENTATION FOR EXERCISE 5.1 HERE
     // ========================================================================
-    // define Mij and D
-    Eigen::SparseMatrix<double> D_inv(n,n);
-    Eigen::SparseMatrix<double> M(n,n);
-
-    typedef Eigen::Triplet<double> T;
 
     for(auto v1: mesh_.vertices()){
+
+        // Get the index and the position of v1
         auto i = v1.idx();
-        auto v_pos = mesh_.position(v1);
-        D_inv.coeffRef(i,i)=1/area_inv[v1];
-        B.row(i)=Eigen::RowVector3d(v_pos[0], v_pos[1], v_pos[2]);
-        std::cout << "vertex n° : " << i << std::endl;
-        for(auto v2: mesh_.vertices()){
-            auto j = v2.idx();
-            if(i==j){
-                double sum = 0;
-                for(auto vn: mesh_.vertices(v2)){
-                   sum+=cotan[mesh_.find_edge(v2,vn)];
+        auto v1_pos = mesh_.position(v1);
+
+        // If v1 is boundary
+        if(mesh_.is_boundary(v1)){
+            // we put a line in B with the position of v1
+            B.row(i)=Eigen::RowVector3d(v1_pos[0], v1_pos[1], v1_pos[2]);
+            // and put 1 to its diagonal position in A
+            triplets.push_back(Eigen::Triplet<double>(i,i,1));
+        }
+
+        // In the other case
+        else {
+            // We put a line in B with the position of v1 multiplied by 2*Ai (multiplication by D^(-1))
+            B.row(i)=Eigen::RowVector3d(v1_pos[0], v1_pos[1], v1_pos[2]) / area_inv[v1];
+
+            // and put 2*Ai to its diagonal position in A (multiplication D^(-1))
+            triplets.push_back(Eigen::Triplet<double>(i,i, 1/area_inv[v1]));
+
+            // Then we iterate on the neighbors (v2s) of v1
+            for(auto v2 : mesh_.vertices(v1)){
+                // Get the index of current v2
+                auto j = v2.idx();
+                // We compute Mij of v1 and the current v2 using timestep and cotan
+                auto Mij = timestep * cotan[mesh_.find_edge(v1,v2)];
+
+                // If v2 is boundary
+                if(mesh_.is_boundary(v2)){
+                    auto v2_pos = mesh_.position(v2);
+                    // we add to the line already create above the position of v2 multiplied by Mij (cot(alpha(i,j)) + cot(beta(i,j))
+                    B.row(i) += Eigen::RowVector3d(v2_pos[0], v2_pos[1], v2_pos[2]) * Mij;
                 }
-                M.coeffRef(i,j)=-sum;
-            } else if(i!=j & mesh_.find_edge(v1,v2).is_valid()){
-                M.coeffRef(i,j) = cotan[mesh_.find_edge(v1,v2)];
+                // In the other case
+                else {
+                    // put -Mij to the position of the intersection between v1 and v2 (to get - sum(cot(alpha(i,j) + cot(beta(i,j)) with j being the indices of the neighbors of v1 (index i))
+                    triplets.push_back(Eigen::Triplet<double>(i,j, -Mij));
+                }
+
+                // We sum the cotan of the neighbors at position (i,i) as seen in the formula
+                triplets.push_back(Eigen::Triplet<double>(i,i,Mij));
             }
-            auto value = D_inv.coeff(i,j)-(timestep*M.coeff(i,j));
-            triplets.push_back(T(i,j,value));
         }
     }
-    B = D_inv * B;
-
-    // TODO Solve the system (D^(-1)-lambda*M)*P^(t+1) = D^(-1)*P^(t)
 
     // build sparse matrix from triplets
     A.setFromTriplets(triplets.begin(), triplets.end());
