@@ -90,16 +90,16 @@ void MeshProcessing::implicit_smoothing(const double timestep) {
                 // If v2 is boundary
                 if(mesh_.is_boundary(v2)){
                     auto v2_pos = mesh_.position(v2);
-                    // we add to the line already create above the position of v2 multiplied by Mij (cot(alpha(i,j)) + cot(beta(i,j))
+                    // we add to the line already create above the position of v2 multiplied by Mij
                     B.row(i) += Eigen::RowVector3d(v2_pos[0], v2_pos[1], v2_pos[2]) * Mij;
                 }
                 // In the other case
                 else {
-                    // put -Mij to the position of the intersection between v1 and v2 (to get - sum(cot(alpha(i,j) + cot(beta(i,j)) with j being the indices of the neighbors of v1 (index i))
+                    // put -Mij to the position of the intersection between v1 and v2 (cot(alpha(i,j)) + cot(beta(i,j))
                     triplets.push_back(Eigen::Triplet<double>(i,j, -Mij));
                 }
 
-                // We sum the cotan of the neighbors at position (i,i) as seen in the formula
+                // We sum the cotan of the neighbors at position (i,i) as seen in the formula (to get - sum(cot(alpha(i,j) + cot(beta(i,j)) with j being the indices of the neighbors of v1 (index i))
                 triplets.push_back(Eigen::Triplet<double>(i,i,Mij));
             }
         }
