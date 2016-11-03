@@ -58,42 +58,42 @@ void MeshProcessing::implicit_smoothing(const double timestep) {
     // TODO: IMPLEMENTATION FOR EXERCISE 5.1 HERE
     // ========================================================================
 
-    for(auto v1: mesh_.vertices()){
+    for(auto vi: mesh_.vertices()){
         // Get the index and the position of v1
-        auto i = v1.idx();
-        auto v1_pos = mesh_.position(v1);
+        auto i = vi.idx();
+        auto vi_pos = mesh_.position(vi);
         // If v1 is boundary
-        if(mesh_.is_boundary(v1)){
-            // we put a line in B with the position of v1
-            B.row(i)=Eigen::RowVector3d(v1_pos[0], v1_pos[1], v1_pos[2]);
+        if(mesh_.is_boundary(vi)){
+            // we put a line in B with the position of vi
+            B.row(i)=Eigen::RowVector3d(vi_pos[0], vi_pos[1], vi_pos[2]);
             // and put 1 to its diagonal position in A
             triplets.push_back(Eigen::Triplet<double>(i,i,1));
         }
         // In the other case
         else {
-            // We put a line in B with the position of v1 multiplied by 2*Ai (multiplication by D^(-1))
-            B.row(i)=Eigen::RowVector3d(v1_pos[0], v1_pos[1], v1_pos[2]) / area_inv[v1];
+            // We put a line in B with the position of vi multiplied by 2*Ai (multiplication by D^(-1))
+            B.row(i)=Eigen::RowVector3d(vi_pos[0], vi_pos[1], vi_pos[2]) / area_inv[vi];
             // and put 2*Ai to its diagonal position in A (multiplication D^(-1))
-            triplets.push_back(Eigen::Triplet<double>(i,i, 1/area_inv[v1]));
-            // Then we iterate on the neighbors (v2s) of v1
-            for(auto v2 : mesh_.vertices(v1)){
-                // Get the index of current v2
-                auto j = v2.idx();
-                // We compute Mij of v1 and the current v2 using timestep and cotan
-                auto Mij = timestep * cotan[mesh_.find_edge(v1,v2)];
+            triplets.push_back(Eigen::Triplet<double>(i,i, 1/area_inv[vi]));
+            // Then we iterate on the neighbors (vjs) of vi
+            for(auto vj : mesh_.vertices(vi)){
+                // Get the index of current vj
+                auto j = vj.idx();
+                // We compute Mij of vi and the current vj using timestep and cotan
+                auto Mij = timestep * cotan[mesh_.find_edge(vi,vj)];
 
-                // If v2 is boundary
-                if(mesh_.is_boundary(v2)){
-                    auto v2_pos = mesh_.position(v2);
-                    // we add to the line already create above the position of v2 multiplied by Mij
-                    B.row(i) += Eigen::RowVector3d(v2_pos[0], v2_pos[1], v2_pos[2]) * Mij;
+                // If vj is boundary
+                if(mesh_.is_boundary(vj)){
+                    auto vj_pos = mesh_.position(vj);
+                    // we add to the line already create above the position of vj multiplied by Mij
+                    B.row(i) += Eigen::RowVector3d(vj_pos[0], vj_pos[1], vj_pos[2]) * Mij;
                 }
                 // In the other case
                 else {
-                    // put -Mij to the position of the intersection between v1 and v2 (cot(alpha(i,j)) + cot(beta(i,j))
+                    // put -Mij to the position of the intersection between vi and vj (cot(alpha(i,j)) + cot(beta(i,j))
                     triplets.push_back(Eigen::Triplet<double>(i,j, -Mij));
                 }
-                // We sum the cotan of the neighbors at position (i,i) as seen in the formula (to get - sum(cot(alpha(i,j) + cot(beta(i,j)) with j being the indices of the neighbors of v1 (index i))
+                // We sum the cotan of the neighbors at position (i,i) as seen in the formula (to get - sum(cot(alpha(i,j) + cot(beta(i,j)) with j being the indices of the neighbors of vi (index i))
                 triplets.push_back(Eigen::Triplet<double>(i,i,Mij));
             }
         }
@@ -145,28 +145,28 @@ void MeshProcessing::minimal_surface() {
     // ========================================================================
     // TODO: IMPLEMENTATION FOR EXERCISE 5.2 HERE
     // ========================================================================
-    for(auto v1: mesh_.vertices()){
-        // Get the index and the position of v1
-        auto i = v1.idx();
-        auto v1_pos = mesh_.position(v1);
-        // If v1 is boundary
-        if(mesh_.is_boundary(v1)){
-            // we put a line in B with the position of v1
-            rhs.row(i)=Eigen::RowVector3d(v1_pos[0], v1_pos[1], v1_pos[2]);
+    for(auto vi: mesh_.vertices()){
+        // Get the index and the position of vi
+        auto i = vi.idx();
+        auto vi_pos = mesh_.position(vi);
+        // If vi is boundary
+        if(mesh_.is_boundary(vi)){
+            // we put a line in B with the position of vi
+            rhs.row(i)=Eigen::RowVector3d(vi_pos[0], vi_pos[1], vi_pos[2]);
             // and put 1 to its diagonal position in A
             triplets_L.push_back(Eigen::Triplet<double>(i,i,1));
         }
         // In the other case
         else {
-            // We iterate on the neighbors (v2s) of v1
-            for(auto v2 : mesh_.vertices(v1)){
-                // Get the index of current v2
-                auto j = v2.idx();
-                // We compute Mij of v1 and the current v2 using timestep and cotan
-                auto Mij = cotan[mesh_.find_edge(v1,v2)] * area_inv[v1];
-                // put -Mij to the position of the intersection between v1 and v2 (cot(alpha(i,j)) + cot(beta(i,j))
+            // We iterate on the neighbors (vjs) of vi
+            for(auto vj : mesh_.vertices(vi)){
+                // Get the index of current vj
+                auto j = vj.idx();
+                // We compute Mij of vi and the current vj using timestep and cotan
+                auto Mij = cotan[mesh_.find_edge(vi,vj)] * area_inv[vi];
+                // put -Mij to the position of the intersection between vi and vj (cot(alpha(i,j)) + cot(beta(i,j))
                 triplets_L.push_back(Eigen::Triplet<double>(i,j, -Mij));
-                // We sum the cotan of the neighbors at position (i,i) as seen in the formula (to get - sum(cot(alpha(i,j) + cot(beta(i,j)) with j being the indices of the neighbors of v1 (index i))
+                // We sum the cotan of the neighbors at position (i,i) as seen in the formula (to get - sum(cot(alpha(i,j) + cot(beta(i,j)) with j being the indices of the neighbors of vi (index i))
                 triplets_L.push_back(Eigen::Triplet<double>(i,i,Mij));
             }
         }
@@ -321,9 +321,8 @@ void MeshProcessing::uniform_smooth(const unsigned int iterations) {
 
 void MeshProcessing::smooth(const unsigned int iterations) {
     Mesh::Edge_property<Scalar> e_weight = mesh_.edge_property<Scalar>("e:weight", 0);
-
     for (unsigned int iter=0; iter<iterations; ++iter) {
-    // ------------- COPY YOUR FUNCTION FROM EXERCISE 4 ---------
+        // ------------- COPY YOUR FUNCTION FROM EXERCISE 4 ---------
         // Perform Laplace-Beltrami smoothing:
         // 1) precompute edge weights using calc_edge_weights()
         // 2) for each non-boundary vertex, update its position using the normalized Laplace-Beltrami operator
