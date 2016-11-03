@@ -48,7 +48,7 @@ public:
     void laplace_beltrami_enhance_feature(const unsigned int iterations,
                                           const unsigned int coefficient);
     void uniform_smooth(const unsigned int iterations);
-    void implicit_smoothing(const double timestep = 1e-5);
+    void implicit_smoothing(const double timestep = 0.5e-5);
     void minimal_surface();
     void smooth(const unsigned int iterations);
     void calc_mean_curvature();

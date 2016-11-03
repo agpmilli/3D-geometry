@@ -7,7 +7,7 @@ proof expected).
 
 When using the implicit smoothing on a surface, the max-planck for instance, there are no changes to be observed,
 even when varying the time steps in iterations.This is because it isn't a boundary mesh, whereas the bunny
-will see is form becoming convex until merging in a single point. I we reduce the time.steps, it will accelerate the process.
+will see is form becoming convex until merging in a single point. If we augment the time steps, it will accelerate the process.
 
 EXERCISE 5.2
 Iterate your method on the three provided cylinders. One of them shows a behavior that
@@ -15,9 +15,9 @@ is different from the other two. Can you explain what is happening? Is the resul
 with the goal of the minimal surface optimization?
 
 When applying the algorithm, we minimize any local surface area, that means that any changes afterwards will lead
-to an increase of local surface area. After enough iterations, the area will be minimal on the whole surface
-and hence will not change anymore under further iterations. Another way to describe the, is that the mean curvature
-is equal to zero after every iteration.
+to an increase of local surface area. Another way to describe it, is that the mean curvature is equal to zero after 
+every iteration. Since we have constraints on the boundaries vertices it will need to compensate the other normal vectors
+to reach a zero mean value.
 
 The main difference between the 3 objects is that compared to the cylinder, the two other objects converge to a final and minimized form 
 whereas the cylinder will be able to shrink and keeping its zero mean curvature until it converges to a single point.
