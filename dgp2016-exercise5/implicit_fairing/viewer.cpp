@@ -369,6 +369,7 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     b = new Button(popup, "Laplace-Beltrami");
     b->setCallback([this]() {
         mesh_->smooth(10);
+        mesh_->compute_mesh_properties();
         this->refresh_mesh();
     });
 
