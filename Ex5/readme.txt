@@ -20,6 +20,7 @@ every iteration. Since we have constraints on the boundaries vertices it will ne
 to reach a zero mean value.
 
 The main difference between the 3 objects is that compared to the cylinder, the two other objects converge to a final and minimized form 
-whereas the cylinder will be able to shrink and keeping its zero mean curvature until it converges to a single point.
+whereas the long cylinder will be able to shrink more. This is due to the fact that the surface of non fixed points is large enough to compensate
+for the fixed noraml vectors. Nevertheless, the goal of the minimal surface is reached.
 
 See screenshots in "Screenshots" folder
