@@ -13,6 +13,10 @@
 #include "mesh_processing.h"
 #include <set>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 namespace mesh_processing {
 
 using surface_mesh::Point;
@@ -103,10 +107,13 @@ void MeshProcessing::split_long_edges ()
     Mesh::Vertex_property<Point> normals = mesh_.vertex_property<Point>("v:normal");
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
 
-  for (finished=false, i=0; !finished && i<100; ++i)
+    // Compute the mean of the property "target_lengths" of the edge's two vertices
+    // TODO
+
+    for (finished=false, i=0; !finished && i<100; ++i)
     {
         finished = true;
-
+        // TODO
     }
 }
 
@@ -124,6 +131,7 @@ void MeshProcessing::collapse_short_edges ()
     for (finished=false, i=0; !finished && i<100; ++i)
     {
         finished = true;
+        // TODO
 
         for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it)
         {
@@ -154,6 +162,8 @@ void MeshProcessing::equalize_valences ()
     for (finished=false, i=0; !finished && i<100; ++i)
     {
         finished = true;
+        // TODO
+
 
         for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it)
         {
@@ -205,6 +215,17 @@ void MeshProcessing::calc_uniform_mean_curvature() {
     // the length of the uniform Laplacian approximation
     // Save your approximation in unicurvature vertex property of the mesh.
     // ------------- IMPLEMENT HERE ---------
+    for(auto v: mesh_.vertices()){
+        if(!mesh_.is_boundary(v)){
+            unsigned int N = mesh_.valence(v);
+            Point sum(0.0, 0.0, 0.0);
+            // iterate over all neighbors of v
+            for(auto neighbor: mesh_.vertices(v)){
+                sum += (mesh_.position(neighbor) - mesh_.position(v));
+            }
+            v_unicurvature[v] = (norm(sum)/(double)N);
+        }
+    }
 }
 
 // ========================================================================
@@ -223,6 +244,24 @@ void MeshProcessing::calc_mean_curvature() {
     // Save your approximation in v_curvature vertex property of the mesh.
     // Use the weights from calc_weights(): e_weight and v_weight
     // ------------- IMPLEMENT HERE ---------
+    // run calc_weights function to fill e_weight and v_weight arrays
+    calc_weights();
+    //iterate over each vertex v
+    for(auto v: mesh_.vertices()){
+        if(!mesh_.is_boundary(v)){
+            Point sum(0.0, 0.0, 0.0);
+            double w = v_weight[v];
+            // iterate over each neighbor vi
+            for(auto vi: mesh_.vertices(v)){
+                // get the edge between v and vi and get its weight from e_weight
+                auto ei = mesh_.find_edge(v, vi);
+                double wi = e_weight[ei];
+                sum += wi*(mesh_.position(vi)-mesh_.position(v));
+            }
+            sum *= w;
+            v_curvature[v] = norm(sum);
+        }
+    }
 }
 
 // ========================================================================
@@ -240,6 +279,37 @@ void MeshProcessing::calc_gauss_curvature() {
     // you pass to the acos function is between -1.0 and 1.0.
     // Use the v_weight property for the area weight.
     // ------------- IMPLEMENT HERE ---------
+    // run calc_verices_weights function to fill v_weight arrays
+    calc_vertices_weights();
+    // Iterate over each vertex v
+
+    for(auto v: mesh_.vertices()){
+        if(!mesh_.is_boundary(v)){
+            double angle_sum = 0;
+            double w = v_weight[v];
+            // as w = 1/2A then A = 1/2w
+            double area = 2*w;
+            // iterate over all neighbors of v
+            for(auto v1: mesh_.vertices(v)){
+                // iterate over all neighbors of v1
+                for(auto v2: mesh_.vertices(v1)){
+                    // if there exists an edge between a neighbor of v1 and v then we have to take this angle
+                    if(mesh_.find_edge(v,v2).is_valid()==1){
+                        // create vectors from points
+                        auto vec1 = mesh_.position(v1)-mesh_.position(v);
+                        auto vec2 = mesh_.position(v2)-mesh_.position(v);
+                        // compute the dot product between two adjacent vectors
+                        double result = dot(vec1,vec2);
+                        // compute acos(dot(A,B) / (norm(A) * norm(B)))
+                        angle_sum += acos(double(result/double(norm(vec1)*norm(vec2))));                    }
+                }
+            }
+            // divide the sum of angle by 2 because each angle is added twice in our sum
+            angle_sum = angle_sum/2;
+            // compute curvature using formula given
+            v_gauss_curvature[v] = (2.0 * M_PI - angle_sum)/area;
+        }
+    }
 }
 
 
