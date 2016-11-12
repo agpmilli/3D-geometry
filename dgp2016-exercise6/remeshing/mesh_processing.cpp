@@ -107,13 +107,28 @@ void MeshProcessing::split_long_edges ()
     Mesh::Vertex_property<Point> normals = mesh_.vertex_property<Point>("v:normal");
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
 
-    // Compute the mean of the property "target_lengths" of the edge's two vertices
-    // TODO
-
     for (finished=false, i=0; !finished && i<100; ++i)
     {
-        finished = true;
-        // TODO
+        // --------- ALAIN -----------
+        double tot_length = 0.0;
+        // Compute the mean of the property "target_lengths" of the edge's two vertices
+        for (e_it = mesh_.edges_begin(); e_it != e_end; e_it.operator ++()){
+            tot_length += target_length[mesh_.vertex((Mesh::Edge)(*e_it), 0)];
+        }
+        // Get the mean by dividing the total length by the number of vertices
+        double mean = tot_length / mesh_.n_vertices();
+
+        // Now for each vertex we test if its length is longer than the 4/3 of the edges target
+        for (e_it = mesh_.edges_begin(); e_it != e_end; e_it.operator ++()){
+            Mesh::Vertex curr_ver = mesh_.vertex((Mesh::Edge)(*e_it), 0);
+            // If it is the case we split the mesh
+            if(target_length[curr_ver] > 4/3 * mean){
+                mesh_.split(mesh_.face(mesh_.halfedge(curr_ver)), curr_ver);
+            }
+            // TODO comoute normal / target_lengths property
+        }
+        // --------- ALAIN ------------
+        //finished = true;
     }
 }
 
