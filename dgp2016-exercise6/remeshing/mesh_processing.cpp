@@ -67,24 +67,32 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
     Mesh::Vertex_property<Scalar> target_new_length  = mesh_.vertex_property<Scalar>("v:newlength", 0);
 
 
+
     if (remeshing_type == AVERAGE)
     {
       // calculate desired length
       for (v_it = mesh_.vertices_begin(); v_it != v_end; ++v_it) {
         length = 1.0;
+        double lengthSum = 0.0;
+        int size = 0;
         if (!mesh_.is_boundary(*v_it)) {
-          //
+            // iterate through vertex neirbourghs and finding their edge's length
+            for (auto vi:mesh_.vertices(*v_it)){
+                lengthSum += mesh_.edge_length(mesh_.find_edge(*v_it,vi));
+                size ++;
+            }
+            length = (double) lengthSum/size;
         }
         target_length[*v_it] = length;
       }
 
       // smooth desired length
       for (int i = 0; i < 5; i++) {
-        //
+        //TODO
       }
 
       // rescale desired length:
-
+      //TODO
     }
     else if (remeshing_type == CURV)
     {
