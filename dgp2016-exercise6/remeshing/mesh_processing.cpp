@@ -47,9 +47,9 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     for (int i = 0; i < num_iterations; ++i)
     {
         split_long_edges ();
-        collapse_short_edges ();
-        equalize_valences ();
-        tangential_relaxation ();
+        //collapse_short_edges ();
+        //equalize_valences ();
+        //tangential_relaxation ();
     }
 }
 
@@ -114,9 +114,10 @@ void MeshProcessing::split_long_edges ()
 
     Mesh::Vertex_property<Point> normals = mesh_.vertex_property<Point>("v:normal");
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
-
+    unsigned int niter = 0;
     for (finished=false, i=0; !finished && i<100; ++i)
     {
+        niter++;
         //set tu true at the beginning and later set to false if at least one edge is split
         finished = true;
         // Iterate over each edge e
@@ -137,12 +138,14 @@ void MeshProcessing::split_long_edges ()
                 //compute and store v0's normal
                 normals[v0] = mesh_.compute_vertex_normal(v0);
                 //update target edge length
+                //TODO should also recompute target edge length of neighbors of new vertex v0
                 target_length[v0] = (target_length[v1]+target_length[v2])/2.0;
             }
         }
-        // since we created vertices and thus new faces, we should update each face's normal
-        mesh_.update_face_normals();
     }
+    // since we created vertices and thus new faces, we should update each face's normal
+    mesh_.update_face_normals();
+    std::cout << "number of iterations:" << niter << "\n";
 }
 
 void MeshProcessing::collapse_short_edges ()
