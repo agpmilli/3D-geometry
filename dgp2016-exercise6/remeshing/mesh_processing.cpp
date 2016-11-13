@@ -252,6 +252,30 @@ void MeshProcessing::collapse_short_edges ()
     if (i==100) std::cerr << "collapse break\n";
 }
 
+/*int MeshProcessing::calc_sum_squared_valence(Mesh::Vertex v0, Mesh::Vertex v1, Mesh::Vertex v2, Mesh::Vertex v3)
+{
+    int             val0, val1, val2, val3;
+    int             val_opt0, val_opt1, val_opt2, val_opt3;
+    int             ve0, ve1, ve2, ve3;
+    // Get valences of each vertex
+    val0 = mesh_.valence(v0);
+    val1 = mesh_.valence(v1);
+    val2 = mesh_.valence(v2);
+    val3 = mesh_.valence(v3);
+
+    // Check what is the optimal valence for each vertex
+    (mesh_.is_boundary(v0)) ? val_opt0 = 4 : val_opt0 = 6;
+    (mesh_.is_boundary(v1)) ? val_opt1 = 4 : val_opt1 = 6;
+    (mesh_.is_boundary(v2)) ? val_opt2 = 4 : val_opt2 = 6;
+    (mesh_.is_boundary(v3)) ? val_opt3 = 4 : val_opt3 = 6;
+
+    ve0 = val0 - val_opt0;
+    ve1 = val1 - val_opt1;
+    ve2 = val2 - val_opt2;
+    ve3 = val3 - val_opt3;
+    return pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
+}*/
+
 void MeshProcessing::equalize_valences ()
 {
     Mesh::Edge_iterator     e_it, e_end(mesh_.edges_end());
@@ -274,10 +298,85 @@ void MeshProcessing::equalize_valences ()
         {
             if (!mesh_.is_boundary(*e_it))
             {
-                //we find the two end vertices of the edge
-                v0 = mesh_.vertex(*e_it,0);
-                v1 = mesh_.vertex(*e_it,1);
-                std::cout << mesh_.vertices(v0) << std::endl;
+                // Test if we can flip the current edge
+                if(mesh_.is_flip_ok(*e_it)){
+                    // Continue as we changed something
+                    finished = false;
+
+                    // Find the two end vertices of the edge
+                    v0 = mesh_.vertex(*e_it,0);
+                    v1 = mesh_.vertex(*e_it,1);
+
+                    // Get the halfedge between v0 and v1
+                    h = mesh_.find_halfedge(v0,v1);
+
+                    v2 = mesh_.vertex(mesh_.edge(mesh_.prev_halfedge(h)),1);
+                    v3 = mesh_.vertex(mesh_.edge(mesh_.next_halfedge(h)),1);
+
+                    // Get valences of each vertex
+                    val0 = mesh_.valence(v0);
+                    val1 = mesh_.valence(v1);
+                    val2 = mesh_.valence(v2);
+                    val3 = mesh_.valence(v3);
+
+                    // Check what is the optimal valence for each vertex
+                    (mesh_.is_boundary(v0)) ? val_opt0 = 4 : val_opt0 = 6;
+                    (mesh_.is_boundary(v1)) ? val_opt1 = 4 : val_opt1 = 6;
+                    (mesh_.is_boundary(v2)) ? val_opt2 = 4 : val_opt2 = 6;
+                    (mesh_.is_boundary(v3)) ? val_opt3 = 4 : val_opt3 = 6;
+
+                    ve0 = val0 - val_opt0;
+                    ve1 = val1 - val_opt1;
+                    ve2 = val2 - val_opt2;
+                    ve3 = val3 - val_opt3;
+                    ve_before = pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
+                    //int sum_before = calc_sum_squared_valence(v0,v1,v2,v3);
+
+                    // Flip current edge
+                    mesh_.flip(*e_it);
+
+                    // Find the two end vertices of the edge
+                    v0 = mesh_.vertex(*e_it,0);
+                    v1 = mesh_.vertex(*e_it,1);
+
+                    // Get the halfedge between v0 and v1
+                    h = mesh_.find_halfedge(v0,v1);
+
+                    // Get v2 and v3 using the previous and next halfedges
+                    v2 = mesh_.vertex(mesh_.edge(mesh_.prev_halfedge(h)),1);
+                    v3 = mesh_.vertex(mesh_.edge(mesh_.next_halfedge(h)),1);
+
+                    // Get valences of each vertex
+                    val0 = mesh_.valence(v0);
+                    val1 = mesh_.valence(v1);
+                    val2 = mesh_.valence(v2);
+                    val3 = mesh_.valence(v3);
+
+                    // Check what is the optimal valence for each vertex
+                    (mesh_.is_boundary(v0)) ? val_opt0 = 4 : val_opt0 = 6;
+                    (mesh_.is_boundary(v1)) ? val_opt1 = 4 : val_opt1 = 6;
+                    (mesh_.is_boundary(v2)) ? val_opt2 = 4 : val_opt2 = 6;
+                    (mesh_.is_boundary(v3)) ? val_opt3 = 4 : val_opt3 = 6;
+
+                    // Compute the valence difference
+                    ve0 = val0 - val_opt0;
+                    ve1 = val1 - val_opt1;
+                    ve2 = val2 - val_opt2;
+                    ve3 = val3 - val_opt3;
+
+                    // Compute the squarred sum of these differences
+                    ve_after = pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
+
+                    // Compare sums and re-flip is not better
+                    if(ve_after >= ve_before){
+
+                        // Unflip current edge
+                        mesh_.flip(*e_it);
+
+                        // As we didn't change anything we stop here
+                        finished = true;
+                    }
+                }
             }
         }
     }
