@@ -119,43 +119,51 @@ void MeshProcessing::split_long_edges ()
         niter++;
         //set tu true at the beginning and later set to false if at least one edge is split
         finished = true;
-        // Iterate over each edge e_it
-        for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it){
-            // find the two endpoints of e_it (v0, v1)
-            v0 = mesh_.vertex(*e_it, 0);
-            v1 = mesh_.vertex(*e_it, 1);
+        // Iterate over each edge e
+        for(auto e:mesh_.edges()){
+            // find the two endpoints of e (v1, v2)
+            v0 = mesh_.vertex(e, 0);
+            v1 = mesh_.vertex(e, 1);
             // compute e's edge target length
-            double target_length_e = (double)((4.0/3.0)*(target_length[v0] + target_length[v1])/2.0);
+            double target_length_e = ((target_length[v0] + target_length[v1])/2.0)*(4.0/3.0);
 
-            //split e_it if its length is bigger than 4/3 times its target length
-            if(mesh_.edge_length(*e_it) > target_length_e){
+            //split e if its length is bigger than 4/3 times its target length
+            if(mesh_.edge_length(e) > target_length_e){
                 finished = false;
                 //add a new vertex v
-                Point p = ((mesh_.position(v0)+mesh_.position(v1))/2.0);
-                v = mesh_.add_vertex(p);
-                //split e_it
-                mesh_.split(*e_it, v);
+                v = mesh_.add_vertex(Point((mesh_.position(v0)+mesh_.position(v1))/2.0));
+                //split e
+                mesh_.split(e, v);
                 //compute and store v's normal
                 normals[v] = mesh_.compute_vertex_normal(v);
                 //update target edge length of v0 and v1
-                target_length[v0] = (target_length[v0])-(mesh_.edge_length(*e_it)/(2.0*mesh_.valence(v0)));
-                target_length[v1] = (target_length[v1])-(mesh_.edge_length(*e_it)/(2.0*mesh_.valence(v1)));
+                target_length[v0] = (target_length[v0])-(mesh_.edge_length(e)/(2.0*mesh_.valence(v0)));
+                target_length[v1] = (target_length[v1])-(mesh_.edge_length(e)/(2.0*mesh_.valence(v1)));
 
+                //update target edge length of the other adjacent vertices
                 for(auto vi:mesh_.vertices(v))
                 {
-                    if (mesh_.position(vi) != mesh_.position(v0) || mesh_.position(vi) != mesh_.position(v1))
+                    if (vi.operator !=(v0) && vi.operator !=(v1))
                     {
-                        target_length[vi] = (target_length[vi])-(mesh_.edge_length(*e_it)/(2.0*mesh_.valence(vi)));
+                        target_length[vi] = (target_length[vi])+(mesh_.edge_length(e)/(2.0*mesh_.valence(vi)));
                     }
                 }
+
+                double lengthSum = 0.0;
+                int size = 0;
+
+                for (auto vi:mesh_.vertices(v)){
+                    lengthSum += mesh_.edge_length(mesh_.find_edge(v,vi));
+                    size ++;
+                }
+                target_length[v] = (double) lengthSum/size;
             }
         }
     }
     // since we created vertices and thus new faces, we should update each face's normal
     mesh_.update_face_normals();
-    std::cout << "number of iterations:" << niter << "\n";
+    //std::cout << "number of iterations:" << niter << "\n";
 }
-
 void MeshProcessing::collapse_short_edges ()
 {
     Mesh::Edge_iterator     e_it, e_end(mesh_.edges_end());
