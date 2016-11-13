@@ -46,8 +46,8 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     // main remeshing loop
     for (int i = 0; i < num_iterations; ++i)
     {
-        //        split_long_edges ();
-        collapse_short_edges ();
+        split_long_edges ();
+        //collapse_short_edges ();
         //        equalize_valences ();
         //        tangential_relaxation ();
 
@@ -67,8 +67,6 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
     Mesh::Vertex_property<Scalar> target_new_length  = mesh_.vertex_property<Scalar>("v:newlength", 0);
 
-
-    //------------Thomas-------------
     if (remeshing_type == AVERAGE)
     {
         // calculate desired length
@@ -121,26 +119,35 @@ void MeshProcessing::split_long_edges ()
         niter++;
         //set tu true at the beginning and later set to false if at least one edge is split
         finished = true;
-        // Iterate over each edge e
-        for(auto e:mesh_.edges()){
-            // find the two endpoints of e (v1, v2)
-            auto v1 = mesh_.vertex(e, 0);
-            auto v2 = mesh_.vertex(e, 1);
+        // Iterate over each edge e_it
+        for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it){
+            // find the two endpoints of e_it (v0, v1)
+            v0 = mesh_.vertex(*e_it, 0);
+            v1 = mesh_.vertex(*e_it, 1);
             // compute e's edge target length
-            Scalar target_length_e = (target_length[v1] + target_length[v2])/2.0;
+            double target_length_e = (double)((4.0/3.0)*(target_length[v0] + target_length[v1])/2.0);
 
-            //split e if its length is bigger than 4/3 times its target length
-            if(mesh_.edge_length(e) > target_length_e*(4.0/3.0)){
+            //split e_it if its length is bigger than 4/3 times its target length
+            if(mesh_.edge_length(*e_it) > target_length_e){
                 finished = false;
-                //add a new vertex v0
-                auto v0 = mesh_.add_vertex(Point((mesh_.position(v1)+mesh_.position(v2))/2));
-                //split e
-                mesh_.split(e, v0);
-                //compute and store v0's normal
-                normals[v0] = mesh_.compute_vertex_normal(v0);
-                //update target edge length
-                //TODO should also recompute target edge length of neighbors of new vertex v0
-                target_length[v0] = (target_length[v1]+target_length[v2])/2.0;
+                //add a new vertex v
+                Point p = ((mesh_.position(v0)+mesh_.position(v1))/2.0);
+                v = mesh_.add_vertex(p);
+                //split e_it
+                mesh_.split(*e_it, v);
+                //compute and store v's normal
+                normals[v] = mesh_.compute_vertex_normal(v);
+                //update target edge length of v0 and v1
+                target_length[v0] = (target_length[v0])-(mesh_.edge_length(*e_it)/(2.0*mesh_.valence(v0)));
+                target_length[v1] = (target_length[v1])-(mesh_.edge_length(*e_it)/(2.0*mesh_.valence(v1)));
+
+                for(auto vi:mesh_.vertices(v))
+                {
+                    if (mesh_.position(vi) != mesh_.position(v0) || mesh_.position(vi) != mesh_.position(v1))
+                    {
+                        target_length[vi] = (target_length[vi])-(mesh_.edge_length(*e_it)/(2.0*mesh_.valence(vi)));
+                    }
+                }
             }
         }
     }
@@ -148,7 +155,7 @@ void MeshProcessing::split_long_edges ()
     mesh_.update_face_normals();
     std::cout << "number of iterations:" << niter << "\n";
 }
-//------------Thomas-------------
+
 void MeshProcessing::collapse_short_edges ()
 {
     Mesh::Edge_iterator     e_it, e_end(mesh_.edges_end());
@@ -231,6 +238,8 @@ void MeshProcessing::collapse_short_edges ()
     }
 
     mesh_.garbage_collection();
+    mesh_.update_vertex_normals();
+    mesh_.update_face_normals();
 
     if (i==100) std::cerr << "collapse break\n";
 }
