@@ -120,10 +120,10 @@ void MeshProcessing::split_long_edges ()
         //set to true at the beginning and later set to false if at least one edge is split
         finished = true;
         // Iterate over each edge e
-        for(auto e:mesh_.edges()){
+        for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it){
             // find the two endpoints of e (v1, v2)
-            v0 = mesh_.vertex(e, 0);
-            v1 = mesh_.vertex(e, 1);
+            v0 = mesh_.vertex(*e_it, 0);
+            v1 = mesh_.vertex(*e_it, 1);
             // compute e's edge target length
             double target_length_e = ((target_length[v0] + target_length[v1])/2.0)*(4.0/3.0);
 
@@ -133,19 +133,19 @@ void MeshProcessing::split_long_edges ()
                 //add a new vertex v
                 v = mesh_.add_vertex(Point((mesh_.position(v0)+mesh_.position(v1))/2.0));
                 //split e
-                mesh_.split(e, v);
+                mesh_.split(*e_it, v);
                 //compute and store v's normal
                 normals[v] = mesh_.compute_vertex_normal(v);
                 //update target edge length of v0 and v1
-                target_length[v0] = (target_length[v0])-(mesh_.edge_length(e)/(2.0*mesh_.valence(v0)));
-                target_length[v1] = (target_length[v1])-(mesh_.edge_length(e)/(2.0*mesh_.valence(v1)));
+                target_length[v0] = (target_length[v0])-(mesh_.edge_length(*e_it)/(2.0*mesh_.valence(v0)));
+                target_length[v1] = (target_length[v1])-(mesh_.edge_length(*e_it)/(2.0*mesh_.valence(v1)));
 
                 //update target edge length of the other adjacent vertices
                 for(auto vi:mesh_.vertices(v))
                 {
                     if (vi.operator !=(v0) && vi.operator !=(v1))
                     {
-                        target_length[vi] = (target_length[vi])+(mesh_.edge_length(e)/(2.0*mesh_.valence(vi)));
+                        target_length[vi] = (target_length[vi])+(mesh_.edge_length(*e_it)/(2.0*mesh_.valence(vi)));
                     }
                 }
 
@@ -269,10 +269,13 @@ void MeshProcessing::collapse_short_edges ()
     (mesh_.is_boundary(v2)) ? val_opt2 = 4 : val_opt2 = 6;
     (mesh_.is_boundary(v3)) ? val_opt3 = 4 : val_opt3 = 6;
 
+    // Compute the valence difference
     ve0 = val0 - val_opt0;
     ve1 = val1 - val_opt1;
     ve2 = val2 - val_opt2;
     ve3 = val3 - val_opt3;
+
+    // return the squarred sum of these differences
     return pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
 }*/
 
@@ -325,12 +328,16 @@ void MeshProcessing::equalize_valences ()
                     (mesh_.is_boundary(v2)) ? val_opt2 = 4 : val_opt2 = 6;
                     (mesh_.is_boundary(v3)) ? val_opt3 = 4 : val_opt3 = 6;
 
+                    // Compute the valence difference
                     ve0 = val0 - val_opt0;
                     ve1 = val1 - val_opt1;
                     ve2 = val2 - val_opt2;
                     ve3 = val3 - val_opt3;
+
+                    // Compute the squarred sum of these differences
                     ve_before = pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
-                    //int sum_before = calc_sum_squared_valence(v0,v1,v2,v3);
+
+                    //Should we use a function to do it ? int sum_before = calc_sum_squared_valence(v0,v1,v2,v3);
 
                     // Flip current edge
                     mesh_.flip(*e_it);
