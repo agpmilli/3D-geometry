@@ -46,10 +46,10 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     // main remeshing loop
     for (int i = 0; i < num_iterations; ++i)
     {
-        split_long_edges ();
+        //        split_long_edges ();
         collapse_short_edges ();
-        equalize_valences ();
-        tangential_relaxation ();
+        //        equalize_valences ();
+        //        tangential_relaxation ();
     }
 }
 
@@ -67,32 +67,32 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
     Mesh::Vertex_property<Scalar> target_new_length  = mesh_.vertex_property<Scalar>("v:newlength", 0);
 
 
-
+    //------------Thomas-------------
     if (remeshing_type == AVERAGE)
     {
-      // calculate desired length
-      for (v_it = mesh_.vertices_begin(); v_it != v_end; ++v_it) {
-        length = 1.0;
-        double lengthSum = 0.0;
-        int size = 0;
-        if (!mesh_.is_boundary(*v_it)) {
-            // iterate through vertex neirbourghs and finding their edge's length
-            for (auto vi:mesh_.vertices(*v_it)){
-                lengthSum += mesh_.edge_length(mesh_.find_edge(*v_it,vi));
-                size ++;
+        // calculate desired length
+        for (v_it = mesh_.vertices_begin(); v_it != v_end; ++v_it) {
+            length = 1.0;
+            double lengthSum = 0.0;
+            int size = 0;
+            if (!mesh_.is_boundary(*v_it)) {
+                // iterate through vertex neirbourghs and finding their edge's length
+                for (auto vi:mesh_.vertices(*v_it)){
+                    lengthSum += mesh_.edge_length(mesh_.find_edge(*v_it,vi));
+                    size ++;
+                }
+                length = (double) lengthSum/size;
             }
-            length = (double) lengthSum/size;
+            target_length[*v_it] = length;
         }
-        target_length[*v_it] = length;
-      }
 
-      // smooth desired length
-      for (int i = 0; i < 5; i++) {
+        // smooth desired length
+        for (int i = 0; i < 5; i++) {
+            //TODO
+        }
+
+        // rescale desired length:
         //TODO
-      }
-
-      // rescale desired length:
-      //TODO
     }
     else if (remeshing_type == CURV)
     {
@@ -139,7 +139,7 @@ void MeshProcessing::split_long_edges ()
         //finished = true;
     }
 }
-
+//------------Thomas-------------
 void MeshProcessing::collapse_short_edges ()
 {
     Mesh::Edge_iterator     e_it, e_end(mesh_.edges_end());
@@ -154,12 +154,65 @@ void MeshProcessing::collapse_short_edges ()
     for (finished=false, i=0; !finished && i<100; ++i)
     {
         finished = true;
-        // TODO
 
         for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it)
         {
+
             if (!mesh_.is_deleted(*e_it)) // might already be deleted
             {
+                v0 = mesh_.vertex(*e_it,0);
+                v1 = mesh_.vertex(*e_it,1);
+                double L = (double) ((double) 4/5)*(((double) target_length[v0]+target_length[v1])/2);
+
+                if (mesh_.edge_length(*e_it) < L)
+                {
+
+                    b0 = mesh_.is_boundary(v0);
+                    b1 = mesh_.is_boundary(v1);
+                    hcol01 = mesh_.is_collapse_ok(mesh_.find_halfedge(v0,v1));
+                    hcol10 = mesh_.is_collapse_ok(mesh_.find_halfedge(v1,v0));
+                    finished = false;
+
+                    if (!b0 && !b1)
+                    {
+
+                        if (hcol01 && hcol10)
+                        {
+                            if (mesh_.valence(v0) < mesh_.valence(v1))
+                            {
+                                mesh_.collapse(h01);
+
+                            }
+                            else
+                            {
+                                mesh_.collapse(h10);
+                            }
+                        }
+                        else if (hcol01)
+                        {
+                            mesh_.collapse(h01);
+                        }
+                        else if (hcol10)
+                        {
+                            mesh_.collapse(h10);
+                        }
+                    }
+                    else if (!b0)
+                    {
+                        if (hcol01)
+                        {
+                            mesh_.collapse(h01);
+                        }
+                    }
+                    else if (!b1)
+                    {
+                        if (hcol10)
+                        {
+                            mesh_.collapse(h10);
+                        }
+
+                    }
+                }
             }
         }
     }
@@ -477,7 +530,7 @@ void MeshProcessing::compute_mesh_properties() {
     calc_mean_curvature();
     calc_gauss_curvature();
     color_coding(vertex_valence, &mesh_, v_color_valence, 3 /* min */,
-                                                          8 /* max */);
+                 8 /* max */);
     color_coding(v_unicurvature, &mesh_, v_color_unicurvature);
     color_coding(v_curvature, &mesh_, v_color_curvature);
     color_coding(v_gauss_curvature, &mesh_, v_color_gaussian_curv);
@@ -510,35 +563,35 @@ void MeshProcessing::compute_mesh_properties() {
     j = 0;
     for (auto v: mesh_.vertices()) {
         points_.col(j) << mesh_.position(v).x,
-                          mesh_.position(v).y,
-                          mesh_.position(v).z;
+                mesh_.position(v).y,
+                mesh_.position(v).z;
 
         normals_.col(j) << vertex_normal[v].x,
-                           vertex_normal[v].y,
-                           vertex_normal[v].z;
+                vertex_normal[v].y,
+                vertex_normal[v].z;
 
         color_valence_.col(j) << v_color_valence[v].x,
-                                 v_color_valence[v].y,
-                                 v_color_valence[v].z;
+                v_color_valence[v].y,
+                v_color_valence[v].z;
 
         color_unicurvature_.col(j) << v_color_unicurvature[v].x,
-                                      v_color_unicurvature[v].y,
-                                      v_color_unicurvature[v].z;
+                v_color_unicurvature[v].y,
+                v_color_unicurvature[v].z;
 
         color_curvature_.col(j) << v_color_curvature[v].x,
-                                   v_color_curvature[v].y,
-                                   v_color_curvature[v].z;
+                v_color_curvature[v].y,
+                v_color_curvature[v].z;
 
         color_gaussian_curv_.col(j) << v_color_gaussian_curv[v].x,
-                                       v_color_gaussian_curv[v].y,
-                                       v_color_gaussian_curv[v].z;
+                v_color_gaussian_curv[v].y,
+                v_color_gaussian_curv[v].z;
         ++j;
     }
 }
 
 void MeshProcessing::color_coding(Mesh::Vertex_property<Scalar> prop, Mesh *mesh,
-                  Mesh::Vertex_property<Color> color_prop, Scalar min_value,
-                  Scalar max_value, int bound) {
+                                  Mesh::Vertex_property<Color> color_prop, Scalar min_value,
+                                  Scalar max_value, int bound) {
     // Get the value array
     std::vector<Scalar> values = prop.vector();
 
@@ -559,7 +612,7 @@ void MeshProcessing::color_coding(Mesh::Vertex_property<Scalar> prop, Mesh *mesh
 }
 
 void MeshProcessing::set_color(Mesh::Vertex v, const Color& col,
-               Mesh::Vertex_property<Color> color_prop)
+                               Mesh::Vertex_property<Color> color_prop)
 {
     color_prop[v] = col;
 }
