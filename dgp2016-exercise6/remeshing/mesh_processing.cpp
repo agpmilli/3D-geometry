@@ -119,7 +119,7 @@ void MeshProcessing::split_long_edges ()
     for (finished=false, i=0; !finished && i<100; ++i)
     {
         niter++;
-        //set tu true at the beginning and later set to false if at least one edge is split
+        //set to true at the beginning and later set to false if at least one edge is split
         finished = true;
         // Iterate over each edge e
         for(auto e:mesh_.edges()){
@@ -250,14 +250,17 @@ void MeshProcessing::equalize_valences ()
     // flip all edges
     for (finished=false, i=0; !finished && i<100; ++i)
     {
+        //set to true at the beginning and later set to false if at least one edge is split
         finished = true;
-        // TODO
-
 
         for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it)
         {
             if (!mesh_.is_boundary(*e_it))
             {
+                //we find the two end vertices of the edge
+                v0 = mesh_.vertex(*e_it,0);
+                v1 = mesh_.vertex(*e_it,1);
+                std::cout << mesh_.vertices(v0) << std::endl;
             }
         }
     }
