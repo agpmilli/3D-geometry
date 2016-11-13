@@ -50,6 +50,7 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
         collapse_short_edges ();
         //        equalize_valences ();
         //        tangential_relaxation ();
+
     }
 }
 
@@ -114,30 +115,38 @@ void MeshProcessing::split_long_edges ()
 
     Mesh::Vertex_property<Point> normals = mesh_.vertex_property<Point>("v:normal");
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
-
+    unsigned int niter = 0;
     for (finished=false, i=0; !finished && i<100; ++i)
     {
-        // --------- ALAIN -----------
-        double tot_length = 0.0;
-        // Compute the mean of the property "target_lengths" of the edge's two vertices
-        for (e_it = mesh_.edges_begin(); e_it != e_end; e_it.operator ++()){
-            tot_length += target_length[mesh_.vertex((Mesh::Edge)(*e_it), 0)];
-        }
-        // Get the mean by dividing the total length by the number of vertices
-        double mean = tot_length / mesh_.n_vertices();
+        niter++;
+        //set tu true at the beginning and later set to false if at least one edge is split
+        finished = true;
+        // Iterate over each edge e
+        for(auto e:mesh_.edges()){
+            // find the two endpoints of e (v1, v2)
+            auto v1 = mesh_.vertex(e, 0);
+            auto v2 = mesh_.vertex(e, 1);
+            // compute e's edge target length
+            Scalar target_length_e = (target_length[v1] + target_length[v2])/2.0;
 
-        // Now for each vertex we test if its length is longer than the 4/3 of the edges target
-        for (e_it = mesh_.edges_begin(); e_it != e_end; e_it.operator ++()){
-            Mesh::Vertex curr_ver = mesh_.vertex((Mesh::Edge)(*e_it), 0);
-            // If it is the case we split the mesh
-            if(target_length[curr_ver] > 4/3 * mean){
-                mesh_.split(mesh_.face(mesh_.halfedge(curr_ver)), curr_ver);
+            //split e if its length is bigger than 4/3 times its target length
+            if(mesh_.edge_length(e) > target_length_e*(4.0/3.0)){
+                finished = false;
+                //add a new vertex v0
+                auto v0 = mesh_.add_vertex(Point((mesh_.position(v1)+mesh_.position(v2))/2));
+                //split e
+                mesh_.split(e, v0);
+                //compute and store v0's normal
+                normals[v0] = mesh_.compute_vertex_normal(v0);
+                //update target edge length
+                //TODO should also recompute target edge length of neighbors of new vertex v0
+                target_length[v0] = (target_length[v1]+target_length[v2])/2.0;
             }
-            // TODO comoute normal / target_lengths property
         }
-        // --------- ALAIN ------------
-        //finished = true;
     }
+    // since we created vertices and thus new faces, we should update each face's normal
+    mesh_.update_face_normals();
+    std::cout << "number of iterations:" << niter << "\n";
 }
 //------------Thomas-------------
 void MeshProcessing::collapse_short_edges ()
