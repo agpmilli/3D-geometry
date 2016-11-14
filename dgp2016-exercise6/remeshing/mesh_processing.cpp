@@ -46,9 +46,9 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     // main remeshing loop
     for (int i = 0; i < num_iterations; ++i)
     {
-        split_long_edges ();
+        //split_long_edges ();
         //collapse_short_edges ();
-        //        equalize_valences ();
+        equalize_valences ();
         //        tangential_relaxation ();
 
     }
