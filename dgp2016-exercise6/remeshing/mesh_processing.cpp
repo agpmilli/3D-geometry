@@ -46,18 +46,10 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     // main remeshing loop
     for (int i = 0; i < num_iterations; ++i)
     {
-<<<<<<< HEAD
         split_long_edges ();
         collapse_short_edges ();
         //equalize_valences ();
         //tangential_relaxation ();
-=======
-        //split_long_edges ();
-        //collapse_short_edges ();
-        //equalize_valences ();
-        tangential_relaxation ();
->>>>>>> a756c46aace946be0de1181d4b2626cda2bac925
-
     }
 }
 
@@ -154,7 +146,7 @@ void MeshProcessing::split_long_edges ()
     }
     // since we created vertices and thus new faces, we should update each face's normal
     mesh_.update_face_normals();
-    //std::cout << "number of iterations:" << niter << "\n";
+    mesh_.update_vertex_normals();
 }
 void MeshProcessing::collapse_short_edges ()
 {
