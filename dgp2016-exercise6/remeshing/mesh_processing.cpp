@@ -46,10 +46,11 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     // main remeshing loop
     for (int i = 0; i < num_iterations; ++i)
     {
-        //split_long_edges ();
-        //collapse_short_edges ();
-        //equalize_valences ();
+        split_long_edges ();
+        collapse_short_edges ();
+        equalize_valences ();
         tangential_relaxation ();
+        std::cout << "remesh number : " << i << std::endl;
 
     }
 }
@@ -162,7 +163,6 @@ void MeshProcessing::split_long_edges ()
     }
     // since we created vertices and thus new faces, we should update each face's normal
     mesh_.update_face_normals();
-    //std::cout << "number of iterations:" << niter << "\n";
 }
 void MeshProcessing::collapse_short_edges ()
 {
@@ -178,7 +178,6 @@ void MeshProcessing::collapse_short_edges ()
     for (finished=false, i=0; !finished && i<100; ++i)
     {
         finished = true;
-        std::cout << "iter : " << i << std::endl;
 
         for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it)
         {
@@ -270,7 +269,7 @@ void MeshProcessing::equalize_valences ()
     {
         //set to true at the beginning and later set to false if at least one edge is flipped
         finished = true;
-        std::cout << "iter : " << i << std::endl;
+
         for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it)
         {
             if (!mesh_.is_boundary(*e_it))
