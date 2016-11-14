@@ -47,7 +47,7 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     for (int i = 0; i < num_iterations; ++i)
     {
         split_long_edges ();
-        //collapse_short_edges ();
+        collapse_short_edges ();
         //equalize_valences ();
         //tangential_relaxation ();
 
@@ -67,22 +67,25 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
     Mesh::Vertex_property<Scalar> target_new_length  = mesh_.vertex_property<Scalar>("v:newlength", 0);
 
-    if (remeshing_type == AVERAGE)
-    {
-        // calculate desired length
-        for (v_it = mesh_.vertices_begin(); v_it != v_end; ++v_it) {
-            length = 1.0;
-            double lengthSum = 0.0;
-            int size = 0;
-            if (!mesh_.is_boundary(*v_it)) {
-                // iterate through vertex neirbourghs and finding their edge's length
-                for (auto vi:mesh_.vertices(*v_it)){
-                    lengthSum += mesh_.edge_length(mesh_.find_edge(*v_it,vi));
-                    size ++;
-                }
-                length = (double) lengthSum/size;
+    if (remeshing_type == AVERAGE){
+        // compute mean edge length
+        mean_length = 0.0;
+        int n = 0;
+        for(auto e: mesh_.edges()){
+            if(e.is_valid()){
+                mean_length += mesh_.edge_length(e);
+                n++;
             }
-            target_length[*v_it] = length;
+        }
+        mean_length /= n;
+
+        //assign target length for each vertex v
+        for(auto v:mesh_.vertices()){
+            length = 1.0;
+            if(!mesh_.is_boundary(v)){
+                length = mean_length;
+            }
+            target_length[v] = length;
         }
 
         // smooth desired length
@@ -136,27 +139,9 @@ void MeshProcessing::split_long_edges ()
                 mesh_.split(*e_it, v);
                 //compute and store v's normal
                 normals[v] = mesh_.compute_vertex_normal(v);
-                //update target edge length of v0 and v1
-                target_length[v0] = (target_length[v0])-(mesh_.edge_length(*e_it)/(2.0*mesh_.valence(v0)));
-                target_length[v1] = (target_length[v1])-(mesh_.edge_length(*e_it)/(2.0*mesh_.valence(v1)));
 
-                //update target edge length of the other adjacent vertices
-                for(auto vi:mesh_.vertices(v))
-                {
-                    if (vi.operator !=(v0) && vi.operator !=(v1))
-                    {
-                        target_length[vi] = (target_length[vi])+(mesh_.edge_length(*e_it)/(2.0*mesh_.valence(vi)));
-                    }
-                }
-
-                double lengthSum = 0.0;
-                int size = 0;
-
-                for (auto vi:mesh_.vertices(v)){
-                    lengthSum += mesh_.edge_length(mesh_.find_edge(v,vi));
-                    size ++;
-                }
-                target_length[v] = (double) lengthSum/size;
+                // interpolate target edge length of new vertex v
+                target_length[v] = (target_length[v0]+target_length[v1])/2.0;
             }
         }
     }
