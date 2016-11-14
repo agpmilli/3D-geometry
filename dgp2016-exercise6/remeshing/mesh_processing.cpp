@@ -48,8 +48,8 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     {
         //split_long_edges ();
         //collapse_short_edges ();
-        equalize_valences ();
-        //        tangential_relaxation ();
+        //equalize_valences ();
+        tangential_relaxation ();
 
     }
 }
@@ -178,6 +178,7 @@ void MeshProcessing::collapse_short_edges ()
     for (finished=false, i=0; !finished && i<100; ++i)
     {
         finished = true;
+        std::cout << "iter : " << i << std::endl;
 
         for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it)
         {
@@ -276,7 +277,8 @@ int MeshProcessing::calc_sum_squared_valence(Mesh::Vertex v0, Mesh::Vertex v1, M
     ve3 = val3 - val_opt3;
 
     // Compute the squarred sum of these differences
-    return pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
+    int sum = pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
+    return sum;
 }
 
 void MeshProcessing::equalize_valences ()
@@ -294,7 +296,7 @@ void MeshProcessing::equalize_valences ()
     {
         //set to true at the beginning and later set to false if at least one edge is split
         finished = true;
-
+        std::cout << "iter : " << i << std::endl;
         for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it)
         {
             if (!mesh_.is_boundary(*e_it))
@@ -302,7 +304,7 @@ void MeshProcessing::equalize_valences ()
                 // Test if we can flip the current edge
                 if(mesh_.is_flip_ok(*e_it)){
                     // Continue as we changed something
-                    finished = false;
+                    //finished = false;
 
                     // Find the two end vertices of the edge
                     v0 = mesh_.vertex(*e_it,0);
@@ -311,8 +313,9 @@ void MeshProcessing::equalize_valences ()
                     // Get the halfedge between v0 and v1
                     h = mesh_.find_halfedge(v0,v1);
 
-                    v2 = mesh_.vertex(mesh_.edge(mesh_.next_halfedge(h)),1);
-                    v3 = mesh_.vertex(mesh_.edge(mesh_.next_halfedge(mesh_.opposite_halfedge(h))),1);
+                    // Get v2 and v3 using the previous and next halfedges
+                    v2 = mesh_.to_vertex(mesh_.next_halfedge(h));
+                    v3 = mesh_.to_vertex(mesh_.next_halfedge(mesh_.opposite_halfedge(h)));
 
                     // Compute the squarred sum of these differences
                     ve_before = calc_sum_squared_valence(v0,v1,v2,v3);
@@ -328,35 +331,33 @@ void MeshProcessing::equalize_valences ()
                     h = mesh_.find_halfedge(v0,v1);
 
                     // Get v2 and v3 using the previous and next halfedges
-                    v2 = mesh_.vertex(mesh_.edge(mesh_.prev_halfedge(h)),1);
-                    v3 = mesh_.vertex(mesh_.edge(mesh_.next_halfedge(h)),1);
+                    v2 = mesh_.to_vertex(mesh_.next_halfedge(h));
+                    v3 = mesh_.to_vertex(mesh_.next_halfedge(mesh_.opposite_halfedge(h)));
 
 
                     // Compute the squarred sum of these differences
                     ve_after = calc_sum_squared_valence(v0,v1,v2,v3);
 
                     // Compare sums and re-flip is not better
-                    if(ve_after >= ve_before){
-
-                        // Unflip current edge
-                        mesh_.flip(*e_it);
-
-                        // As we didn't change anything we stop here
-                        finished = true;
+                    if(ve_before < ve_after){
+                        if(mesh_.is_flip_ok(*e_it)){
+                            // Unflip current edge
+                            mesh_.flip(*e_it);
+                        }
+                    } else {
+                        finished = false;
                     }
                 }
             }
         }
     }
 
-    // since we changed faces, we should update each face's normal
-    mesh_.update_face_normals();
-
     if (i==100) std::cerr << "flip break\n";
 }
 
 void MeshProcessing::tangential_relaxation ()
 {
+    Mesh::Vertex_property<Scalar> v_unicurvature = mesh_.vertex_property<Scalar>("v:unicurvature", 0.0f);
     Mesh::Vertex_iterator     v_it, v_end(mesh_.vertices_end());
     Mesh::Vertex_around_vertex_circulator   vv_c, vv_end;
     int    valence;
@@ -366,6 +367,7 @@ void MeshProcessing::tangential_relaxation ()
     Mesh::Vertex_property<Point> normals = mesh_.vertex_property<Point>("v:normal");
     Mesh::Vertex_property<Point> update = mesh_.vertex_property<Point>("v:update");
 
+    calc_uniform_mean_curvature();
 
     // smooth
     for (int iters=0; iters<10; ++iters)
@@ -374,6 +376,14 @@ void MeshProcessing::tangential_relaxation ()
         {
             if (!mesh_.is_boundary(*v_it))
             {
+                valence = mesh_.valence(*v_it);
+                u = update[*v_it];
+                n = normals[*v_it];
+                double sum = 0;
+                for(vv_c=mesh_.vertices(*v_it).begin(); vv_c!=vv_end; ++vv_end){
+                    sum += mesh_.position(*vv_c);
+                }
+                laplace = (1/(double) valence) * sum;
             }
         }
 
