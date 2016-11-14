@@ -46,7 +46,6 @@ public:
     void calc_target_length (const REMESHING_TYPE &remeshing_type);
     void split_long_edges ();
     void collapse_short_edges ();
-    int calc_sum_squared_valence(Mesh::Vertex v0, Mesh::Vertex v1, Mesh::Vertex v2, Mesh::Vertex v3);
     void equalize_valences ();
     void tangential_relaxation ();
 
