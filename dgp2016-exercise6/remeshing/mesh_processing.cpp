@@ -48,8 +48,8 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     {
         split_long_edges ();
         collapse_short_edges ();
-        equalize_valences ();
-        tangential_relaxation ();
+        //equalize_valences ();
+        //tangential_relaxation ();
         std::cout << "remesh number : " << i << std::endl;
     }
 }
@@ -317,6 +317,9 @@ void MeshProcessing::equalize_valences ()
             }
         }
     }
+
+
+    mesh_.update_face_normals();
 
     if (i==100) std::cerr << "flip break\n";
 }
