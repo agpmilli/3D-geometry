@@ -128,7 +128,7 @@ void MeshProcessing::split_long_edges ()
             double target_length_e = ((target_length[v0] + target_length[v1])/2.0)*(4.0/3.0);
 
             //split e if its length is bigger than 4/3 times its target length
-            if(mesh_.edge_length(e) > target_length_e){
+            if(mesh_.edge_length(*e_it) > target_length_e){
                 finished = false;
                 //add a new vertex v
                 v = mesh_.add_vertex(Point((mesh_.position(v0)+mesh_.position(v1))/2.0));
@@ -252,7 +252,7 @@ void MeshProcessing::collapse_short_edges ()
     if (i==100) std::cerr << "collapse break\n";
 }
 
-/*int MeshProcessing::calc_sum_squared_valence(Mesh::Vertex v0, Mesh::Vertex v1, Mesh::Vertex v2, Mesh::Vertex v3)
+int MeshProcessing::calc_sum_squared_valence(Mesh::Vertex v0, Mesh::Vertex v1, Mesh::Vertex v2, Mesh::Vertex v3)
 {
     int             val0, val1, val2, val3;
     int             val_opt0, val_opt1, val_opt2, val_opt3;
@@ -275,18 +275,16 @@ void MeshProcessing::collapse_short_edges ()
     ve2 = val2 - val_opt2;
     ve3 = val3 - val_opt3;
 
-    // return the squarred sum of these differences
+    // Compute the squarred sum of these differences
     return pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
-}*/
+}
 
 void MeshProcessing::equalize_valences ()
 {
     Mesh::Edge_iterator     e_it, e_end(mesh_.edges_end());
     Mesh::Vertex   v0, v1, v2, v3;
     Mesh::Halfedge   h;
-    int             val0, val1, val2, val3;
-    int             val_opt0, val_opt1, val_opt2, val_opt3;
-    int             ve0, ve1, ve2, ve3, ve_before, ve_after;
+    int             ve_before, ve_after;
     bool            finished;
     int             i;
 
@@ -313,31 +311,11 @@ void MeshProcessing::equalize_valences ()
                     // Get the halfedge between v0 and v1
                     h = mesh_.find_halfedge(v0,v1);
 
-                    v2 = mesh_.vertex(mesh_.edge(mesh_.prev_halfedge(h)),1);
-                    v3 = mesh_.vertex(mesh_.edge(mesh_.next_halfedge(h)),1);
-
-                    // Get valences of each vertex
-                    val0 = mesh_.valence(v0);
-                    val1 = mesh_.valence(v1);
-                    val2 = mesh_.valence(v2);
-                    val3 = mesh_.valence(v3);
-
-                    // Check what is the optimal valence for each vertex
-                    (mesh_.is_boundary(v0)) ? val_opt0 = 4 : val_opt0 = 6;
-                    (mesh_.is_boundary(v1)) ? val_opt1 = 4 : val_opt1 = 6;
-                    (mesh_.is_boundary(v2)) ? val_opt2 = 4 : val_opt2 = 6;
-                    (mesh_.is_boundary(v3)) ? val_opt3 = 4 : val_opt3 = 6;
-
-                    // Compute the valence difference
-                    ve0 = val0 - val_opt0;
-                    ve1 = val1 - val_opt1;
-                    ve2 = val2 - val_opt2;
-                    ve3 = val3 - val_opt3;
+                    v2 = mesh_.vertex(mesh_.edge(mesh_.next_halfedge(h)),1);
+                    v3 = mesh_.vertex(mesh_.edge(mesh_.next_halfedge(mesh_.opposite_halfedge(h))),1);
 
                     // Compute the squarred sum of these differences
-                    ve_before = pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
-
-                    //Should we use a function to do it ? int sum_before = calc_sum_squared_valence(v0,v1,v2,v3);
+                    ve_before = calc_sum_squared_valence(v0,v1,v2,v3);
 
                     // Flip current edge
                     mesh_.flip(*e_it);
@@ -353,26 +331,9 @@ void MeshProcessing::equalize_valences ()
                     v2 = mesh_.vertex(mesh_.edge(mesh_.prev_halfedge(h)),1);
                     v3 = mesh_.vertex(mesh_.edge(mesh_.next_halfedge(h)),1);
 
-                    // Get valences of each vertex
-                    val0 = mesh_.valence(v0);
-                    val1 = mesh_.valence(v1);
-                    val2 = mesh_.valence(v2);
-                    val3 = mesh_.valence(v3);
-
-                    // Check what is the optimal valence for each vertex
-                    (mesh_.is_boundary(v0)) ? val_opt0 = 4 : val_opt0 = 6;
-                    (mesh_.is_boundary(v1)) ? val_opt1 = 4 : val_opt1 = 6;
-                    (mesh_.is_boundary(v2)) ? val_opt2 = 4 : val_opt2 = 6;
-                    (mesh_.is_boundary(v3)) ? val_opt3 = 4 : val_opt3 = 6;
-
-                    // Compute the valence difference
-                    ve0 = val0 - val_opt0;
-                    ve1 = val1 - val_opt1;
-                    ve2 = val2 - val_opt2;
-                    ve3 = val3 - val_opt3;
 
                     // Compute the squarred sum of these differences
-                    ve_after = pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
+                    ve_after = calc_sum_squared_valence(v0,v1,v2,v3);
 
                     // Compare sums and re-flip is not better
                     if(ve_after >= ve_before){
@@ -387,6 +348,9 @@ void MeshProcessing::equalize_valences ()
             }
         }
     }
+
+    // since we changed faces, we should update each face's normal
+    mesh_.update_face_normals();
 
     if (i==100) std::cerr << "flip break\n";
 }
