@@ -48,8 +48,8 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     {
         //split_long_edges ();
         //collapse_short_edges ();
-        equalize_valences ();
-        //tangential_relaxation ();
+        //equalize_valences ();
+        tangential_relaxation ();
 
     }
 }
@@ -268,18 +268,13 @@ void MeshProcessing::equalize_valences ()
     // flip all edges
     for (finished=false, i=0; !finished && i<100; ++i)
     {
-        //set to true at the beginning and later set to false if at least one edge is split
+        //set to true at the beginning and later set to false if at least one edge is flipped
         finished = true;
         std::cout << "iter : " << i << std::endl;
         for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it)
         {
             if (!mesh_.is_boundary(*e_it))
             {
-                // Test if we can flip the current edge
-                //if(mesh_.is_flip_ok(*e_it)){
-                // Continue as we changed something
-                //finished = false;
-
                 // Find the two end vertices of the edge
                 v0 = mesh_.vertex(*e_it,0);
                 v1 = mesh_.vertex(*e_it,1);
@@ -287,7 +282,7 @@ void MeshProcessing::equalize_valences ()
                 // Get the halfedge between v0 and v1
                 h = mesh_.find_halfedge(v0,v1);
 
-                // Get v2 and v3 using the previous and next halfedges
+                // Get v2 and v3 using the next halfedges from the h and its opposite
                 v2 = mesh_.to_vertex(mesh_.next_halfedge(h));
                 v3 = mesh_.to_vertex(mesh_.next_halfedge(mesh_.opposite_halfedge(h)));
 
@@ -313,10 +308,10 @@ void MeshProcessing::equalize_valences ()
                 ve_before = pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
 
                 // Get valences of each vertex after simulating the flip
-                val0 = mesh_.valence(v0)-1;
-                val1 = mesh_.valence(v1)-1;
-                val2 = mesh_.valence(v2)+1;
-                val3 = mesh_.valence(v3)+1;
+                val0 -= 1;//= mesh_.valence(v0)-1;
+                val1 -= 1;//= mesh_.valence(v1)-1;
+                val2 += 1;//= mesh_.valence(v2)+1;
+                val3 += 1;//= mesh_.valence(v3)+1;
 
                 // Compute the valence difference
                 ve0 = val0 - val_opt0;
@@ -356,25 +351,75 @@ void MeshProcessing::tangential_relaxation ()
     // smooth
     for (int iters=0; iters<10; ++iters)
     {
+        // Iterate on all vertices in the mesh
         for (v_it=mesh_.vertices_begin(); v_it!=v_end; ++v_it)
         {
+            // Check if current vertex is boundary
             if (!mesh_.is_boundary(*v_it))
             {
-                valence = mesh_.valence(*v_it);
-                u = update[*v_it];
+                // Get the normal of current vertex
                 n = normals[*v_it];
+
+                // Find its valence
+                valence = mesh_.valence(*v_it);
+
+                // approximate the mean curvature with the uniform Laplacian.
                 Point sum(0.0, 0.0, 0.0);
-                for(vv_c=mesh_.vertices(*v_it).begin(); vv_c!=vv_end; ++vv_end){
+
+                // Using circulator on vertices
+                vv_c = mesh_.vertices(*v_it);
+                vv_end = vv_c;
+
+                do{
                     sum += mesh_.position(*vv_c);
-                }
+                }while(++vv_c != vv_end);
+
+                // Compute the laplace point
                 laplace = (1/(double) valence) * sum;
+
+                // Compute (I - n * nT) as n_tran[3][3]
+                int size_n = n.size();
+                double n_tran[3][3] = {{0}};
+                for(int i=0; i<size_n-1;i++){
+                    for(int j=0; j<size_n-1; j++){
+                        n_tran[i][j] = (double)(-(n[i] * n[j]));
+                        if(i==j){
+                            n_tran[i][j] = n_tran[i][j]+1;
+                        }
+                    }
+                }
+
+                // Compute n_tran * (laplace - position(v)) as Point update_vector
+                Point update_vector(0.0, 0.0, 0.0);
+                for (int i=0;i<3;i++){
+                    for (int j=0;j<3;j++){
+                        update_vector[i]+= (n_tran[i][j]*(laplace - mesh_.position(*v_it))[j]);
+                    }
+                }
+
+                // Get a lambda
+                double lambda = 1.0;
+
+                // Compute the update vector
+                u = lambda * update_vector;
+
+                // Add it in the update property
+                update[*v_it] = u;
             }
         }
 
-        for (v_it=mesh_.vertices_begin(); v_it!=v_end; ++v_it)
-            if (!mesh_.is_boundary(*v_it))
+        // Iterate on all vertices in the mesh
+        for (v_it=mesh_.vertices_begin(); v_it!=v_end; ++v_it){
+            if (!mesh_.is_boundary(*v_it)){
+                // Refresh its position using the update property
                 mesh_.position(*v_it) += update[*v_it];
+            }
+        }
     }
+
+    // Update vertex and face normals as we changed them
+    mesh_.update_vertex_normals();
+    mesh_.update_face_normals();
 }
 
 // ========================================================================
