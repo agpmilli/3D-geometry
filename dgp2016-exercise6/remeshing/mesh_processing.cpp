@@ -108,7 +108,8 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
     {
         // for each vertex set its target length to its height
         for(auto v:mesh_.vertices()){
-            if(mesh_.is_boundary(v)){
+            if(!mesh_.is_boundary(v)){
+                // TODO SCALE TARGET LENGTH
                 target_length[v] = mean_length * mesh_.position(v)[2];
             }
             else{
