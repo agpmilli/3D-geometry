@@ -47,9 +47,12 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     for (int i = 0; i < num_iterations; ++i)
     {
         split_long_edges ();
+        calc_target_length(remeshing_type);
         collapse_short_edges ();
-        //equalize_valences ();
+        equalize_valences ();
+        calc_target_length(remeshing_type);
         //tangential_relaxation ();
+        //calc_target_length(remeshing_type);
         std::cout << "remesh number : " << i << std::endl;
     }
 }
@@ -67,17 +70,18 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
     Mesh::Vertex_property<Scalar> target_new_length  = mesh_.vertex_property<Scalar>("v:newlength", 0);
 
-    if (remeshing_type == AVERAGE){
-        // compute mean edge length
-        mean_length = 0.0;
-        int n = 0;
-        for(auto e: mesh_.edges()){
-            if(e.is_valid()){
-                mean_length += mesh_.edge_length(e);
-                n++;
-            }
+    // compute mean edge length
+    mean_length = 0.0;
+    int n = 0;
+    for(auto e: mesh_.edges()){
+        if(e.is_valid()){
+            mean_length += mesh_.edge_length(e);
+            n++;
         }
-        mean_length /= n;
+    }
+    mean_length /= n;
+
+    if (remeshing_type == AVERAGE){
 
         //assign target length for each vertex v
         for(auto v:mesh_.vertices()){
@@ -102,6 +106,15 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
     }
     else if (remeshing_type == HEIGHT)
     {
+        // for each vertex set its target length to its height
+        for(auto v:mesh_.vertices()){
+            if(mesh_.is_boundary(v)){
+                target_length[v] = mean_length * mesh_.position(v)[2];
+            }
+            else{
+                target_length[v] = 1.0;
+            }
+        }
 
     }
 
@@ -128,10 +141,10 @@ void MeshProcessing::split_long_edges ()
             v0 = mesh_.vertex(*e_it, 0);
             v1 = mesh_.vertex(*e_it, 1);
             // compute e's edge target length
-            double target_length_e = ((target_length[v0] + target_length[v1])/2.0)*(4.0/3.0);
+            double target_length_e = ((target_length[v0] + target_length[v1])/2.0);
 
             //split e if its length is bigger than 4/3 times its target length
-            if(mesh_.edge_length(*e_it) > target_length_e){
+            if(mesh_.edge_length(*e_it) > target_length_e*(4.0/3.0)){
                 finished = false;
                 //add a new vertex v
                 v = mesh_.add_vertex(Point((mesh_.position(v0)+mesh_.position(v1))/2.0));
@@ -159,7 +172,6 @@ void MeshProcessing::collapse_short_edges ()
     bool            hcol01, hcol10;
 
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
-
     for (finished=false, i=0; !finished && i<100; ++i)
     {
         finished = true;
@@ -172,9 +184,9 @@ void MeshProcessing::collapse_short_edges ()
                 //we find the two end vertices of the edge
                 v0 = mesh_.vertex(*e_it,0);
                 v1 = mesh_.vertex(*e_it,1);
-                double L = (double) ((double) 4/5)*(((double) target_length[v0]+target_length[v1])/2);
+                double L = (double) (((double) target_length[v0]+target_length[v1])/2.0);
 
-                if (mesh_.edge_length(*e_it) < L)
+                if (mesh_.edge_length(*e_it) < (4.0/5.0)*L)
                 {
 
                     // we compute every useful variable corresponding to the edge
@@ -184,7 +196,6 @@ void MeshProcessing::collapse_short_edges ()
                     h10 = mesh_.find_halfedge(v1,v0);   //half edge going from the first vertex to the other
                     hcol01 = mesh_.is_collapse_ok(h01);
                     hcol10 = mesh_.is_collapse_ok(h10); // is the halfedge collapsable
-                    finished = false;   //If there is a change, we iterate again
 
                     if (!b0 && !b1) //Checking if vertex are boundary
                     {
@@ -194,20 +205,24 @@ void MeshProcessing::collapse_short_edges ()
                             if (mesh_.valence(v0) < mesh_.valence(v1))  // which has the weaker variance
                             {
                                 mesh_.collapse(h01);
+                                finished = false;   //If there is a change, we iterate again
 
                             }
                             else
                             {
                                 mesh_.collapse(h10);
+                                finished = false;   //If there is a change, we iterate again
                             }
                         }
                         else if (hcol01)
                         {
                             mesh_.collapse(h01);
+                            finished = false;   //If there is a change, we iterate again
                         }
                         else if (hcol10)
                         {
                             mesh_.collapse(h10);
+                            finished = false;   //If there is a change, we iterate again
                         }
                     }
                     else if (!b0)
@@ -215,6 +230,7 @@ void MeshProcessing::collapse_short_edges ()
                         if (hcol01)
                         {
                             mesh_.collapse(h01);
+                            finished = false;   //If there is a change, we iterate again
                         }
                     }
                     else if (!b1)
@@ -222,6 +238,7 @@ void MeshProcessing::collapse_short_edges ()
                         if (hcol10)
                         {
                             mesh_.collapse(h10);
+                            finished = false;   //If there is a change, we iterate again
                         }
 
                     }
@@ -366,12 +383,12 @@ void MeshProcessing::tangential_relaxation ()
 
                 // Compute (I - n * nT) as n_tran[3][3]
                 int size_n = n.size();
-                double n_tran[3][3] = {{0}};
+                double n_tran[3][3] = {{0.0}};
                 for(int i=0; i<size_n-1;i++){
                     for(int j=0; j<size_n-1; j++){
                         n_tran[i][j] = (double)(-(n[i] * n[j]));
                         if(i==j){
-                            n_tran[i][j] = n_tran[i][j]+1;
+                            n_tran[i][j] = n_tran[i][j]+1.0;
                         }
                     }
                 }
