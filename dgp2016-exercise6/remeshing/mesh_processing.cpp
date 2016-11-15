@@ -47,7 +47,7 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     calc_target_length (remeshing_type);
 
     // main remeshing loop
-    for (int i = 0; i < 1; ++i)
+    for (int i = 0; i < num_iterations; ++i)
     {
         split_long_edges ();
         collapse_short_edges ();
@@ -64,9 +64,9 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
     Scalar                   mean_length;
     Scalar                   H;
     Scalar                   K;
-    Scalar user_specified_target_length = 3.0;
+    Scalar                   user_specified_target_length;
 
-    Mesh::Vertex_property<Scalar> curvature = mesh_.vertex_property<Scalar>("v:curvature", 0);
+    Mesh::Vertex_property<Scalar> curvature = mesh_.vertex_property<Scalar>("v:unicurvature", 0);
     Mesh::Vertex_property<Scalar> gauss_curvature = mesh_.vertex_property<Scalar>("v:gauss_curvature", 0);
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
     Mesh::Vertex_property<Scalar> target_new_length  = mesh_.vertex_property<Scalar>("v:newlength", 0);
@@ -95,20 +95,28 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
     }
     else if (remeshing_type == CURV)
     {
+
+        double min_curv = 0.0;
+        double max_curv = 0.0;
         //assign target length for each vertex v
         for(auto v:mesh_.vertices()){
             length = 1.0;
-            double min = 0.0;
             if(!mesh_.is_boundary(v)){
                 length = curvature[v];
-                if(curvature[v] < min){
-                    min = curvature[v];
+                if(curvature[v] < min_curv){
+                    min_curv = curvature[v];
+                }
+                if(curvature[v] > max_curv){
+                    max_curv = curvature[v];
                 }
             }
-            target_length[v] = length+(std::abs(min));
+            target_length[v] = length+(std::abs(min_curv));
+
         }
+
+
         // smooth desired length
-        /*for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             for(auto v: mesh_.vertices()){
                 if(!mesh_.is_boundary(v)){
                     unsigned int N = mesh_.valence(v);
@@ -122,7 +130,7 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
                     target_length[v] = target_length[v] + 0.5 * update;
                 }
             }
-        }*/
+        }
 
         // rescale desired length:
         double sum = 0.0;
@@ -137,6 +145,7 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
         double min_tl = 10.0;
         double max = 0.0;
         double min = 0.0;
+        user_specified_target_length = mean_length;
         for(auto v: mesh_.vertices()){
             target_new_length[v] = n*user_specified_target_length*target_length[v]/sum;
             target_length[v] = target_new_length[v];
@@ -149,9 +158,6 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
                 min = curvature[v];
             }
         }
-        std::cout << "MIN TARGET_LENGTH : " << min_tl << " AND ITS CURVATURE : " << min << std::endl;
-        std::cout << "MAX TARGET_LENGTH : " << max_tl << " AND ITS CURVATURE : " << max << std::endl;
-
     }
     else if (remeshing_type == HEIGHT)
     {
