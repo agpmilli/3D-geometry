@@ -307,12 +307,10 @@ void MeshProcessing::collapse_short_edges (){
             }
         }
     }
-
     // clean the deleted edges/vertices/faces
     mesh_.garbage_collection();
 
     if (i==100) std::cerr << "collapse break\n";
-
     std::cout << "Collapse short edges done" << std::endl;
 }
 
@@ -328,61 +326,64 @@ void MeshProcessing::equalize_valences (){
 
     // flip all edges
     for (finished=false, i=0; !finished && i<100; ++i){
+
         // finished = true if we don't flip any edge
         // finished = false in the other case
         finished = true;
 
+        // iterate on edges of the mesh
         for (auto e: mesh_.edges()){
+            // check if current edge is boundary
             if (!mesh_.is_boundary(e))
             {
-                // Find the two end vertices of the edge
+                // find the two end vertices of the edge
                 v0 = mesh_.vertex(e,0);
                 v1 = mesh_.vertex(e,1);
 
-                // Get the halfedge between v0 and v1
+                // get the halfedge between v0 and v1
                 h = mesh_.find_halfedge(v0,v1);
 
-                // Get v2 and v3 using the next halfedges from the h and its opposite
+                // get v2 and v3 using the next halfedges from the h and its opposite
                 v2 = mesh_.to_vertex(mesh_.next_halfedge(h));
                 v3 = mesh_.to_vertex(mesh_.next_halfedge(mesh_.opposite_halfedge(h)));
 
-                // Get valences of each vertex
+                // get valences of each vertex
                 val0 = mesh_.valence(v0);
                 val1 = mesh_.valence(v1);
                 val2 = mesh_.valence(v2);
                 val3 = mesh_.valence(v3);
 
-                // Check what is the optimal valence for each vertex
+                // check what is the optimal valence for each vertex
                 (mesh_.is_boundary(v0)) ? val_opt0 = 4 : val_opt0 = 6;
                 (mesh_.is_boundary(v1)) ? val_opt1 = 4 : val_opt1 = 6;
                 (mesh_.is_boundary(v2)) ? val_opt2 = 4 : val_opt2 = 6;
                 (mesh_.is_boundary(v3)) ? val_opt3 = 4 : val_opt3 = 6;
 
-                // Compute the valence difference
+                // compute the valence difference
                 ve0 = val0 - val_opt0;
                 ve1 = val1 - val_opt1;
                 ve2 = val2 - val_opt2;
                 ve3 = val3 - val_opt3;
 
-                // Compute the squarred sum of these differences
+                // compute the squarred sum of these differences
                 ve_before = pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
 
-                // Get valences of each vertex after simulating the flip
+                // get valences of each vertex after simulating the flip
                 val0 -= 1;
                 val1 -= 1;
                 val2 += 1;
                 val3 += 1;
 
-                // Compute the valence difference
+                // compute the valence difference
                 ve0 = val0 - val_opt0;
                 ve1 = val1 - val_opt1;
                 ve2 = val2 - val_opt2;
                 ve3 = val3 - val_opt3;
 
-                // Compute the squarred sum of these differences
+                // compute the squarred sum of these differences
                 ve_after = pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
 
-                // Compare sums and flip if better
+                // compare sums and flip if better
                 if(ve_after < ve_before){
                     if(mesh_.is_flip_ok(e)){
                         // flip current edge
@@ -393,9 +394,7 @@ void MeshProcessing::equalize_valences (){
             }
         }
     }
-
     if (i==100) std::cerr << "flip break\n";
-
     std::cout << "Equalize valence done" << std::endl;
 }
 
@@ -409,58 +408,56 @@ void MeshProcessing::tangential_relaxation (){
 
     // smooth
     for (int iters=0; iters<10; ++iters){
-        // Iterate on all vertices in the mesh
+
+        // iterate on all vertices in the mesh
         for (auto v: mesh_.vertices()){
-            // Check if current vertex is boundary
+            // check if current vertex is boundary
             if (!mesh_.is_boundary(v)){
-                // Get the normal of current vertex
+
+                // get the normal of current vertex
                 n = normals[v];
 
                 // Find its valence
                 valence = mesh_.valence(v);
 
-                // approximate the mean curvature with the uniform Laplacian.
                 Point sum(0.0, 0.0, 0.0);
-
                 // iterate through neighbors to get the sum of their positions
                 for(auto vn:mesh_.vertices(v)){
                     sum += mesh_.position(vn);
                 }
 
-                // Compute the laplace point
+                // compute the laplace point
                 laplace = (1/(double) valence) * sum;
 
-                // Compute the update vector
+                // instantiate the update vector
                 Point update_vector(0.0, 0.0, 0.0);
 
-                // Compute the update vecotr
+                // compute the update vector
                 update_vector[0] = (((1-pow(n[0],2)) * (laplace[0] - mesh_.position(v)[0])) - ((n[0]*n[1])*(laplace[1] - mesh_.position(v)[1])) - ((n[0]*n[2])*(laplace[2] - mesh_.position(v)[2])));
                 update_vector[1] = ((-(n[0]*n[1]) * (laplace[0] - mesh_.position(v)[0])) + ((1-pow(n[1],2))*(laplace[1] - mesh_.position(v)[1])) - ((n[1]*n[2])*(laplace[2] - mesh_.position(v)[2])));
                 update_vector[2] = ((-(n[0]*n[2]) * (laplace[0] - mesh_.position(v)[0])) - ((n[1]*n[2])*(laplace[1] - mesh_.position(v)[1])) + ((1-pow(n[2],2))*(laplace[2] - mesh_.position(v)[2])));
 
                 // get a lambda
-                double lambda = 1.0;
+                double lambda = 1;
 
-                // Compute the update vector
+                // compute the update vector
                 u = lambda * update_vector;
 
-                // Add it in the update property
+                // add it in the update property
                 update[v] = u;
             }
         }
 
-        // Iterate on all vertices in the mesh
+        // iterate on all vertices in the mesh
         for (auto v: mesh_.vertices()){
             if (!mesh_.is_boundary(v)){
-                // Refresh its position using the update property
+                // refresh its position using the update property
                 mesh_.position(v) += update[v];
             }
         }
     }
 
     std::cout << "Tangential relaxation done" << std::endl;
-
-
 }
 
 // ========================================================================
