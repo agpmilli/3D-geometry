@@ -246,29 +246,30 @@ void MeshProcessing::collapse_short_edges (){
                 //we find the two end vertices of the edge
                 v0 = mesh_.vertex(e,0);
                 v1 = mesh_.vertex(e,1);
+                // compute e's target length from v0's and v1's.
                 double target_length_e = ((target_length[v0] + target_length[v1])/2.0);
 
                 // check if the edge is smaller the (4/5) of the edge target length
                 if (mesh_.edge_length(e) < (4.0/5.0)*target_length_e){
                     // we compute every useful variable corresponding to the edge
                     b0 = mesh_.is_boundary(v0);
-                    b1 = mesh_.is_boundary(v1); // is the vertex boundary
+                    b1 = mesh_.is_boundary(v1);
                     h01 = mesh_.find_halfedge(v0,v1);
-                    h10 = mesh_.find_halfedge(v1,v0);   //half edge going from the first vertex to the other
+                    h10 = mesh_.find_halfedge(v1,v0);
                     hcol01 = mesh_.is_collapse_ok(h01);
-                    hcol10 = mesh_.is_collapse_ok(h10); // is the halfedge collapsable
+                    hcol10 = mesh_.is_collapse_ok(h10);
 
-                    //Checking if vertex are boundary
-                    if (!b0 && !b1) {
-                         //Checking if halfedges collapsable
+                    // If neither endpoint is a boundary vertex or if both endpoints are boundary vertices, both halfedges are potentially collapsable
+                    if ((!b0 && !b1) || (b0 && b1)) {
+                         //If both halfedges are collapsable, collapse the lower valence vertex into the higher one
                         if (hcol01 && hcol10){
                             finished = false;
-                            // which has the weaker variance
                             if (mesh_.valence(v0) < mesh_.valence(v1)){
                                 mesh_.collapse(h01);
                             } else {
                                 mesh_.collapse(h10);
                             }
+                        // If exactly one of the halfedges is collapsable, collapse only this halfedge
                         } else if (hcol01) {
                             mesh_.collapse(h01);
                             finished = false;
@@ -276,6 +277,7 @@ void MeshProcessing::collapse_short_edges (){
                             mesh_.collapse(h10);
                             finished = false;
                         }
+                    // if exactly one endpoint of e is a boundary v, we only collapse the halfedge going from the non-b. to the b. vertex
                     } else if (!b0){
                         if (hcol01){
                             mesh_.collapse(h01);
@@ -283,22 +285,6 @@ void MeshProcessing::collapse_short_edges (){
                         }
                     } else if (!b1){
                         if (hcol10){
-                            mesh_.collapse(h10);
-                            finished = false;
-                        }
-                    } else {
-                        if (hcol01 && hcol10){
-                            finished = false;
-                            // which has the weaker variance
-                            if (mesh_.valence(v0) < mesh_.valence(v1)){
-                                mesh_.collapse(h01);
-                            } else {
-                                mesh_.collapse(h10);
-                            }
-                        } else if (hcol01) {
-                            mesh_.collapse(h01);
-                            finished = false;
-                        } else if (hcol10){
                             mesh_.collapse(h10);
                             finished = false;
                         }
