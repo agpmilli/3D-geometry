@@ -12,6 +12,8 @@
 //-----------------------------------------------------------------------------
 #include "mesh_processing.h"
 #include <set>
+#include <Eigen/Dense>
+
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -26,6 +28,7 @@ using std::min;
 using std::max;
 using std::cout;
 using std::endl;
+using namespace Eigen;
 
 MeshProcessing::MeshProcessing(const string& filename) {
     load_mesh(filename);
@@ -201,7 +204,7 @@ void MeshProcessing::collapse_short_edges ()
                 //we find the two end vertices of the edge
                 v0 = mesh_.vertex(*e_it,0);
                 v1 = mesh_.vertex(*e_it,1);
-                double L = (double) (((double) target_length[v0]+target_length[v1])/2.0);
+                double L = (double) ((( double) target_length[v0]+target_length[v1])/2.0);
 
                 if (mesh_.edge_length(*e_it) < (4.0/5.0)*L)
                 {
@@ -263,7 +266,6 @@ void MeshProcessing::collapse_short_edges ()
             }
         }
     }
-
     mesh_.garbage_collection();
     mesh_.update_vertex_normals();
     mesh_.update_face_normals();
@@ -404,6 +406,7 @@ void MeshProcessing::tangential_relaxation ()
 
                 // Compute (I - n * nT) as n_tran[3][3]
                 int size_n = n.size();
+
                 double n_tran[3][3] = {{0.0}};
                 for(int i=0; i<size_n-1; i++){
                     for(int j=0; j<size_n-1; j++){
