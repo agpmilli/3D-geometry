@@ -96,7 +96,7 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
     else if (remeshing_type == CURV)
     {
         // smooth desired length
-        for (int i = 0; i < 5; i++) {
+        /*for (int i = 0; i < 5; i++) {
             for(auto v: mesh_.vertices()){
                 if(!mesh_.is_boundary(v)){
                     unsigned int N = mesh_.valence(v);
@@ -110,7 +110,7 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
                     target_length[v] = target_length[v] + 0.5 * update;
                 }
             }
-        }
+        }*/
 
         // rescale desired length:
         double sum = 0.0;
