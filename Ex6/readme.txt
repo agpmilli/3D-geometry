@@ -4,6 +4,10 @@ Functions description :
     1. calc_target_length
     
     2. split_long_edges
+		This method aims to split edges that are too long. We perform at most 100 iterations (we use a boolean variable to check if there's no more splitting to do
+		and break if it's the case). At each iteration we check every edge e, compute it's target length from the target lengths of its two endpoints v0 and v1 and 
+		compare it to its length to decide if e must be split or not. If the answer is yes, we add a new vertex v between v0 and v1 and split e in two edges. Then, 
+		we compute v's normal and interpolate its target_length from the target lengths of v0 and v1, doing a simple average.
     
     3. collapse_short_edges
     
