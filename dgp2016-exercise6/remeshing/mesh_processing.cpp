@@ -44,7 +44,7 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     calc_target_length (remeshing_type);
 
     // main remeshing loop
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < num_iterations; ++i)
     {
         split_long_edges ();
         calc_target_length(remeshing_type);
@@ -54,7 +54,7 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
         calc_target_length(remeshing_type);
         tangential_relaxation ();
         calc_target_length(remeshing_type);
-        std::cout << "remesh number : " << i << "done" << std::endl;
+        std::cout << "remesh number " << i << " done" << std::endl;
     }
 }
 
@@ -125,10 +125,10 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
         for(auto v:mesh_.vertices()){
             if(!mesh_.is_boundary(v)){
                 // TODO SCALE TARGET LENGTH
-                target_length[v] = mean_length * (((mesh_.position(v)[1]+min)/max)+0.2) * 5.0;
+                target_length[v] = mean_length * ((((mesh_.position(v)[1]+min)/max)*5.0)+0.5);
             }
             else{
-                //target_length[v] = mean_length * (((mesh_.position(v)[1]+min)/max)+0.2) * 5.0;
+
                 target_length[v] = 1.0;
             }
         }
@@ -161,6 +161,7 @@ void MeshProcessing::split_long_edges ()
 
             //split e if its length is bigger than 4/3 times its target length
             if(mesh_.edge_length(*e_it) > target_length_e*(4.0/3.0)){
+                std::cout << "SPLIT : edge length : " << mesh_.edge_length(*e_it) << "; target length : " << target_length_e*(4.0/3.0) << std::endl;
                 finished = false;
                 //add a new vertex v
                 v = mesh_.add_vertex(Point((mesh_.position(v0)+mesh_.position(v1))/2.0));
@@ -172,6 +173,7 @@ void MeshProcessing::split_long_edges ()
                 // interpolate target edge length of new vertex v
                 target_length[v] = (target_length[v0]+target_length[v1])/2.0;
             }
+
         }
     }
     // since we created vertices and thus new faces, we should update each face's normal
@@ -402,28 +404,12 @@ void MeshProcessing::tangential_relaxation ()
                 // Compute the laplace point
                 laplace = (1/(double) valence) * sum;
 
-                // Compute (I - n * nT) as n_tran[3][3]
-                int size_n = n.size();
-                double n_tran[3][3] = {{0.0}};
-                for(int i=0; i<size_n-1; i++){
-                    for(int j=0; j<size_n-1; j++){
-                        n_tran[i][j] = -(n[i] * n[j]);
-                        if(i==j){
-                            n_tran[i][j] = n_tran[i][j]+1.0;
-                        }
-                    }
-                }
-
-                // Compute n_tran * (laplace - position(v)) as Point update_vector
-                Point update_vector(0.0, 0.0, 0.0);
-                for (int i=0;i<3;i++){
-                    for (int j=0;j<3;j++){
-                        update_vector[i]+= (n_tran[i][j]*(laplace - mesh_.position(*v_it))[j]);
-                    }
-                }
+                update_vector[0] = (((1-pow(n[0],2)) * (laplace[0] - mesh_.position(*v_it)[0])) - ((n[0]*n[1])*(laplace[1] - mesh_.position(*v_it)[1])) - ((n[0]*n[2])*(laplace[2] - mesh_.position(*v_it)[2])));
+                update_vector[1] = ((-(n[0]*n[1]) * (laplace[0] - mesh_.position(*v_it)[0])) + ((1-pow(n[1],2))*(laplace[1] - mesh_.position(*v_it)[1])) - ((n[1]*n[2])*(laplace[2] - mesh_.position(*v_it)[2])));
+                update_vector[2] = ((-(n[0]*n[2]) * (laplace[0] - mesh_.position(*v_it)[0])) - ((n[1]*n[2])*(laplace[1] - mesh_.position(*v_it)[1])) + ((1-pow(n[2],2))*(laplace[2] - mesh_.position(*v_it)[2])));
 
                 // Get a lambda
-                double lambda = 0.1;
+                double lambda = 1.0;
 
                 // Compute the update vector
                 u = lambda * update_vector;
