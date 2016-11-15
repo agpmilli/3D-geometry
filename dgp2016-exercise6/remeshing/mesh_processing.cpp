@@ -44,16 +44,17 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     calc_target_length (remeshing_type);
 
     // main remeshing loop
-    for (int i = 0; i < num_iterations; ++i)
+    for (int i = 0; i < 3; ++i)
     {
         split_long_edges ();
         calc_target_length(remeshing_type);
         collapse_short_edges ();
+        calc_target_length(remeshing_type);
         equalize_valences ();
         calc_target_length(remeshing_type);
-        //tangential_relaxation ();
-        //calc_target_length(remeshing_type);
-        std::cout << "remesh number : " << i << std::endl;
+        tangential_relaxation ();
+        calc_target_length(remeshing_type);
+        std::cout << "remesh number : " << i << "done" << std::endl;
     }
 }
 
@@ -106,19 +107,34 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
     }
     else if (remeshing_type == HEIGHT)
     {
+        double max = 0;
+        double min = 0;
+        for(auto v:mesh_.vertices()){
+            double y = mesh_.position(v)[1];
+            if(y > max){
+                max = y;
+            } else if (y < min){
+                min = y;
+            }
+        }
+
+        min = std::abs(min);
+        max = std::abs(max);
+
         // for each vertex set its target length to its height
         for(auto v:mesh_.vertices()){
             if(!mesh_.is_boundary(v)){
                 // TODO SCALE TARGET LENGTH
-                target_length[v] = mean_length * mesh_.position(v)[2];
+                target_length[v] = mean_length * (((mesh_.position(v)[1]+min)/max)+0.2) * 5.0;
             }
             else{
+                //target_length[v] = mean_length * (((mesh_.position(v)[1]+min)/max)+0.2) * 5.0;
                 target_length[v] = 1.0;
             }
         }
 
     }
-
+    std::cout << "Calc target length done" << std::endl;
 }
 
 void MeshProcessing::split_long_edges ()
@@ -130,10 +146,9 @@ void MeshProcessing::split_long_edges ()
 
     Mesh::Vertex_property<Point> normals = mesh_.vertex_property<Point>("v:normal");
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
-    unsigned int niter = 0;
+
     for (finished=false, i=0; !finished && i<100; ++i)
     {
-        niter++;
         //set to true at the beginning and later set to false if at least one edge is split
         finished = true;
         // Iterate over each edge e
@@ -162,6 +177,7 @@ void MeshProcessing::split_long_edges ()
     // since we created vertices and thus new faces, we should update each face's normal
     mesh_.update_face_normals();
     mesh_.update_vertex_normals();
+    std::cout << "Split long edges done" << std::endl;
 }
 void MeshProcessing::collapse_short_edges ()
 {
@@ -253,6 +269,8 @@ void MeshProcessing::collapse_short_edges ()
     mesh_.update_face_normals();
 
     if (i==100) std::cerr << "collapse break\n";
+
+    std::cout << "Collapse short edges done" << std::endl;
 }
 
 void MeshProcessing::equalize_valences ()
@@ -340,6 +358,8 @@ void MeshProcessing::equalize_valences ()
     mesh_.update_face_normals();
 
     if (i==100) std::cerr << "flip break\n";
+
+    std::cout << "Equalize valence done" << std::endl;
 }
 
 void MeshProcessing::tangential_relaxation ()
@@ -385,9 +405,9 @@ void MeshProcessing::tangential_relaxation ()
                 // Compute (I - n * nT) as n_tran[3][3]
                 int size_n = n.size();
                 double n_tran[3][3] = {{0.0}};
-                for(int i=0; i<size_n-1;i++){
+                for(int i=0; i<size_n-1; i++){
                     for(int j=0; j<size_n-1; j++){
-                        n_tran[i][j] = (double)(-(n[i] * n[j]));
+                        n_tran[i][j] = -(n[i] * n[j]);
                         if(i==j){
                             n_tran[i][j] = n_tran[i][j]+1.0;
                         }
@@ -403,7 +423,7 @@ void MeshProcessing::tangential_relaxation ()
                 }
 
                 // Get a lambda
-                double lambda = 1.0;
+                double lambda = 0.1;
 
                 // Compute the update vector
                 u = lambda * update_vector;
@@ -420,11 +440,14 @@ void MeshProcessing::tangential_relaxation ()
                 mesh_.position(*v_it) += update[*v_it];
             }
         }
+        // Update vertex and face normals as we changed them
+        mesh_.update_vertex_normals();
+        mesh_.update_face_normals();
     }
 
-    // Update vertex and face normals as we changed them
-    mesh_.update_vertex_normals();
-    mesh_.update_face_normals();
+    std::cout << "Tangential relaxation done" << std::endl;
+
+
 }
 
 // ========================================================================
