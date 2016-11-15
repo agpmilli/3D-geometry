@@ -10,9 +10,15 @@ Functions description :
 		we compute v's normal and interpolate its target_length from the target lengths of v0 and v1, doing a simple average.
     
     3. collapse_short_edges
+	This function will iterate over all edges and compare their length to the mean target length of their respective end vertices. If it is smaller than a certain treshold
+	(i.e 4/5 of the target length) it will merge the lower valenced vertex into the higher one. We make sure, that the end vertices are either both or aren't boundary vertices
+	and that the halfedges are collapsable in order to use the collapse function. If only one of them is boundary, we collapse the non boundary into the boundary vertex after
+	checking if the halfedge is collapsable. Furthermore we turn the variable finishesd to false everytime that a collapse occurs so that if nothing changes, the iteration 
+	will stop and won't lead to unecessary loops.	
+	
     
     4. equalize_valences
-        In this function we didn't want not lose too much time by flipping an edge forth and back.
+        In this function we didn't want to lose too much time by flipping an edge forth and back.
         So we simulate the flip by changing the valence of the vertices involved (+1 on new edge's endpoint and -1 to the old edge's endpoints).
         We then compared the sum of squared valence deviation before and after this simulation and check if it was better to flip or not.
     
