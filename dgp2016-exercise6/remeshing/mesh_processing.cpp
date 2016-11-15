@@ -47,8 +47,7 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     calc_target_length (remeshing_type);
 
     // main remeshing loop
-    for (int i = 0; i < num_iterations; ++i)
-    {
+    for (int i = 0; i < num_iterations; ++i){
         split_long_edges ();
         collapse_short_edges ();
         equalize_valences ();
@@ -57,21 +56,16 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     }
 }
 
-void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
-    Mesh::Vertex_iterator        v_it, v_end(mesh_.vertices_end());
-    Mesh::Vertex_around_vertex_circulator  vv_c, vv_end;
+void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
     Scalar                   length;
     Scalar                   mean_length;
-    Scalar                   H;
-    Scalar                   K;
     Scalar                   user_specified_target_length;
 
     Mesh::Vertex_property<Scalar> curvature = mesh_.vertex_property<Scalar>("v:unicurvature", 0);
-    Mesh::Vertex_property<Scalar> gauss_curvature = mesh_.vertex_property<Scalar>("v:gauss_curvature", 0);
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
     Mesh::Vertex_property<Scalar> target_new_length  = mesh_.vertex_property<Scalar>("v:newlength", 0);
 
-    // compute mean edge length
+    // compute mean edge length for future use
     mean_length = 0.0;
     int n = 0;
     for(auto e: mesh_.edges()){
@@ -82,9 +76,9 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
     }
     mean_length /= n;
 
+    // Scaled average edge length
     if (remeshing_type == AVERAGE){
-
-        //assign target length for each vertex v
+        // assign target length for each vertex v
         for(auto v:mesh_.vertices()){
             length = 1.0;
             if(!mesh_.is_boundary(v)){
@@ -93,29 +87,33 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
             target_length[v] = length;
         }
     }
-    else if (remeshing_type == CURV)
-    {
 
+    // Curvature-based adaptive remeshing
+    else if (remeshing_type == CURV){
+        // instantiate min curvature to 0.0
         double min_curv = 0.0;
-        double max_curv = 0.0;
-        //assign target length for each vertex v
         for(auto v:mesh_.vertices()){
-            length = 1.0;
             if(!mesh_.is_boundary(v)){
-                length = curvature[v];
+                // find min curvature
                 if(curvature[v] < min_curv){
                     min_curv = curvature[v];
                 }
-                if(curvature[v] > max_curv){
-                    max_curv = curvature[v];
-                }
             }
-            target_length[v] = length+(std::abs(min_curv));
+        }
 
+        // assign target length for each vertex v
+        for(auto v:mesh_.vertices()){
+            length = 1.0;
+            if(!mesh_.is_boundary(v)){
+                // get curvature of current vertex
+                length = curvature[v];
+            }
+            // update target length with the curvature of current vertex + min value (to avoid negative target length
+            target_length[v] = length+(std::abs(min_curv));
         }
 
 
-        // smooth desired length
+        // smooth desired length (using uniform smooth)
         for (int i = 0; i < 5; i++) {
             for(auto v: mesh_.vertices()){
                 if(!mesh_.is_boundary(v)){
@@ -139,54 +137,61 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
             sum += target_length[v];
             n++;
         }
-        // rescale the target length of each vertex so that the mean of the new target lengths
-        // equals the user specified target length
-        double max_tl = 0.0;
-        double min_tl = 10.0;
-        double max = 0.0;
-        double min = 0.0;
+
         user_specified_target_length = mean_length;
+
+        // rescale the target length of each vertex so that the mean of the new target lengths equals the user specified target length
         for(auto v: mesh_.vertices()){
+            // compute new target length
             target_new_length[v] = n*user_specified_target_length*target_length[v]/sum;
             target_length[v] = target_new_length[v];
-            if(target_length[v] > max_tl){
-                max_tl = target_length[v];
-                max = curvature[v];
-            }
-            if(target_length[v] < min_tl){
-                min_tl = target_length[v];
-                min = curvature[v];
-            }
         }
     }
-    else if (remeshing_type == HEIGHT)
-    {
-        double max = 0;
-        double min = 0;
+
+    // Height-based
+    else if (remeshing_type == HEIGHT){
+        // instantiate min curvature to 0.0
+        double min_height = 0.0;
         for(auto v:mesh_.vertices()){
-            double y = mesh_.position(v)[1];
-            if(y > max){
-                max = y;
-            } else if (y < min){
-                min = y;
+            if(!mesh_.is_boundary(v)){
+                // find min curvature
+                if(mesh_.position(v)[1] < min_height){
+                    min_height = mesh_.position(v)[1];
+                }
             }
         }
 
-        min = std::abs(min);
-        max = std::abs(max);
-
-        // for each vertex set its target length to its height
+        // assign target length for each vertex v
         for(auto v:mesh_.vertices()){
-            target_length[v] = mean_length * ((((mesh_.position(v)[1]+min)/max)*5.0)+0.5);
+            // get curvature of current vertex
+            length = mesh_.position(v)[1];
+
+            // update target length with the curvature of current vertex + min value (to avoid negative target length
+            target_length[v] = length+(std::abs(min_height));
+        }
+
+        // rescale desired length:
+        double sum = 0.0;
+        int n = 0;
+        for(auto v: mesh_.vertices()){
+            sum += target_length[v];
+            n++;
+        }
+
+        user_specified_target_length = 10.0;
+
+        // rescale the target length of each vertex so that the mean of the new target lengths equals the user specified target length
+        for(auto v: mesh_.vertices()){
+            // compute new target length
+            target_new_length[v] = n*user_specified_target_length*target_length[v]/sum;
+            target_length[v] = target_new_length[v] + 1.0;
         }
 
     }
     std::cout << "Calc target length done" << std::endl;
 }
 
-void MeshProcessing::split_long_edges ()
-{
-    Mesh::Edge_iterator     e_it, e_end(mesh_.edges_end());
+void MeshProcessing::split_long_edges (){
     Mesh::Vertex   v0, v1, v;
     bool            finished;
     int             i;
@@ -194,27 +199,23 @@ void MeshProcessing::split_long_edges ()
     Mesh::Vertex_property<Point> normals = mesh_.vertex_property<Point>("v:normal");
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
 
-    for (finished=false, i=0; !finished && i<100; ++i)
-    {
-        //set to true at the beginning and later set to false if at least one edge is split
+    for (finished=false, i=0; !finished && i<100; ++i){
+        // set to true at the beginning and later set to false if at least one edge is split
         finished = true;
-        // Iterate over each edge e
-        for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it){
+        // iterate over each edge e
+        for (auto e:mesh_.edges()){
             // find the two endpoints of e (v1, v2)
-            v0 = mesh_.vertex(*e_it, 0);
-            v1 = mesh_.vertex(*e_it, 1);
+            v0 = mesh_.vertex(e, 0);
+            v1 = mesh_.vertex(e, 1);
             // compute e's edge target length
             double target_length_e = ((target_length[v0] + target_length[v1])/2.0);
-            //std::cout << "edge length : " << mesh_.edge_length(*e_it) << std::endl;
-            //std::cout << "target length before split (*4/3) : " << target_length_e*(4.0/3.0) << std::endl;
             //split e if its length is bigger than 4/3 times its target length
-            if(mesh_.edge_length(*e_it) > target_length_e*(4.0/3.0)){
-                //std::cout << "SPLIT" << std::endl;
+            if(mesh_.edge_length(e) > target_length_e*(4.0/3.0)){
                 finished = false;
                 //add a new vertex v
                 v = mesh_.add_vertex(Point((mesh_.position(v0)+mesh_.position(v1))/2.0));
                 //split e
-                mesh_.split(*e_it, v);
+                mesh_.split(e, v);
                 //compute and store v's normal
                 normals[v] = mesh_.compute_vertex_normal(v);
 
@@ -224,12 +225,9 @@ void MeshProcessing::split_long_edges ()
 
         }
     }
-
     std::cout << "Split long edges done" << std::endl;
 }
-void MeshProcessing::collapse_short_edges ()
-{
-    Mesh::Edge_iterator     e_it, e_end(mesh_.edges_end());
+void MeshProcessing::collapse_short_edges (){
     Mesh::Vertex   v0, v1;
     Mesh::Halfedge  h01, h10;
     bool            finished, b0, b1;
@@ -237,23 +235,21 @@ void MeshProcessing::collapse_short_edges ()
     bool            hcol01, hcol10;
 
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
-    for (finished=false, i=0; !finished && i<100; ++i)
-    {
+    for (finished=false, i=0; !finished && i<100; ++i){
+        // finished = true if we don't collapse any edge
+        // finished = false in the other case
         finished = true;
 
-        for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it)
-        {
-
-            if (!mesh_.is_deleted(*e_it)) // might already be deleted
-            {
+        for (auto e: mesh_.edges()){
+            // might already be deleted
+            if (!mesh_.is_deleted(e)){
                 //we find the two end vertices of the edge
-                v0 = mesh_.vertex(*e_it,0);
-                v1 = mesh_.vertex(*e_it,1);
-                double L = (double) ((( double) target_length[v0]+target_length[v1])/2.0);
+                v0 = mesh_.vertex(e,0);
+                v1 = mesh_.vertex(e,1);
+                double target_length_e = ((target_length[v0] + target_length[v1])/2.0);
 
-                if (mesh_.edge_length(*e_it) < (4.0/5.0)*L)
-                {
-
+                // check if the edge is smaller the (4/5) of the edge target length
+                if (mesh_.edge_length(e) < (4.0/5.0)*target_length_e){
                     // we compute every useful variable corresponding to the edge
                     b0 = mesh_.is_boundary(v0);
                     b1 = mesh_.is_boundary(v1); // is the vertex boundary
@@ -262,55 +258,57 @@ void MeshProcessing::collapse_short_edges ()
                     hcol01 = mesh_.is_collapse_ok(h01);
                     hcol10 = mesh_.is_collapse_ok(h10); // is the halfedge collapsable
 
-                    if (!b0 && !b1) //Checking if vertex are boundary
-                    {
-
-                        if (hcol01 && hcol10)   //Checking if halfedges collapsable
-                        {
-                            if (mesh_.valence(v0) < mesh_.valence(v1))  // which has the weaker variance
-                            {
+                    //Checking if vertex are boundary
+                    if (!b0 && !b1) {
+                         //Checking if halfedges collapsable
+                        if (hcol01 && hcol10){
+                            finished = false;
+                            // which has the weaker variance
+                            if (mesh_.valence(v0) < mesh_.valence(v1)){
                                 mesh_.collapse(h01);
-                                finished = false;   //If there is a change, we iterate again
-
-                            }
-                            else
-                            {
+                            } else {
                                 mesh_.collapse(h10);
-                                finished = false;   //If there is a change, we iterate again
                             }
-                        }
-                        else if (hcol01)
-                        {
+                        } else if (hcol01) {
                             mesh_.collapse(h01);
-                            finished = false;   //If there is a change, we iterate again
-                        }
-                        else if (hcol10)
-                        {
+                            finished = false;
+                        } else if (hcol10){
                             mesh_.collapse(h10);
-                            finished = false;   //If there is a change, we iterate again
+                            finished = false;
                         }
-                    }
-                    else if (!b0)
-                    {
-                        if (hcol01)
-                        {
+                    } else if (!b0){
+                        if (hcol01){
                             mesh_.collapse(h01);
-                            finished = false;   //If there is a change, we iterate again
+                            finished = false;
                         }
-                    }
-                    else if (!b1)
-                    {
-                        if (hcol10)
-                        {
+                    } else if (!b1){
+                        if (hcol10){
                             mesh_.collapse(h10);
-                            finished = false;   //If there is a change, we iterate again
+                            finished = false;
                         }
-
+                    } else {
+                        if (hcol01 && hcol10){
+                            finished = false;
+                            // which has the weaker variance
+                            if (mesh_.valence(v0) < mesh_.valence(v1)){
+                                mesh_.collapse(h01);
+                            } else {
+                                mesh_.collapse(h10);
+                            }
+                        } else if (hcol01) {
+                            mesh_.collapse(h01);
+                            finished = false;
+                        } else if (hcol10){
+                            mesh_.collapse(h10);
+                            finished = false;
+                        }
                     }
                 }
             }
         }
     }
+
+    // clean the deleted edges/vertices/faces
     mesh_.garbage_collection();
 
     if (i==100) std::cerr << "collapse break\n";
@@ -318,9 +316,7 @@ void MeshProcessing::collapse_short_edges ()
     std::cout << "Collapse short edges done" << std::endl;
 }
 
-void MeshProcessing::equalize_valences ()
-{
-    Mesh::Edge_iterator     e_it, e_end(mesh_.edges_end());
+void MeshProcessing::equalize_valences (){
     Mesh::Vertex   v0, v1, v2, v3;
     Mesh::Halfedge   h;
     int             val0, val1, val2, val3;
@@ -331,18 +327,17 @@ void MeshProcessing::equalize_valences ()
 
 
     // flip all edges
-    for (finished=false, i=0; !finished && i<100; ++i)
-    {
-        //set to true at the beginning and later set to false if at least one edge is flipped
+    for (finished=false, i=0; !finished && i<100; ++i){
+        // finished = true if we don't flip any edge
+        // finished = false in the other case
         finished = true;
 
-        for (e_it=mesh_.edges_begin(); e_it!=e_end; ++e_it)
-        {
-            if (!mesh_.is_boundary(*e_it))
+        for (auto e: mesh_.edges()){
+            if (!mesh_.is_boundary(e))
             {
                 // Find the two end vertices of the edge
-                v0 = mesh_.vertex(*e_it,0);
-                v1 = mesh_.vertex(*e_it,1);
+                v0 = mesh_.vertex(e,0);
+                v1 = mesh_.vertex(e,1);
 
                 // Get the halfedge between v0 and v1
                 h = mesh_.find_halfedge(v0,v1);
@@ -373,10 +368,10 @@ void MeshProcessing::equalize_valences ()
                 ve_before = pow(ve0,2) + pow(ve1,2) + pow(ve2,2) + pow(ve3,2);
 
                 // Get valences of each vertex after simulating the flip
-                val0 -= 1;//= mesh_.valence(v0)-1;
-                val1 -= 1;//= mesh_.valence(v1)-1;
-                val2 += 1;//= mesh_.valence(v2)+1;
-                val3 += 1;//= mesh_.valence(v3)+1;
+                val0 -= 1;
+                val1 -= 1;
+                val2 += 1;
+                val3 += 1;
 
                 // Compute the valence difference
                 ve0 = val0 - val_opt0;
@@ -389,9 +384,9 @@ void MeshProcessing::equalize_valences ()
 
                 // Compare sums and flip if better
                 if(ve_after < ve_before){
-                    if(mesh_.is_flip_ok(*e_it)){
+                    if(mesh_.is_flip_ok(e)){
                         // flip current edge
-                        mesh_.flip(*e_it);
+                        mesh_.flip(e);
                         finished = false;
                     }
                 }
@@ -404,10 +399,7 @@ void MeshProcessing::equalize_valences ()
     std::cout << "Equalize valence done" << std::endl;
 }
 
-void MeshProcessing::tangential_relaxation ()
-{
-    Mesh::Vertex_iterator     v_it, v_end(mesh_.vertices_end());
-    Mesh::Vertex_around_vertex_circulator   vv_c, vv_end;
+void MeshProcessing::tangential_relaxation (){
     int    valence;
     Point     u, n;
     Point     laplace;
@@ -416,30 +408,24 @@ void MeshProcessing::tangential_relaxation ()
     Mesh::Vertex_property<Point> update = mesh_.vertex_property<Point>("v:update");
 
     // smooth
-    for (int iters=0; iters<10; ++iters)
-    {
+    for (int iters=0; iters<10; ++iters){
         // Iterate on all vertices in the mesh
-        for (v_it=mesh_.vertices_begin(); v_it!=v_end; ++v_it)
-        {
+        for (auto v: mesh_.vertices()){
             // Check if current vertex is boundary
-            if (!mesh_.is_boundary(*v_it))
-            {
+            if (!mesh_.is_boundary(v)){
                 // Get the normal of current vertex
-                n = normals[*v_it];
+                n = normals[v];
 
                 // Find its valence
-                valence = mesh_.valence(*v_it);
+                valence = mesh_.valence(v);
 
                 // approximate the mean curvature with the uniform Laplacian.
                 Point sum(0.0, 0.0, 0.0);
 
-                // Using circulator on vertices
-                vv_c = mesh_.vertices(*v_it);
-                vv_end = vv_c;
-
-                do{
-                    sum += mesh_.position(*vv_c);
-                }while(++vv_c != vv_end);
+                // iterate through neighbors to get the sum of their positions
+                for(auto vn:mesh_.vertices(v)){
+                    sum += mesh_.position(vn);
+                }
 
                 // Compute the laplace point
                 laplace = (1/(double) valence) * sum;
@@ -447,26 +433,27 @@ void MeshProcessing::tangential_relaxation ()
                 // Compute the update vector
                 Point update_vector(0.0, 0.0, 0.0);
 
-                update_vector[0] = (((1-pow(n[0],2)) * (laplace[0] - mesh_.position(*v_it)[0])) - ((n[0]*n[1])*(laplace[1] - mesh_.position(*v_it)[1])) - ((n[0]*n[2])*(laplace[2] - mesh_.position(*v_it)[2])));
-                update_vector[1] = ((-(n[0]*n[1]) * (laplace[0] - mesh_.position(*v_it)[0])) + ((1-pow(n[1],2))*(laplace[1] - mesh_.position(*v_it)[1])) - ((n[1]*n[2])*(laplace[2] - mesh_.position(*v_it)[2])));
-                update_vector[2] = ((-(n[0]*n[2]) * (laplace[0] - mesh_.position(*v_it)[0])) - ((n[1]*n[2])*(laplace[1] - mesh_.position(*v_it)[1])) + ((1-pow(n[2],2))*(laplace[2] - mesh_.position(*v_it)[2])));
+                // Compute the update vecotr
+                update_vector[0] = (((1-pow(n[0],2)) * (laplace[0] - mesh_.position(v)[0])) - ((n[0]*n[1])*(laplace[1] - mesh_.position(v)[1])) - ((n[0]*n[2])*(laplace[2] - mesh_.position(v)[2])));
+                update_vector[1] = ((-(n[0]*n[1]) * (laplace[0] - mesh_.position(v)[0])) + ((1-pow(n[1],2))*(laplace[1] - mesh_.position(v)[1])) - ((n[1]*n[2])*(laplace[2] - mesh_.position(v)[2])));
+                update_vector[2] = ((-(n[0]*n[2]) * (laplace[0] - mesh_.position(v)[0])) - ((n[1]*n[2])*(laplace[1] - mesh_.position(v)[1])) + ((1-pow(n[2],2))*(laplace[2] - mesh_.position(v)[2])));
 
-                // Get a lambda
+                // get a lambda
                 double lambda = 1.0;
 
                 // Compute the update vector
                 u = lambda * update_vector;
 
                 // Add it in the update property
-                update[*v_it] = u;
+                update[v] = u;
             }
         }
 
         // Iterate on all vertices in the mesh
-        for (v_it=mesh_.vertices_begin(); v_it!=v_end; ++v_it){
-            if (!mesh_.is_boundary(*v_it)){
+        for (auto v: mesh_.vertices()){
+            if (!mesh_.is_boundary(v)){
                 // Refresh its position using the update property
-                mesh_.position(*v_it) += update[*v_it];
+                mesh_.position(v) += update[v];
             }
         }
     }
