@@ -200,7 +200,7 @@ void MeshProcessing::split_long_edges (){
     Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
 
     for (finished=false, i=0; !finished && i<100; ++i){
-        // set to true at the beginning and later set to false if at least one edge is split
+        // set to true at the beginning and later set to false if at least one edge is split during this iteration
         finished = true;
         // iterate over each edge e
         for (auto e:mesh_.edges()){
@@ -212,17 +212,15 @@ void MeshProcessing::split_long_edges (){
             //split e if its length is bigger than 4/3 times its target length
             if(mesh_.edge_length(e) > target_length_e*(4.0/3.0)){
                 finished = false;
-                //add a new vertex v
+                //split e and add a new vertex v between v0 and v1
                 v = mesh_.add_vertex(Point((mesh_.position(v0)+mesh_.position(v1))/2.0));
-                //split e
                 mesh_.split(e, v);
+
                 //compute and store v's normal
                 normals[v] = mesh_.compute_vertex_normal(v);
-
                 // interpolate target edge length of new vertex v
                 target_length[v] = (target_length[v0]+target_length[v1])/2.0;
             }
-
         }
     }
     std::cout << "Split long edges done" << std::endl;
