@@ -404,6 +404,10 @@ void MeshProcessing::tangential_relaxation ()
                 // Compute the laplace point
                 laplace = (1/(double) valence) * sum;
 
+
+                // Compute the update vector
+                Point update_vector(0.0, 0.0, 0.0);
+
                 update_vector[0] = (((1-pow(n[0],2)) * (laplace[0] - mesh_.position(*v_it)[0])) - ((n[0]*n[1])*(laplace[1] - mesh_.position(*v_it)[1])) - ((n[0]*n[2])*(laplace[2] - mesh_.position(*v_it)[2])));
                 update_vector[1] = ((-(n[0]*n[1]) * (laplace[0] - mesh_.position(*v_it)[0])) + ((1-pow(n[1],2))*(laplace[1] - mesh_.position(*v_it)[1])) - ((n[1]*n[2])*(laplace[2] - mesh_.position(*v_it)[2])));
                 update_vector[2] = ((-(n[0]*n[2]) * (laplace[0] - mesh_.position(*v_it)[0])) - ((n[1]*n[2])*(laplace[1] - mesh_.position(*v_it)[1])) + ((1-pow(n[2],2))*(laplace[2] - mesh_.position(*v_it)[2])));
