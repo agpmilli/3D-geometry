@@ -47,13 +47,9 @@ void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
     for (int i = 0; i < num_iterations; ++i)
     {
         split_long_edges ();
-        calc_target_length(remeshing_type);
         collapse_short_edges ();
-        calc_target_length(remeshing_type);
         equalize_valences ();
-        calc_target_length(remeshing_type);
         tangential_relaxation ();
-        calc_target_length(remeshing_type);
         std::cout << "remesh number " << i << " done" << std::endl;
     }
 }
@@ -123,14 +119,7 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type) {
 
         // for each vertex set its target length to its height
         for(auto v:mesh_.vertices()){
-            if(!mesh_.is_boundary(v)){
-                // TODO SCALE TARGET LENGTH
-                target_length[v] = mean_length * ((((mesh_.position(v)[1]+min)/max)*5.0)+0.5);
-            }
-            else{
-
-                target_length[v] = 1.0;
-            }
+            target_length[v] = mean_length * ((((mesh_.position(v)[1]+min)/max)*5.0)+0.5);
         }
 
     }
@@ -161,7 +150,6 @@ void MeshProcessing::split_long_edges ()
 
             //split e if its length is bigger than 4/3 times its target length
             if(mesh_.edge_length(*e_it) > target_length_e*(4.0/3.0)){
-                std::cout << "SPLIT : edge length : " << mesh_.edge_length(*e_it) << "; target length : " << target_length_e*(4.0/3.0) << std::endl;
                 finished = false;
                 //add a new vertex v
                 v = mesh_.add_vertex(Point((mesh_.position(v0)+mesh_.position(v1))/2.0));
@@ -176,9 +164,7 @@ void MeshProcessing::split_long_edges ()
 
         }
     }
-    // since we created vertices and thus new faces, we should update each face's normal
-    mesh_.update_face_normals();
-    mesh_.update_vertex_normals();
+
     std::cout << "Split long edges done" << std::endl;
 }
 void MeshProcessing::collapse_short_edges ()
@@ -267,8 +253,6 @@ void MeshProcessing::collapse_short_edges ()
     }
 
     mesh_.garbage_collection();
-    mesh_.update_vertex_normals();
-    mesh_.update_face_normals();
 
     if (i==100) std::cerr << "collapse break\n";
 
@@ -356,9 +340,6 @@ void MeshProcessing::equalize_valences ()
         }
     }
 
-
-    mesh_.update_face_normals();
-
     if (i==100) std::cerr << "flip break\n";
 
     std::cout << "Equalize valence done" << std::endl;
@@ -430,9 +411,6 @@ void MeshProcessing::tangential_relaxation ()
                 mesh_.position(*v_it) += update[*v_it];
             }
         }
-        // Update vertex and face normals as we changed them
-        mesh_.update_vertex_normals();
-        mesh_.update_face_normals();
     }
 
     std::cout << "Tangential relaxation done" << std::endl;
