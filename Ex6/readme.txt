@@ -5,8 +5,10 @@ Functions description :
         - Average length :
         
         - Height based :
+        For the height based remeshing, we first of all get the minimum height of a vertex in the mesh. We then set the target_length of each vertex to its height + the minimum height found before. (to avoir negative target_length)
+        At the end we rescale the target length to make the mesh looks like the example you gave us using the user specified target length.
         
-        - Adaptive remeshing :
+        - Curvature-based adaptive remeshing :
         For adaptive remeshing to know what was the better curvature to use, we took a look at 
             
         Additionnal comments : 
