@@ -3,6 +3,8 @@ EXERCISE 6
 Functions description : 
     1. calc_target_length
         - Average length :
+		This part is quite trivial. We first iterate over every edge of the mesh to compute the mean edge length in the mesh. Then we iterate over every vertex v
+		and set v's target_length property to mean_edge_length.
         
         - Height based :
         For the height based remeshing, we first of all get the minimum height of a vertex in the mesh. We then set the target_length of each vertex to its height + the minimum height found before. (to avoir negative target_length)
