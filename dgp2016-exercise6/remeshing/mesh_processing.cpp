@@ -102,7 +102,7 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
                 // get curvature of current vertex
                 length = curvature[v];
             }
-            // update target length with the curvature of current vertex + min value (to avoid negative target length
+            // update target length with the curvature of current vertex + min value (to avoid negative target length)
             target_length[v] = length+(std::abs(min_curv));
         }
 
@@ -144,11 +144,11 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
 
     // Height-based
     else if (remeshing_type == HEIGHT){
-        // instantiate min curvature to 0.0
+        // instantiate min height to 0.0
         double min_height = 0.0;
         for(auto v:mesh_.vertices()){
             if(!mesh_.is_boundary(v)){
-                // find min curvature
+                // find min height
                 if(mesh_.position(v)[1] < min_height){
                     min_height = mesh_.position(v)[1];
                 }
@@ -157,10 +157,10 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
 
         // assign target length for each vertex v
         for(auto v:mesh_.vertices()){
-            // get curvature of current vertex
+            // get height of current vertex
             length = mesh_.position(v)[1];
 
-            // update target length with the curvature of current vertex + min value (to avoid negative target length
+            // update target length with the height of current vertex + min value (to avoid negative target length)
             target_length[v] = length+(std::abs(min_height));
         }
 
