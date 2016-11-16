@@ -78,11 +78,7 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
     if (remeshing_type == AVERAGE){
         // assign target length for each vertex v
         for(auto v:mesh_.vertices()){
-            length = 1.0;
-            if(!mesh_.is_boundary(v)){
-                length = mean_length;
-            }
-            target_length[v] = length;
+            target_length[v] = mean_length;
         }
     }
 

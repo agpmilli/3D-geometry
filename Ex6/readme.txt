@@ -7,7 +7,7 @@ Functions description :
         - Height based :
         
         - Adaptive remeshing :
-        For adaptive remeshing to know what was the better curvature to use, we took a look at our  we used the Uniform Laplace curvature because
+        For adaptive remeshing to know what was the better curvature to use, we took a look at 
             
         Additionnal comments : 
         With our implementation we don't get the exact same result shown in your PDF but we get your result when we do the exact same thing without using the curvature 
