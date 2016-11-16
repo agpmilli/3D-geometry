@@ -7,8 +7,11 @@ Functions description :
 		and set v's target_length property to mean_edge_length.
         
         - Height based :
-        For the height based remeshing, we first of all get the minimum height of a vertex in the mesh. We then set the target_length of each vertex to its height + the minimum height found before. (to avoir negative target_length)
-        At the end we rescale the target length to make the mesh looks like the example you gave us using the user specified target length.
+        For the height based remeshing, we first of all get the minimum height of a vertex in the mesh. We then set the target_length of each vertex 
+		to its height + the minimum height found before (we basically shift the domain to avoid negative target_length values).
+		Finally, we scale the target_length of each vertex so that its mean value is equal to the user specified target length. We defined the user spec. target length
+		as a local variable and gave it a value such that our remeshed Max Planck face looks approximately like the one in the pdf.
+		Note: to get the height value of a vertex v we just use mesh_.position(v)[1].
         
         - Curvature-based adaptive remeshing :
         For adaptive remeshing to know what was the better curvature to use, we took a look at 
