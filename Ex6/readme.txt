@@ -7,11 +7,13 @@ Functions description :
 		and set v's target_length property to mean_edge_length.
         
         - Height based :
-        For the height based remeshing, we first of all get the minimum height of a vertex in the mesh. We then set the target_length of each vertex to its height + the minimum height found before. (to avoir negative target_length)
+        For the height based remeshing, we first of all get the minimum height of a vertex in the mesh. We then set the target_length of each vertex to its height + the absolute value of the minimum height found before. (to avoir negative target_length)
         At the end we rescale the target length to make the mesh looks like the example you gave us using the user specified target length.
         
         - Curvature-based adaptive remeshing :
-        For adaptive remeshing to know what was the better curvature to use, we took a look at 
+        In this part we did pretty much the same as in the height-based remeshing but instead of using the height of the vertex we use its curvature and before scaling the length, we do 5 iterations of uniform smooth on the target_length to get rid of noise.
+        To know what was the better curvature to use, we took a look at our mesh under each curvature and we found out that the Uniform Laplacian Curvature is the one that fits better.
+        It makes sense because in the Uniform Laplacian curvature, the higher the curvature, the bigger it is represented. And in our case, we would like to split more the high curvatures than the low ones.
             
         Additionnal comments : 
         With our implementation we don't get the exact same result shown in your PDF but we get your result when we do the exact same thing without using the curvature 
