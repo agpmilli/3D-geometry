@@ -20,12 +20,11 @@ Functions description :
     we compute v's normal and interpolate its target_length from the target lengths of v0 and v1, doing a simple average.
     
     3. collapse_short_edges
-    This function will iterate over all edges and compare their length to the mean target length of their respective end vertices. If it is smaller than a certain treshold
-    (i.e 4/5 of the target length) it will merge the lower valenced vertex into the higher one. We make sure, that the end vertices are either both or aren't boundary vertices
-    and that the halfedges are collapsable in order to use the collapse function. If only one of them is boundary, we collapse the non boundary into the boundary vertex after
-    checking if the halfedge is collapsable. Furthermore we turn the variable finishesd to false everytime that a collapse occurs so that if nothing changes, the iteration 
-    will stop and won't lead to unecessary loops.	
-	
+    This function will iterate over all edges and compare their length to the mean target length of their respective end vertices. If it is smaller than a certain threshold
+    (i.e. 4/5 of the target length) it will merge the lower valence vertex into the higher one. We make sure, that the end vertices are either both or aren't boundary vertices
+    and that the halfedges are collapsible in order to use the collapse function. If only one of them is boundary, we collapse the non boundary into the boundary vertex after
+    checking if the halfedge is collapsible. Furthermore we turn the variable finished to false every time that a collapse occurs so that if nothing changes, the iteration 
+    will stop and won't lead to unnecessary loops.
     
     4. equalize_valences
     In this function we didn't want to lose too much time by flipping an edge forth and back.
@@ -33,6 +32,7 @@ Functions description :
     We then compared the sum of squared valence deviation before and after this simulation and check if it was better to flip or not.
     
     5. tangential_relaxation
-    For this function we used the formula found at page 27 of the '08 Remeshing' PDF. To do so, we compute the laplace point and to not lose
+    For this function we used the formula found at page 27 of the '08 Remeshing' PDF. To do so, we compute the Laplace point and to not lose
     time computing the matrix/vertex multiplication we did the whole development on paper and just compute the final result.
     We take a lambda value of 1 (it is a constant value used to control the smoothing) and then we update the position by adding the update vector.
+
