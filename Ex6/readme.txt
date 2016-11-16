@@ -17,7 +17,7 @@ Functions description :
         In this part we did pretty much the same as in the height-based remeshing but instead of using the height of the vertex we use its curvature and before scaling the length, we do 5 iterations of uniform smooth on the target_length to get rid of noise.
         To know what was the better curvature to use, we took a look at our mesh under each curvature and we found out that the Uniform Laplacian Curvature is the one that fits better.
         It makes sense because in the Uniform Laplacian curvature, the higher the curvature in the mesh, the lower its associated value.
-		And in our case, we would like to split more the high curvatures than the low ones, so we want the target length of a vertex to be inversely proportional to its curvature.
+		And in our case, we would like smaller edges where there is higher curvature, so we want the target length of a vertex to be inversely proportional to its curvature.
             
         Additionnal comments : 
         With our implementation we don't get the exact same result shown in your PDF but we get your result when we do the exact same thing without using the curvature 
