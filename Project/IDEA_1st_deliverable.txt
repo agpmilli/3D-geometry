@@ -1,0 +1,14 @@
+Programms we will use :
+    -   meshlab
+    -   123d make
+    -   netfabb (to repair the mesh)
+    
+    
+Functions we will implement :
+    -   We would like to create holes in our mesh to make the light.
+    -   
+    
+    
+Things to take care of :
+    -   thickness of the mesh
+    -   base size for the lamp
