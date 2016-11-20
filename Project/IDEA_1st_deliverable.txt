@@ -35,3 +35,10 @@ Clean mesh :
         Positive Volume: All the green faces face out and the red face in, otherwise the printer will think that everything outside the model is material causing printer issues.
         Closed Surfaces: A closed surface means that there are no holes or border edges.
         Orientable Surface:All faces must be defined as in or out, with no stray edges or vertices.)
+        
+        
+Interesting papers : 
+http://matthias-mueller-fischer.ch/publications/posBasedDyn.pdf
+https://nccastaff.bournemouth.ac.uk/jmacey/MastersProjects/MSc12/Ioannidis/Thesis.pdf
+https://mikeash.com/pyblog/fluid-simulation-for-dummies.html
+http://www.mat.ucsb.edu/~wakefield/594cm/assignment.htm
