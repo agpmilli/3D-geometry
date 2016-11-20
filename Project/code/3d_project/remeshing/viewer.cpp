@@ -293,6 +293,12 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
         this->refresh_mesh();
         this->refresh_trackball_center();
     });
+    b = new Button(popup, "Geralt");
+    b->setCallback([this]() {
+        mesh_->load_mesh("../data/geralt.off");
+        this->refresh_mesh();
+        this->refresh_trackball_center();
+    });
 
     b = new Button(popup, "Open mesh ...");
     b->setCallback([this]() {
@@ -382,57 +388,75 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     popupBtn = new PopupButton(window_, "Smooth");
     popup = popupBtn->popup();
     popup->setLayout(new GroupLayout());
+
+    Widget* panelSmooth = new Widget(popup);
+    panelSmooth->setLayout(new GroupLayout());
+
     b = new Button(popup, "Uniform Laplacian");
     b->setCallback([this]() {
-        mesh_->uniform_smooth(10);
+        mesh_->uniform_smooth(this->iterationSmoothTextBox->value());
         mesh_->meshProcess();
         this->refresh_mesh();
     });
     b = new Button(popup, "Laplace-Beltrami");
     b->setCallback([this]() {
-        mesh_->smooth(10);
+        mesh_->smooth(this->iterationSmoothTextBox->value());
         mesh_->meshProcess();
         this->refresh_mesh();
     });
+
+    panelSmooth = new Widget(popup);
+    GridLayout *layoutSmooth = new GridLayout(Orientation::Horizontal, 2,
+                                        Alignment::Middle, 15, 5);
+    layoutSmooth->setColAlignment({ Alignment::Maximum, Alignment::Fill });
+    layoutSmooth->setSpacing(0, 10);
+    panelSmooth->setLayout(layoutSmooth);
+    new Label(panelSmooth, "Number of iterations:", "sans-bold");
+    iterationSmoothTextBox = new IntBox<int>(panelSmooth, 10);
+    iterationSmoothTextBox->setEditable(true);
+    iterationSmoothTextBox->setFixedSize(Vector2i(50, 20));
+    iterationSmoothTextBox->setDefaultValue("10");
+    iterationSmoothTextBox->setFontSize(16);
+    iterationSmoothTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
 
     popupBtn = new PopupButton(window_, "Enhancement");
     popup = popupBtn->popup();
     popup->setLayout(new GroupLayout());
 
-    Widget* panel = new Widget(popup);
-    panel->setLayout(new GroupLayout());
+    Widget* panelEnhancement = new Widget(popup);
+    panelEnhancement->setLayout(new GroupLayout());
 
 
-    b = new Button(panel, "Uniform Laplacian");
+    b = new Button(panelEnhancement, "Uniform Laplacian");
     b->setCallback([this]() {
-        mesh_->uniform_laplacian_enhance_feature(this->iterationTextBox->value(),
+        mesh_->uniform_laplacian_enhance_feature(this->iterationEnhancementTextBox->value(),
                                           this->coefTextBox->value());
         mesh_->meshProcess();
         this->refresh_mesh();
     });
-    b = new Button(panel, "Laplace-Beltrami");
+    b = new Button(panelEnhancement, "Laplace-Beltrami");
     b->setCallback([this]() {
-        mesh_->laplace_beltrami_enhance_feature(this->iterationTextBox->value(),
+        mesh_->laplace_beltrami_enhance_feature(this->iterationEnhancementTextBox->value(),
                                           this->coefTextBox->value());
         mesh_->meshProcess();
         this->refresh_mesh();
     });
 
-    panel = new Widget(popup);
-    GridLayout *layout = new GridLayout(Orientation::Horizontal, 2,
+    panelEnhancement = new Widget(popup);
+    GridLayout *layoutEnhancement = new GridLayout(Orientation::Horizontal, 2,
                                         Alignment::Middle, 15, 5);
-    layout->setColAlignment({ Alignment::Maximum, Alignment::Fill });
-    layout->setSpacing(0, 10);
-    panel->setLayout(layout);
-    new Label(panel, "Number of iterations:", "sans-bold");
-    iterationTextBox = new IntBox<int>(panel, 10);
-    iterationTextBox->setEditable(true);
-    iterationTextBox->setFixedSize(Vector2i(50, 20));
-    iterationTextBox->setDefaultValue("10");
-    iterationTextBox->setFontSize(16);
-    iterationTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
-    new Label(panel, "Coefficient:", "sans-bold");
-    coefTextBox = new FloatBox<float>(panel, 2.0);
+    layoutEnhancement->setColAlignment({ Alignment::Maximum, Alignment::Fill });
+    layoutEnhancement->setSpacing(0, 10);
+    panelEnhancement->setLayout(layoutEnhancement);
+    new Label(panelEnhancement, "Number of iterations:", "sans-bold");
+    iterationEnhancementTextBox = new IntBox<int>(panelEnhancement, 10);
+    iterationEnhancementTextBox->setEditable(true);
+    iterationEnhancementTextBox->setFixedSize(Vector2i(50, 20));
+    iterationEnhancementTextBox->setDefaultValue("10");
+    iterationEnhancementTextBox->setFontSize(16);
+    iterationEnhancementTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
+    new Label(panelEnhancement, "Coefficient:", "sans-bold");
+    coefTextBox = new FloatBox<float>(panelEnhancement, 2.0);
     coefTextBox->setEditable(true);
     coefTextBox->setFixedSize(Vector2i(50, 20));
     coefTextBox->setDefaultValue("2.0");
@@ -442,7 +466,7 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     performLayout();
 
     initShaders();
-    mesh_ = new mesh_processing::MeshProcessing("../data/bunny.off");
+    mesh_ = new mesh_processing::MeshProcessing("../data/geralt.off");
     this->refresh_mesh();
     this->refresh_trackball_center();
 }

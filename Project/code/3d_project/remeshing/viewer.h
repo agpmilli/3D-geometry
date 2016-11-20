@@ -112,6 +112,7 @@ private:
 
     PopupButton *popupCurvature;
     FloatBox<float>* coefTextBox;
-    IntBox<int>* iterationTextBox;
+    IntBox<int>* iterationEnhancementTextBox;
+    IntBox<int>* iterationSmoothTextBox;
 
 };

@@ -29,10 +29,9 @@ using std::max;
 using std::cout;
 using std::endl;
 using namespace Eigen;
-Mesh::Vertex_property<surface_mesh::Color> v_color_valence;
-Mesh::Vertex_property<surface_mesh::Color> v_color_unicurvature;
-Mesh::Vertex_property<surface_mesh::Color> v_color_curvature;
-Mesh::Vertex_property<surface_mesh::Color> v_color_gaussian_curv;
+
+int save_count = 0;
+string save_filename = "";
 
 MeshProcessing::MeshProcessing(const string& filename) {
     load_mesh(filename);
@@ -745,6 +744,7 @@ void MeshProcessing::load_mesh(const string &filename) {
         std::cerr << "Mesh not found, exiting." << std::endl;
         exit(-1);
     }
+    save_filename = filename.substr(0, filename.size()-4);
 
     cout << "Mesh "<< filename << " loaded." << endl;
     cout << "# of vertices : " << mesh_.n_vertices() << endl;
@@ -773,7 +773,9 @@ void MeshProcessing::load_mesh(const string &filename) {
 }
 
 void MeshProcessing::save_mesh() {
-    auto name = "mesh_test.off";
+    string prefix = "../data/";
+    string name = prefix + save_filename + "_" + std::to_string(save_count)+ ".off";
+
     std::ofstream outfile (name);
 
     outfile << "OFF" << std::endl;
@@ -803,10 +805,16 @@ void MeshProcessing::save_mesh() {
     cout << "# of vertices : " << mesh_.n_vertices() << endl;
     cout << "# of faces : " << mesh_.n_faces() << endl;
     cout << "# of edges : " << mesh_.n_edges() << endl;
+
+    save_count++;
 }
 
 void MeshProcessing::meshProcess() {
-    Point default_normal(0.0, 1.0, 0.0);
+    Mesh::Vertex_property<surface_mesh::Color> v_color_valence;
+    Mesh::Vertex_property<surface_mesh::Color> v_color_unicurvature;
+    Mesh::Vertex_property<surface_mesh::Color> v_color_curvature;
+    Mesh::Vertex_property<surface_mesh::Color> v_color_gaussian_curv;
+
     Mesh::Vertex_property<Point> vertex_normal = mesh_.vertex_property<Point>("v:normal");
     mesh_.update_face_normals();
     mesh_.update_vertex_normals();
