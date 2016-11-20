@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (MiKTeX 2.9) (preloaded format=pdflatex 2016.6.8)  18 NOV 2016 09:40
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (MiKTeX 2.9) (preloaded format=pdflatex 2016.6.8)  20 NOV 2016 09:39
 entering extended mode
 **./latex_1st_deliverable.tex
 (latex_1st_deliverable.tex
@@ -289,59 +289,46 @@ G,.JBIG2,.JB2,.eps]
 (grfext)             \AppendGraphicsExtensions on input line 456.
 )
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <14> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 18.
-Missing character: There is no Ã in font ptmr7t!
-Missing character: There is no « in font ptmr7t!
-Missing character: There is no Ã in font ptmr7t!
-Missing character: There is no « in font ptmr7t!
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 19.
 
+<liquid_mesh.jpg, id=16, 357.335pt x 642.4pt>
+File: liquid_mesh.jpg Graphic file (type jpg)
+ <use liquid_mesh.jpg>
+Package pdftex.def Info: liquid_mesh.jpg used on input line 27.
+(pdftex.def)             Requested size: 243.91125pt x 438.4926pt.
 
-LaTeX Warning: Citation `anderson04' on page 1 undefined on input line 100.
+<3d-printed-lamps-animal-lace-bear.jpg, id=18, 246.6816pt x 246.6816pt>
+File: 3d-printed-lamps-animal-lace-bear.jpg Graphic file (type jpg)
 
+<use 3d-printed-lamps-animal-lace-bear.jpg>
+Package pdftex.def Info: 3d-printed-lamps-animal-lace-bear.jpg used on input li
+ne 37.
+(pdftex.def)             Requested size: 243.91125pt x 243.91817pt.
 
-LaTeX Warning: Citation `wavelab' on page 1 undefined on input line 100.
-
-
-LaTeX Warning: Citation `kallet04methods' on page 1 undefined on input line 108
-.
-
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 138.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 138.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 138.
-[1{C:/Users/Alain/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}
-
-
-]
-
-LaTeX Warning: Citation `hunt99pragmatic' on page 2 undefined on input line 158
-.
-
-
-LaTeX Warning: Citation `spolsky04software' on page 2 undefined on input line 1
-59.
-
-
-LaTeX Warning: Citation `schwab00' on page 2 undefined on input line 162.
-
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 165.
-LaTeX Font Info:    Try loading font information for OT1+pcr on input line 165.
-
-("C:\Program Files (x86)\latex\tex\latex\psnfss\ot1pcr.fd"
-File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
-)
-Underfull \hbox (badness 4479) in paragraph at lines 176--178
-[]\OT1/ptm/m/n/10 Use mean-ing-ful file-names, and not \OT1/pcr/m/n/10 temp1.py
-\OT1/ptm/m/n/10 ,
+Underfull \hbox (badness 5374) in paragraph at lines 48--51
+\OT1/ptm/m/n/10 We will also need to im-ple-ment new meth-ods if
  []
 
 
-Package hyperref Warning: Difference (2) between bookmark levels is greater 
-(hyperref)                than one, level fixed on input line 187.
+Underfull \hbox (badness 5504) in paragraph at lines 48--51
+\OT1/ptm/m/n/10 we want to achieve a re-sult that looks like fig-
+ []
 
+
+Underfull \hbox (badness 4634) in paragraph at lines 48--51
+\OT1/ptm/m/n/10 ure []1[]. \OT1/ptm/b/n/10 TODO Talk about http://matthias-muel
+ler-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 54--57
+
+ []
+
+[1{C:/Users/Alain/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}
+
+
+ <./liquid_mesh.jpg>]
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -353,50 +340,33 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 211.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 66.
 [2
 
-]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 211.
+ <./3d-printed-lamps-animal-lace-bear.jpg>]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 66.
  (latex_1st_deliverable.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 211.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 211.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 66.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 66.
 Package rerunfilecheck Info: File `latex_1st_deliverable.out' has not changed.
-(rerunfilecheck)             Checksum: C6670194F74E0E87BE8A572AE0F34F09;605.
-
-
-LaTeX Warning: There were undefined references.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 211.
+(rerunfilecheck)             Checksum: F0FD82EF3C350A82AE638F2007FD7203;125.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 66.
  ) 
 Here is how much of TeX's memory you used:
- 5825 strings out of 493335
- 89541 string characters out of 3138831
- 178141 words of memory out of 3000000
- 9308 multiletter control sequences out of 15000+200000
- 42523 words of font info for 78 fonts, out of 3000000 for 9000
+ 5755 strings out of 493335
+ 88738 string characters out of 3138831
+ 176977 words of memory out of 3000000
+ 9261 multiletter control sequences out of 15000+200000
+ 32459 words of font info for 62 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 29i,8n,28p,221b,339s stack positions out of 5000i,500n,10000p,200000b,50000s
-pdfTeX warning (dest): name{figure.2} has been referenced but does not exist,
- replaced by a fixed one
-
-pdfTeX warning (dest): name{figure.1} has been referenced but does not exist, r
-eplaced by a fixed one
-
-{C:/Program Files (x86)/latex/fonts/enc/dvips/fontname/8r.enc}<C:/Program Files
- (x86)/latex/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Program Files (x86)/
-latex/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Program Files (x86)/latex/fo
-nts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Program Files (x86)/latex/fonts/type
-1/urw/courier/ucrr8a.pfb><C:/Program Files (x86)/latex/fonts/type1/urw/times/ut
-mb8a.pfb><C:/Program Files (x86)/latex/fonts/type1/urw/times/utmbi8a.pfb><C:/Pr
-ogram Files (x86)/latex/fonts/type1/urw/times/utmr8a.pfb><C:/Program Files (x86
-)/latex/fonts/type1/urw/times/utmri8a.pfb>
-Output written on latex_1st_deliverable.pdf (2 pages, 100121 bytes).
+ 29i,8n,28p,362b,416s stack positions out of 5000i,500n,10000p,200000b,50000s
+{C:/Program Files (x86)/latex/fonts/enc/dvips/fontname/8r.enc}<C:/Program Fil
+es (x86)/latex/fonts/type1/urw/times/utmb8a.pfb><C:/Program Files (x86)/latex/f
+onts/type1/urw/times/utmr8a.pfb><C:/Program Files (x86)/latex/fonts/type1/urw/t
+imes/utmri8a.pfb>
+Output written on latex_1st_deliverable.pdf (2 pages, 305860 bytes).
 PDF statistics:
- 112 PDF objects out of 1000 (max. 8388607)
- 24 named destinations out of 1000 (max. 500000)
- 81 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 58 PDF objects out of 1000 (max. 8388607)
+ 14 named destinations out of 1000 (max. 500000)
+ 35 words of extra memory for PDF output out of 10000 (max. 10000000)
 
