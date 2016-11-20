@@ -50,6 +50,7 @@ public:
     void tangential_relaxation ();
 
     void load_mesh(const string& filename);
+    void save_mesh();
     void compute_mesh_properties();
 
     void calc_mean_curvature();

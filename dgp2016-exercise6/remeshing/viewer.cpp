@@ -308,6 +308,13 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
         }
     });
 
+    b = new Button(popup, "Save current mesh");
+    b->setCallback([this]() {
+        mesh_->save_mesh();
+        this->refresh_mesh();
+        this->refresh_trackball_center();
+    });
+
     new Label(window_, "Display Control", "sans-bold");
 
     b = new Button(window_, "Wireframe");

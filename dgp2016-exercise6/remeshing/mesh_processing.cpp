@@ -12,6 +12,8 @@
 //-----------------------------------------------------------------------------
 #include "mesh_processing.h"
 #include <set>
+#include <iostream>
+#include <fstream>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -650,6 +652,39 @@ void MeshProcessing::load_mesh(const string &filename) {
 
     // Store the original mesh, this might be useful for some computations
     mesh_init_ = mesh_;
+}
+
+void MeshProcessing::save_mesh() {
+    auto name = "mesh_test.off";
+    std::ofstream outfile (name);
+
+    outfile << "OFF" << std::endl;
+    outfile << mesh_.n_vertices() << " " << mesh_.n_faces() << " " << mesh_.n_edges() << std::endl;
+    for(auto v: mesh_.vertices()){
+        outfile << mesh_.position(v)[0] << " "  << mesh_.position(v)[1] << " " << mesh_.position(v)[2] << std::endl;
+    }
+    for(auto f: mesh_.faces()){
+        Mesh::Vertex_around_face_circulator vc, vc_end;
+        vc = mesh_.vertices(f);
+        vc_end = vc;
+        auto i = 0;
+        do {
+            i+=1;
+        } while(++vc != vc_end);
+        outfile << i << " ";
+        do {
+            auto index = (*vc).idx();
+            outfile << index << " ";
+        } while(++vc != vc_end);
+        outfile << std::endl;
+    }
+
+    outfile.close();
+
+    cout << "Mesh "<< name << " created." << endl;
+    cout << "# of vertices : " << mesh_.n_vertices() << endl;
+    cout << "# of faces : " << mesh_.n_faces() << endl;
+    cout << "# of edges : " << mesh_.n_edges() << endl;
 }
 
 void MeshProcessing::compute_mesh_properties() {
