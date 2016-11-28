@@ -1,0 +1,3 @@
+Here we can write every ides we have concerning mesh building, algorithm, processing of the Geralt mesh so that we don't forget them :)
+
+- for plan B: use Voronoi point to build the artistic pattern
