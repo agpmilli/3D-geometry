@@ -1,0 +1,8 @@
+Construct our methods step by step
+    - cut the mesh arbitrarly in the middle
+    - make kind of "goutte" falling from the bottom of the mesh (add points under the mesh randomly and link them to the bottom of the mesh)
+    - make the water fall on the top of the mesh
+    - smooth to make it water-like (until there it can be just lines (not smooth at all))
+
+Create one method for each of those things with parameters    
+    

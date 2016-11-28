@@ -26,6 +26,8 @@ Clean mesh :
         - remove duplicate vertices (18)
         - remove zero area faces (0)
         - remove unreferenced vertices (3)
+        
+    filter - remeshing - quadric edge collpase decimation (2 times)
 
 - netfabb :
         - default repair of the mesh (concerns :  
