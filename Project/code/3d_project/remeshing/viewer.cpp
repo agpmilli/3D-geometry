@@ -463,6 +463,45 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     coefTextBox->setFontSize(16);
     coefTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
 
+    new Label(window_, "Effects", "sans-bold");
+    popupBtn = new PopupButton(window_, "Mesh Cut");
+    popup = popupBtn->popup();
+    popup->setLayout(new GroupLayout());
+
+    Widget* panelEffect = new Widget(popup);
+    panelEffect->setLayout(new GroupLayout());
+
+
+    b = new Button(panelEffect, "Cut mesh by height");
+    b->setCallback([this]() {
+        mesh_->cut_mesh_by_height(this->leftHeightTextBox->value(),
+                                          this->rightHeightTextBox->value());
+        //mesh_->meshProcess();
+        //this->refresh_mesh();
+    });
+
+    panelEffect = new Widget(popup);
+    GridLayout *layoutEffect = new GridLayout(Orientation::Horizontal, 2,
+                                        Alignment::Middle, 15, 5);
+    layoutEffect->setColAlignment({ Alignment::Maximum, Alignment::Fill });
+    layoutEffect->setSpacing(0, 10);
+    panelEffect->setLayout(layoutEffect);
+    new Label(panelEffect, "Left height:", "sans-bold");
+    leftHeightTextBox = new FloatBox<float>(panelEffect, 0.0);
+    leftHeightTextBox->setEditable(true);
+    leftHeightTextBox->setFixedSize(Vector2i(50, 20));
+    leftHeightTextBox->setDefaultValue("0.0");
+    leftHeightTextBox->setFontSize(16);
+    leftHeightTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
+    new Label(panelEffect, "Right height:", "sans-bold");
+    rightHeightTextBox = new FloatBox<float>(panelEffect, 0.0);
+    rightHeightTextBox->setEditable(true);
+    rightHeightTextBox->setFixedSize(Vector2i(50, 20));
+    rightHeightTextBox->setDefaultValue("0.0");
+    rightHeightTextBox->setFontSize(16);
+    rightHeightTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
+
+
     performLayout();
 
     initShaders();

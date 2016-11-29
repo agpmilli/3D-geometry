@@ -115,4 +115,7 @@ private:
     IntBox<int>* iterationEnhancementTextBox;
     IntBox<int>* iterationSmoothTextBox;
 
+    FloatBox<float>* leftHeightTextBox;
+    FloatBox<float>* rightHeightTextBox;
+
 };
