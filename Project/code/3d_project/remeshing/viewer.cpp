@@ -300,6 +300,13 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
         this->refresh_trackball_center();
     });
 
+    b = new Button(popup, "Skull");
+    b->setCallback([this]() {
+        mesh_->load_mesh("../data/skull.off");
+        this->refresh_mesh();
+        this->refresh_trackball_center();
+    });
+
     b = new Button(popup, "Open mesh ...");
     b->setCallback([this]() {
         string filename = nanogui::file_dialog({{"obj", "Wavefront OBJ"},
@@ -472,34 +479,12 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     panelEffect->setLayout(new GroupLayout());
 
 
-    b = new Button(panelEffect, "Cut mesh by height");
+    b = new Button(panelEffect, "Cut mesh in half");
     b->setCallback([this]() {
-        mesh_->cut_mesh_by_height(this->leftHeightTextBox->value(),
-                                          this->rightHeightTextBox->value());
+        mesh_->cut_mesh_half();
         //mesh_->meshProcess();
         //this->refresh_mesh();
     });
-
-    panelEffect = new Widget(popup);
-    GridLayout *layoutEffect = new GridLayout(Orientation::Horizontal, 2,
-                                        Alignment::Middle, 15, 5);
-    layoutEffect->setColAlignment({ Alignment::Maximum, Alignment::Fill });
-    layoutEffect->setSpacing(0, 10);
-    panelEffect->setLayout(layoutEffect);
-    new Label(panelEffect, "Left height:", "sans-bold");
-    leftHeightTextBox = new FloatBox<float>(panelEffect, 0.0);
-    leftHeightTextBox->setEditable(true);
-    leftHeightTextBox->setFixedSize(Vector2i(50, 20));
-    leftHeightTextBox->setDefaultValue("0.0");
-    leftHeightTextBox->setFontSize(16);
-    leftHeightTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
-    new Label(panelEffect, "Right height:", "sans-bold");
-    rightHeightTextBox = new FloatBox<float>(panelEffect, 0.0);
-    rightHeightTextBox->setEditable(true);
-    rightHeightTextBox->setFixedSize(Vector2i(50, 20));
-    rightHeightTextBox->setDefaultValue("0.0");
-    rightHeightTextBox->setFontSize(16);
-    rightHeightTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
 
 
     performLayout();

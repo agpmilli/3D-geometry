@@ -57,6 +57,7 @@ class Viewer : public nanogui::Screen {
 public:
 
     void refresh_mesh();
+    //void refresh_mesh2();
     void refresh_trackball_center();
     Viewer();
     ~Viewer();
@@ -98,6 +99,7 @@ private:
     nanogui::Window *window_;
 
     mesh_processing::MeshProcessing* mesh_;
+    mesh_processing::MeshProcessing* mesh2_;
 
     enum COLOR_MODE : int { NORMAL = 0, VALENCE = 1, CURVATURE = 2 };
     enum CURVATURE_TYPE : int { UNIMEAN = 2, LAPLACEBELTRAMI = 3, GAUSS = 4 };
@@ -114,8 +116,5 @@ private:
     FloatBox<float>* coefTextBox;
     IntBox<int>* iterationEnhancementTextBox;
     IntBox<int>* iterationSmoothTextBox;
-
-    FloatBox<float>* leftHeightTextBox;
-    FloatBox<float>* rightHeightTextBox;
 
 };

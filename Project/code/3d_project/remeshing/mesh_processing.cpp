@@ -190,98 +190,45 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
     std::cout << "Calc target length done" << std::endl;
 }
 
-void MeshProcessing::cut_mesh_by_height (double left_height, double right_height){
-    /*(point to test) dot (plane normal) = 0 => Point is on the plane
+void MeshProcessing::cut_mesh_half (){
+    /* Cut the current mesh in half */
 
-    (point to test) dot (plane normal) > 0 => Point is on the same side as the normal vector
-
-    (point to test) dot (plane normal) < 0 => Point is on the opposite side of the normal vector*/
-
-    double minX = 0.0;
-    double maxX = 0.0;
-    double minY = 0.0;
-    double maxY = 0.0;
-    double minZ = 0.0;
-    double maxZ = 0.0;
+    double meanX = 0.0;
+    double meanY = 0.0;
+    double meanZ = 0.0;
+    int num = 0;
 
     for (auto v:mesh_.vertices()){
         auto position = mesh_.position(v);
-        if (position[0] < minX) {
-             minX=position[0];
-        }
-        if (position[0] > maxX) {
-             maxX=position[0];
-        }
-        if (position[1] < minY) {
-             minY=position[1];
-        }
-        if (position[1] > maxY) {
-             maxY=position[1];
-        }
-        if (position[2] < minZ) {
-             minZ=position[2];
-        }
-        if (position[2] > maxZ) {
-             maxZ=position[2];
-        }
+        meanX += position[0];
+        meanY += position[1];
+        meanZ += position[2];
+        num += 1;
     }
 
-    std::cout << "min X : " << minX << std::endl;
-    std::cout << "max X : " << maxX << std::endl;
-    std::cout << "min Y : " << minY << std::endl;
-    std::cout << "max Y : " << maxY << std::endl;
-    std::cout << "min Z : " << minZ << std::endl;
-    std::cout << "max Z : " << maxZ << std::endl;
+    meanX /= num;
+    meanY /= num;
+    meanZ /= num;
 
-    Point left,right;
-    left[0] = 0;
-    left[1] = 0;
-    left[2] = 0;
-    right[0] = 0;
-    right[1] = 0;
-    right[2] = 0;
-
-    left_height = left_height - std::abs(minY);
-    right_height = right_height - std::abs(minY);
-
-    left[0] = minX;
-    left[1] = left_height;
-    left[2] = minZ;
-    right[0] = maxX;
-    right[1] = right_height;
-    right[2] = maxZ;
-
-    std::cout << "LEFT : " << left << std::endl;
-    std::cout << "RIGHT : " << right << std::endl;
-
-    Point point3;
-    point3[0] = minX;
-    point3[1] = left_height;
-    point3[2] = maxZ;
-    Point u = left - point3;
-    Point v = right - point3;
-
-    Point normal;
-    normal[0]=u[1]*v[2] - u[2]*v[1];
-    normal[1]=u[2]*v[0] - u[0]*v[2];
-    normal[2]=u[0]*v[1] - u[1]*v[0];
-
-    double a = normal[0] * point3[0] + normal[1] * point3[1] + normal[2] * point3[2];
+    std::cout << "mean computed" << std::endl;
 
     for ( auto v: mesh_.vertices()){
-        Point position = mesh_.position(v);
-        std::cout << "DELETE if < 0 : " << normal[0] * position[0] + normal[1] * position[1] + normal[2] * position[2] - a << std::endl;
-        if(normal[0] * position[0] + normal[1] * position[1] + normal[2] * position[2] - a > 0){
+        auto position = mesh_.position(v);
+        if(position[0] > meanX){
             mesh_.delete_vertex(v);
+            /*for(auto neighbors: mesh_.vertices(v)){
+                auto position1 = mesh_.position(neighbors);
+                if(position1[0] > meanX){
+                    mesh_.delete_edge(mesh_.find_edge(v,neighbors));
+                }
+            }*/
         }
     }
-   /*
-    vec normalA;
-    vec AB = B - A;
-    double dot = dot(AB, normalA);
-    bool inFront = (dot > 0);
-    */
 
+    std::cout << "edges deleted" << std::endl;
+
+    // clean the deleted edges/vertices/faces
+    mesh_.garbage_collection();
 }
 
 void MeshProcessing::split_long_edges (){
