@@ -479,11 +479,18 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     panelEffect->setLayout(new GroupLayout());
 
 
-    b = new Button(panelEffect, "Cut mesh in half");
+    b = new Button(panelEffect, "Separate top of the head");
     b->setCallback([this]() {
-        mesh_->cut_mesh_half();
-        //mesh_->meshProcess();
-        //this->refresh_mesh();
+        mesh_->separate_head();
+        mesh_->meshProcess();
+        this->refresh_mesh();
+    });
+
+    b = new Button(panelEffect, "Delete long edges");
+    b->setCallback([this]() {
+        mesh_->delete_long_edges();
+        mesh_->meshProcess();
+        this->refresh_mesh();
     });
 
 

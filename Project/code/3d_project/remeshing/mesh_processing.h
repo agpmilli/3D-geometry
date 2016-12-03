@@ -45,7 +45,8 @@ public:
     void remesh (const REMESHING_TYPE &remeshing_type, const int &num_iterations);
     void calc_target_length (const REMESHING_TYPE &remeshing_type);
 
-    void cut_mesh_half();
+    void separate_head();
+    void delete_long_edges();
 
     void split_long_edges ();
     void collapse_short_edges ();

@@ -190,13 +190,12 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
     std::cout << "Calc target length done" << std::endl;
 }
 
-void MeshProcessing::cut_mesh_half (){
-    /* Cut the current mesh in half */
-
+void MeshProcessing::separate_head (){
     double meanX = 0.0;
     double meanY = 0.0;
     double meanZ = 0.0;
     int num = 0;
+    double gamma = 0.4;
 
     for (auto v:mesh_.vertices()){
         auto position = mesh_.position(v);
@@ -214,18 +213,36 @@ void MeshProcessing::cut_mesh_half (){
 
     for ( auto v: mesh_.vertices()){
         auto position = mesh_.position(v);
-        if(position[0] > meanX){
-            mesh_.delete_vertex(v);
-            /*for(auto neighbors: mesh_.vertices(v)){
-                auto position1 = mesh_.position(neighbors);
-                if(position1[0] > meanX){
-                    mesh_.delete_edge(mesh_.find_edge(v,neighbors));
-                }
-            }*/
+        if(position[0] < meanX){
+            if(position[1] > meanY){
+                position[1] += gamma * (meanX - position[0]);
+            }else{
+                position[1] -= gamma * (meanX - position[0]);
+            }
+            mesh_.position(v)[1] = position[1];
         }
     }
 
-    std::cout << "edges deleted" << std::endl;
+    std::cout << "move vertices" << std::endl;
+
+    // clean the deleted edges/vertices/faces
+    mesh_.garbage_collection();
+}
+
+void MeshProcessing::delete_long_edges (){
+    double mean_length = 0;
+    int num = 0;
+    for(auto e:mesh_.edges()){
+        mean_length += mesh_.edge_length(e);
+        num += 1;
+    }
+    mean_length/=num;
+
+    for(auto e:mesh_.edges()){
+        if(mesh_.edge_length(e)>mean_length){
+            /* WHAT TO DO HERE ? */
+        }
+    }
 
     // clean the deleted edges/vertices/faces
     mesh_.garbage_collection();
