@@ -489,8 +489,8 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     b = new Button(panelEffect, "Delete long edges");
     b->setCallback([this]() {
         mesh_->delete_long_edges();
-        mesh_->meshProcess();
-        this->refresh_mesh();
+        //mesh_->meshProcess();
+        //this->refresh_mesh();
     });
 
 
