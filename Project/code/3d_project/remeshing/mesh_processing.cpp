@@ -229,18 +229,44 @@ void MeshProcessing::separate_head (){
     mesh_.garbage_collection();
 }
 
+//void MeshProcessing::delete_long_edges (){
+//    double mean_length = 0;
+//    int num = 0;
+//    for(auto e:mesh_.edges()){
+//        mean_length += mesh_.edge_length(e);
+//        num += 1;
+//    }
+//    mean_length/=num;
+
+//    for(auto h:mesh_.halfedges()){
+//        auto e = mesh_.edge(h);
+//        if(mesh_.edge_length(e) > mean_length){
+//            auto bigface = mesh_.face(h);
+//            mesh_.delete_face(bigface);
+//        }
+//    }
+
+//    // clean the deleted edges/vertices/faces
+//    mesh_.garbage_collection();
+//}
+
 void MeshProcessing::delete_long_edges (){
-    double mean_length = 0;
+    double mean_length = 0.0;
     int num = 0;
     for(auto e:mesh_.edges()){
         mean_length += mesh_.edge_length(e);
         num += 1;
     }
     mean_length/=num;
+    std::cout << "mean length" << mean_length << std::endl;
 
     for(auto e:mesh_.edges()){
-        if(mesh_.edge_length(e)>mean_length){
+        if(mesh_.edge_length(e)>mean_length*25){
             /* WHAT TO DO HERE ? */
+            std::cout << "removed edge length: " << mesh_.edge_length(e) << std::endl;
+            mesh_.delete_edge(e);
+            //mesh_.garbage_collection();
+
         }
     }
 
