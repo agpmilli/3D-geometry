@@ -209,24 +209,17 @@ void MeshProcessing::separate_head (){
     meanY /= num;
     meanZ /= num;
 
-    std::cout << "mean computed" << std::endl;
-
     for ( auto v: mesh_.vertices()){
         auto position = mesh_.position(v);
-        if(position[0] < meanX){
-            if(position[1] > meanY){
-                position[1] += gamma * (meanX - position[0]);
+        if(position[1] > meanY){
+            if(position[0] > meanX){
+                position[0] += gamma * (position[1] - meanY);
             }else{
-                position[1] -= gamma * (meanX - position[0]);
+                position[0] -= gamma * (position[1] - meanY);
             }
-            mesh_.position(v)[1] = position[1];
+            mesh_.position(v)[0] = position[0];
         }
     }
-
-    std::cout << "move vertices" << std::endl;
-
-    // clean the deleted edges/vertices/faces
-    mesh_.garbage_collection();
 }
 
 //void MeshProcessing::delete_long_edges (){
@@ -255,6 +248,7 @@ void MeshProcessing::delete_long_edges (){
     int num = 0;
     for(auto e:mesh_.edges()){
         mean_length += mesh_.edge_length(e);
+        std::cout << "edge_length : " << mesh_.edge_length(e) << std::endl;
         num += 1;
     }
     mean_length/=num;
@@ -265,7 +259,6 @@ void MeshProcessing::delete_long_edges (){
             /* WHAT TO DO HERE ? */
             std::cout << "removed edge length: " << mesh_.edge_length(e) << std::endl;
             mesh_.delete_edge(e);
-            //mesh_.garbage_collection();
 
         }
     }
