@@ -224,21 +224,36 @@ void MeshProcessing::separate_head (){
 
 void MeshProcessing::delete_long_edges (){
     double mean_length = 0;
-    int num = 0;
+    int num_edges_1 = 0;
+    int num_edges_2 = 0;
+    int num_deleted = 0;
+    double gamma = 1;
     for(auto e:mesh_.edges()){
         mean_length += mesh_.edge_length(e);
-        std::cout << "edge_length : " << mesh_.edge_length(e) << std::endl;
-        num += 1;
+        num_edges_1 += 1;
     }
-    mean_length/=num;
-    std::cout << "MEAN LENGTH : " << mean_length << std::endl;
+    mean_length/=num_edges_1;
 
-    for(auto e:mesh_.edges()){
-        if(mesh_.edge_length(e) > mean_length){
-            mesh_.delete_edge(e);
-            // Strange behavior, looks like it depend of x axis
+
+    std::vector<Mesh::Face> faces_to_delete;
+    Mesh::Edge_iterator e_it=mesh_.edges_begin();
+    Mesh::Edge_iterator e_end = mesh_.edges_end();
+    for (e_it; e_it!=e_end; ++e_it){
+        num_edges_2+=1;
+        if(mesh_.edge_length(*e_it) > gamma * mean_length){
+            auto h = mesh_.find_halfedge(mesh_.vertex(*e_it,0), mesh_.vertex(*e_it,1));
+            Mesh::Face face = mesh_.face(h);
+            if(face.is_valid()){
+                faces_to_delete.push_back(face);
+            }
         }
     }
+
+    for(int i=0; i<faces_to_delete.size(); i++){
+            mesh_.delete_face(faces_to_delete[i]);
+            num_deleted+=1;
+    }
+    std::cout << "nb of edges in 1st loop : " << num_edges_1 << " - nb of edges in 2nd loop : " << num_edges_2 << " - nb of face deleted : " << num_deleted << std::endl;
 
     // clean the deleted edges/vertices/faces
     mesh_.garbage_collection();
