@@ -299,7 +299,12 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
         this->refresh_mesh();
         this->refresh_trackball_center();
     });
-
+    b = new Button(popup, "Geralt no hair");
+    b->setCallback([this]() {
+        mesh_->load_mesh("../data/geralt_cut_filled.off");
+        this->refresh_mesh();
+        this->refresh_trackball_center();
+    });
     b = new Button(popup, "Skull");
     b->setCallback([this]() {
         mesh_->load_mesh("../data/skull.off");

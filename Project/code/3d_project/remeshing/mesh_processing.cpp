@@ -195,7 +195,7 @@ void MeshProcessing::separate_head (){
     double meanY = 0.0;
     double meanZ = 0.0;
     int num = 0;
-    double gamma = 0.5;
+    double gamma = 0.35;
 
     for (auto v:mesh_.vertices()){
         auto position = mesh_.position(v);
@@ -297,7 +297,6 @@ double MeshProcessing::compute_area_face (Mesh::Face face){
     auto v2 = *vertices;
     vertices.operator ++();
     auto v3 = *vertices;
-    //std::cout << "position of the vertices that are in face : " << mesh_.position(v1) << " : " << mesh_.position(v2) << " : " << mesh_.position(v3) << std::endl;
     auto l1 =  norm(mesh_.position(v1) - mesh_.position(v2));
     auto l2 =  norm(mesh_.position(v1) - mesh_.position(v3));
     auto l3 =  norm(mesh_.position(v2) - mesh_.position(v3));
