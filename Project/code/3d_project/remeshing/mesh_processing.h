@@ -46,7 +46,12 @@ public:
     void calc_target_length (const REMESHING_TYPE &remeshing_type);
 
     void separate_head();
-    void delete_long_edges();
+    void delete_long_edges_faces();
+    void delete_big_faces();
+    double compute_area_face (Mesh::Face face);
+
+    void circularHole();
+    void delete_faces_vertex();
 
     void split_long_edges ();
     void collapse_short_edges ();

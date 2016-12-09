@@ -470,7 +470,7 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     coefTextBox->setFontSize(16);
     coefTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
 
-    new Label(window_, "Effects", "sans-bold");
+    new Label(window_, "Geralt-Effects", "sans-bold");
     popupBtn = new PopupButton(window_, "Mesh Cut");
     popup = popupBtn->popup();
     popup->setLayout(new GroupLayout());
@@ -483,15 +483,51 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     b->setCallback([this]() {
         mesh_->separate_head();
         mesh_->meshProcess();
+        this->mesh_->compute_mesh_properties();
         this->refresh_mesh();
     });
 
-    b = new Button(panelEffect, "Delete long edges");
+    b = new Button(panelEffect, "Delete long edges faces");
     b->setCallback([this]() {
-        mesh_->delete_long_edges();
-        //mesh_->meshProcess();
-        //this->refresh_mesh();
+        mesh_->delete_long_edges_faces();
+        mesh_->meshProcess();
+        this->mesh_->compute_mesh_properties();
+        this->refresh_mesh();
     });
+
+    b = new Button(panelEffect, "Delete big area faces");
+    b->setCallback([this]() {
+        mesh_->delete_big_faces();
+        mesh_->meshProcess();
+        this->mesh_->compute_mesh_properties();
+        this->refresh_mesh();
+    });
+
+    new Label(window_, "Skull-Effects", "sans-bold");
+    popupBtn = new PopupButton(window_, "Hole");
+    popup = popupBtn->popup();
+    popup->setLayout(new GroupLayout());
+
+    Widget* panelSkullEffect = new Widget(popup);
+    panelSkullEffect->setLayout(new GroupLayout());
+
+
+    b = new Button(panelSkullEffect, "Create a big hole");
+    b->setCallback([this]() {
+        mesh_->circularHole();
+        mesh_->meshProcess();
+        this->mesh_->compute_mesh_properties();
+        this->refresh_mesh();
+    });
+
+    b = new Button(panelSkullEffect, "Create some small holes");
+    b->setCallback([this]() {
+        mesh_->delete_faces_vertex();
+        mesh_->meshProcess();
+        this->mesh_->compute_mesh_properties();
+        this->refresh_mesh();
+    });
+
 
 
     performLayout();
