@@ -14,6 +14,7 @@
 #include <set>
 #include <iostream>
 #include <fstream>
+#include <math.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -44,9 +45,6 @@ MeshProcessing::~MeshProcessing() {
 void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
                              const int &num_iterations) {
     calc_weights ();
-    /*calc_mean_curvature ();
-    calc_uniform_mean_curvature ();
-    calc_gauss_curvature ();*/
     calc_target_length (remeshing_type);
 
     // main remeshing loop
@@ -191,42 +189,102 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
 }
 
 void MeshProcessing::separate_head (){
-    double meanX = 0.0;
-    double meanY = 0.0;
-    double meanZ = 0.0;
-    int num = 0;
-    double gamma = 0.35;
+    double noseX = 0;
+    double noseY = 0;
+    double noseZ = 0;
 
+    double gamma = 0.35;
+    double lambda = 0.2;
+
+    // Find the middle of the mesh coordinate-wise
     for (auto v:mesh_.vertices()){
         auto position = mesh_.position(v);
-        meanX += position[0];
-        meanY += position[1];
-        meanZ += position[2];
-        num += 1;
+        if(position[2]>noseZ){
+            noseX = position[0];
+            noseY = position[1];
+            noseZ = position[2];
+        }
     }
 
-    meanX /= num;
-    meanY /= num;
-    meanZ /= num;
-
+    // Compute the new coordinates for vertices higher than a certain value (in our case middle of the mesh)
     for ( auto v: mesh_.vertices()){
         auto position = mesh_.position(v);
-        if(position[1] > meanY){
-            if(position[0] > meanX){
-                position[0] += gamma * (position[1] - meanY);
+        if(position[1] > noseY){
+            if(position[0] > noseX){
+                position[0] += gamma * pow((position[1] - noseY)/6,2);
+                position[1] -= lambda * pow((position[1] - noseY)/7,2);
             }else{
-                position[0] -= gamma * (position[1] - meanY);
+                position[0] -= gamma * pow((position[1] - noseY)/6,2);
+                position[1] -= lambda * pow((position[1] - noseY)/7,2);
             }
             mesh_.position(v)[0] = position[0];
+            mesh_.position(v)[1] = position[1];
         }
     }
 }
 
+void MeshProcessing::create_fracture (){
+    double noseX = 0;
+    double noseY = 0;
+    double noseZ = 0;
+    double maxY = 0;
+    double gamma = 3;
+    double lambda = 2;
+    std::vector<Mesh::Vertex> vertices_in_fracture;
+
+    double mean_length = 0;
+    int num_edges_1 = 0;
+
+    int i = 0;
+
+    for(auto e:mesh_.edges()){
+        mean_length += mesh_.edge_length(e);
+        num_edges_1 += 1;
+    }
+    mean_length/=num_edges_1;
+
+    // Find the middle of the mesh coordinate-wise
+    for (auto v:mesh_.vertices()){
+        auto position = mesh_.position(v);
+        if(position[2]>noseZ){
+            noseX = position[0];
+            noseY = position[1];
+            noseZ = position[2];
+        }
+        if(position[1] > maxY){
+            maxY = position[1];
+        }
+    }
+
+    std::cout << "difference maxY - noseY : " << maxY - noseY << std::endl;
+
+    for(auto e:mesh_.edges()){
+        if(mesh_.edge_length(e) > gamma * mean_length){
+            vertices_in_fracture.push_back(mesh_.vertex(e,0));
+            i++;
+            vertices_in_fracture.push_back(mesh_.vertex(e,1));
+            i++;
+        }
+    }
+    std::cout << "vertices in fracture : " << i << std::endl;
+
+    for(auto v:vertices_in_fracture){
+        auto position = mesh_.position(v);
+        double h_fracture = fmod(position[1], 5);
+        // TO LOOK AND CHANGE
+        if(h_fracture<2.5){
+            position[0] += lambda * fmod(position[1], 2.5);
+        } else{
+            position[0] -= lambda * fmod(position[1], 2.5);
+        }
+        mesh_.position(v)[0] = position[0];
+    }
+}
 
 void MeshProcessing::delete_long_edges_faces (){
     double mean_length = 0;
     int num_edges_1 = 0;
-    double gamma = 4;
+    double gamma = 3;
     for(auto e:mesh_.edges()){
         mean_length += mesh_.edge_length(e);
         num_edges_1 += 1;
@@ -255,113 +313,6 @@ void MeshProcessing::delete_long_edges_faces (){
         mesh_.delete_face(faces_to_delete[i]);
     }
 
-    // clean the deleted edges/vertices/faces
-    mesh_.garbage_collection();
-}
-
-void MeshProcessing::delete_big_faces (){
-    double mean_length = 0;
-    int num_edges_1 = 0;
-    double gamma = 2;
-    for(auto e:mesh_.edges()){
-        mean_length += mesh_.edge_length(e);
-        num_edges_1 += 1;
-    }
-    double threshold = mean_length/num_edges_1;
-
-    std::vector<Mesh::Face> faces_to_delete;
-    std::vector<int> faces_to_delete_idx;
-
-    for(auto f:mesh_.faces()){
-        auto area = compute_area_face(f);
-
-        if(area > gamma * threshold){
-            if(f.is_valid()){
-                faces_to_delete_idx.push_back(f.idx());
-                faces_to_delete.push_back(f);
-            }
-        }
-    }
-
-    for(int i=0; i<faces_to_delete.size(); i++){
-        mesh_.delete_face(faces_to_delete[i]);
-    }
-
-    // clean the deleted edges/vertices/faces
-    mesh_.garbage_collection();
-}
-
-double MeshProcessing::compute_area_face (Mesh::Face face){
-    auto vertices = mesh_.vertices(face);
-    auto v1 = *vertices;
-    vertices.operator ++();
-    auto v2 = *vertices;
-    vertices.operator ++();
-    auto v3 = *vertices;
-    auto l1 =  norm(mesh_.position(v1) - mesh_.position(v2));
-    auto l2 =  norm(mesh_.position(v1) - mesh_.position(v3));
-    auto l3 =  norm(mesh_.position(v2) - mesh_.position(v3));
-    auto p = l1 + l2 + l3;
-    p/=2;
-    return sqrt(p * (p-l1) * (p-l2) * (p-l3));
-}
-
-
-
-void MeshProcessing::circularHole(){
-    double length = 10.0;
-    Mesh::Vertex vertex_chosen;
-    int vertex_number = std::rand() % mesh_.n_vertices();
-    std::vector<Mesh::Face> faces_to_delete;
-    for(auto v:mesh_.vertices()){
-        if(v.idx() == vertex_number){
-         vertex_chosen = v;
-        }
-    }
-    auto x = mesh_.position(vertex_chosen);
-    for(auto v:mesh_.vertices()){
-        if(v.idx() != vertex_chosen.idx()){
-            auto y = mesh_.position(v);
-            double distance1 = sqrt(pow(x[0]-y[0],2.0)+pow(x[1]-y[1],2.0)+pow(x[2]-y[2],2.0));
-
-            if(distance1 < length){
-                for(auto v2:mesh_.vertices(v)){
-                    auto z = mesh_.position(v2);
-                    double distance2 = sqrt(pow(x[0]-y[0],2.0)+pow(x[1]-y[1],2.0)+pow(x[2]-y[2],2.0));
-                    if(distance2 < length){
-                        auto h = mesh_.find_halfedge(v,v2);
-                        auto f = mesh_.face(h);
-                        if(f.is_valid()){
-                            faces_to_delete.push_back(f);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    for(int i=0; i<faces_to_delete.size(); i++){
-        mesh_.delete_face(faces_to_delete[i]);
-    }
-    // clean the deleted edges/vertices/faces
-    mesh_.garbage_collection();
-}
-
-void MeshProcessing::delete_faces_vertex(){
-    std::vector<Mesh::Face> faces_to_delete;
-    for(auto v:mesh_.vertices()){
-        if(v.idx() % 1000 == 0){
-            for(auto f:mesh_.faces(v)){
-                if(f.is_valid()){
-                    faces_to_delete.push_back(f);
-                }
-            }
-        }
-    }
-    for(int i=0; i<faces_to_delete.size(); i++){
-        mesh_.delete_face(faces_to_delete[i]);
-
-    }
     // clean the deleted edges/vertices/faces
     mesh_.garbage_collection();
 }

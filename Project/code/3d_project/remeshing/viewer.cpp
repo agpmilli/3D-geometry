@@ -459,27 +459,25 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     Widget* panelEffect = new Widget(popup);
     panelEffect->setLayout(new GroupLayout());
 
-
     b = new Button(panelEffect, "Separate top of the head");
     b->setCallback([this]() {
         mesh_->separate_head();
         mesh_->meshProcess();
-        //this->mesh_->compute_mesh_properties();
+        this->mesh_->compute_mesh_properties();
+        this->refresh_mesh();
+    });
+
+    b = new Button(panelEffect, "Create fracture");
+    b->setCallback([this]() {
+        mesh_->create_fracture();
+        mesh_->meshProcess();
+        this->mesh_->compute_mesh_properties();
         this->refresh_mesh();
     });
 
     b = new Button(panelEffect, "Delete long edges faces");
     b->setCallback([this]() {
         mesh_->delete_long_edges_faces();
-        mesh_->meshProcess();
-        this->mesh_->compute_mesh_properties();
-        this->refresh_mesh();
-    });
-
-    b = new Button(panelEffect, "Delete big area faces");
-    b->setCallback([this]() {
-        mesh_->delete_big_faces();
-        mesh_->meshProcess();
         this->mesh_->compute_mesh_properties();
         this->refresh_mesh();
     });
@@ -492,29 +490,10 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     Widget* panelSkullEffect = new Widget(popup);
     panelSkullEffect->setLayout(new GroupLayout());
 
-
-    b = new Button(panelSkullEffect, "Create a big hole");
-    b->setCallback([this]() {
-        mesh_->circularHole();
-        mesh_->meshProcess();
-        this->mesh_->compute_mesh_properties();
-        this->refresh_mesh();
-    });
-
-    b = new Button(panelSkullEffect, "Create some small holes");
-    b->setCallback([this]() {
-        mesh_->delete_faces_vertex();
-        mesh_->meshProcess();
-        this->mesh_->compute_mesh_properties();
-        this->refresh_mesh();
-    });
-
-
-
     performLayout();
 
     initShaders();
-    mesh_ = new mesh_processing::MeshProcessing("../data/geralt.off");
+    mesh_ = new mesh_processing::MeshProcessing("../data/geralt_cut_filled.off");
     this->refresh_mesh();
     this->refresh_trackball_center();
 }
