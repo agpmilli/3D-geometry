@@ -357,30 +357,6 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
         this->popupCurvature->setPushed(false);
     });
 
-    popupCurvature = new PopupButton(window_, "Curvature");
-    popup = popupCurvature->popup();
-    popupCurvature->setCallback([this] () {
-        this->color_mode = CURVATURE;
-    });
-    popup->setLayout(new GroupLayout());
-    new Label(popup, "Curvature Type", "sans-bold");
-    b = new Button(popup, "Uniform Laplacian");
-    b->setFlags(Button::RadioButton);
-    b->setPushed(true);
-    b->setCallback([this]() {
-        this->curvature_type = UNIMEAN;
-    });
-    b = new Button(popup, "Laplace-Beltrami");
-    b->setFlags(Button::RadioButton);
-    b->setCallback([this]() {
-        this->curvature_type = LAPLACEBELTRAMI;
-    });
-    b = new Button(popup, "Gaussian");
-    b->setFlags(Button::RadioButton);
-    b->setCallback([this]() {
-        this->curvature_type = GAUSS;
-    });
-
     new Label(window_, "Remeshing Type", "sans-bold");
     vector<string> remeshing_type = {"Average", "Curvature", "Height"};
     ComboBox *c = new ComboBox(window_, remeshing_type);
@@ -488,7 +464,7 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     b->setCallback([this]() {
         mesh_->separate_head();
         mesh_->meshProcess();
-        this->mesh_->compute_mesh_properties();
+        //this->mesh_->compute_mesh_properties();
         this->refresh_mesh();
     });
 

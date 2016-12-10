@@ -63,10 +63,6 @@ public:
     void compute_mesh_properties();
     void meshProcess();
 
-    void calc_mean_curvature();
-    void calc_uniform_mean_curvature();
-    void calc_gauss_curvature();
-
     void uniform_smooth(unsigned int n_iters);
     void smooth(unsigned int n_iters);
 
