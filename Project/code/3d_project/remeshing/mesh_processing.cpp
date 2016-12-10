@@ -195,7 +195,7 @@ void MeshProcessing::separate_head (){
     double meanY = 0.0;
     double meanZ = 0.0;
     int num = 0;
-    double gamma = 0.4;
+    double gamma = 0.35;
 
     for (auto v:mesh_.vertices()){
         auto position = mesh_.position(v);
@@ -222,6 +222,7 @@ void MeshProcessing::separate_head (){
     }
 }
 
+<<<<<<< HEAD
 //void MeshProcessing::delete_long_edges (){
 //    double mean_length = 0;
 //    int num = 0;
@@ -246,23 +247,160 @@ void MeshProcessing::separate_head (){
 void MeshProcessing::delete_long_edges (){
     double mean_length = 0.0;
     int num = 0;
+=======
+void MeshProcessing::delete_long_edges_faces (){
+    double mean_length = 0;
+    int num_edges_1 = 0;
+    double gamma = 4;
+>>>>>>> 338e98c20857468c9d30c475c012d4d0e87e3e66
     for(auto e:mesh_.edges()){
         mean_length += mesh_.edge_length(e);
-        std::cout << "edge_length : " << mesh_.edge_length(e) << std::endl;
-        num += 1;
+        num_edges_1 += 1;
     }
+    mean_length/=num_edges_1;
+
+    std::vector<Mesh::Face> faces_to_delete;
+    Mesh::Edge_iterator e_it=mesh_.edges_begin();
+    Mesh::Edge_iterator e_end = mesh_.edges_end();
+    for (e_it; e_it!=e_end; ++e_it){
+        if(mesh_.edge_length(*e_it) > gamma * mean_length){
+            auto h1 = mesh_.find_halfedge(mesh_.vertex(*e_it,0), mesh_.vertex(*e_it,1));
+            auto h2 = mesh_.find_halfedge(mesh_.vertex(*e_it,1), mesh_.vertex(*e_it,0));
+            Mesh::Face face1 = mesh_.face(h1);
+            if(face1.is_valid()){
+                faces_to_delete.push_back(face1);
+            }
+            Mesh::Face face2 = mesh_.face(h2);
+            if(face2.is_valid()){
+                faces_to_delete.push_back(face2);
+            }
+        }
+    }
+<<<<<<< HEAD
     mean_length/=num;
     std::cout << "mean length" << mean_length << std::endl;
+=======
+>>>>>>> 338e98c20857468c9d30c475c012d4d0e87e3e66
 
+    for(int i=0; i<faces_to_delete.size(); i++){
+        mesh_.delete_face(faces_to_delete[i]);
+    }
+
+    // clean the deleted edges/vertices/faces
+    mesh_.garbage_collection();
+}
+
+void MeshProcessing::delete_big_faces (){
+    double mean_length = 0;
+    int num_edges_1 = 0;
+    double gamma = 2;
     for(auto e:mesh_.edges()){
+<<<<<<< HEAD
         if(mesh_.edge_length(e)>mean_length*25){
             /* WHAT TO DO HERE ? */
             std::cout << "removed edge length: " << mesh_.edge_length(e) << std::endl;
             mesh_.delete_edge(e);
 
+=======
+        mean_length += mesh_.edge_length(e);
+        num_edges_1 += 1;
+    }
+    double threshold = mean_length/num_edges_1;
+
+    std::vector<Mesh::Face> faces_to_delete;
+    std::vector<int> faces_to_delete_idx;
+
+    for(auto f:mesh_.faces()){
+        auto area = compute_area_face(f);
+
+        if(area > gamma * threshold){
+            if(f.is_valid()){
+                faces_to_delete_idx.push_back(f.idx());
+                faces_to_delete.push_back(f);
+            }
+>>>>>>> 338e98c20857468c9d30c475c012d4d0e87e3e66
         }
     }
 
+    for(int i=0; i<faces_to_delete.size(); i++){
+        mesh_.delete_face(faces_to_delete[i]);
+    }
+
+    // clean the deleted edges/vertices/faces
+    mesh_.garbage_collection();
+}
+
+double MeshProcessing::compute_area_face (Mesh::Face face){
+    auto vertices = mesh_.vertices(face);
+    auto v1 = *vertices;
+    vertices.operator ++();
+    auto v2 = *vertices;
+    vertices.operator ++();
+    auto v3 = *vertices;
+    auto l1 =  norm(mesh_.position(v1) - mesh_.position(v2));
+    auto l2 =  norm(mesh_.position(v1) - mesh_.position(v3));
+    auto l3 =  norm(mesh_.position(v2) - mesh_.position(v3));
+    auto p = l1 + l2 + l3;
+    p/=2;
+    return sqrt(p * (p-l1) * (p-l2) * (p-l3));
+}
+
+
+
+void MeshProcessing::circularHole(){
+    double length = 10.0;
+    Mesh::Vertex vertex_chosen;
+    int vertex_number = std::rand() % mesh_.n_vertices();
+    std::vector<Mesh::Face> faces_to_delete;
+    for(auto v:mesh_.vertices()){
+        if(v.idx() == vertex_number){
+         vertex_chosen = v;
+        }
+    }
+    auto x = mesh_.position(vertex_chosen);
+    for(auto v:mesh_.vertices()){
+        if(v.idx() != vertex_chosen.idx()){
+            auto y = mesh_.position(v);
+            double distance1 = sqrt(pow(x[0]-y[0],2.0)+pow(x[1]-y[1],2.0)+pow(x[2]-y[2],2.0));
+
+            if(distance1 < length){
+                for(auto v2:mesh_.vertices(v)){
+                    auto z = mesh_.position(v2);
+                    double distance2 = sqrt(pow(x[0]-y[0],2.0)+pow(x[1]-y[1],2.0)+pow(x[2]-y[2],2.0));
+                    if(distance2 < length){
+                        auto h = mesh_.find_halfedge(v,v2);
+                        auto f = mesh_.face(h);
+                        if(f.is_valid()){
+                            faces_to_delete.push_back(f);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    for(int i=0; i<faces_to_delete.size(); i++){
+        mesh_.delete_face(faces_to_delete[i]);
+    }
+    // clean the deleted edges/vertices/faces
+    mesh_.garbage_collection();
+}
+
+void MeshProcessing::delete_faces_vertex(){
+    std::vector<Mesh::Face> faces_to_delete;
+    for(auto v:mesh_.vertices()){
+        if(v.idx() % 1000 == 0){
+            for(auto f:mesh_.faces(v)){
+                if(f.is_valid()){
+                    faces_to_delete.push_back(f);
+                }
+            }
+        }
+    }
+    for(int i=0; i<faces_to_delete.size(); i++){
+        mesh_.delete_face(faces_to_delete[i]);
+
+    }
     // clean the deleted edges/vertices/faces
     mesh_.garbage_collection();
 }
