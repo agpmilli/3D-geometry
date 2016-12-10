@@ -222,37 +222,11 @@ void MeshProcessing::separate_head (){
     }
 }
 
-<<<<<<< HEAD
-//void MeshProcessing::delete_long_edges (){
-//    double mean_length = 0;
-//    int num = 0;
-//    for(auto e:mesh_.edges()){
-//        mean_length += mesh_.edge_length(e);
-//        num += 1;
-//    }
-//    mean_length/=num;
 
-//    for(auto h:mesh_.halfedges()){
-//        auto e = mesh_.edge(h);
-//        if(mesh_.edge_length(e) > mean_length){
-//            auto bigface = mesh_.face(h);
-//            mesh_.delete_face(bigface);
-//        }
-//    }
-
-//    // clean the deleted edges/vertices/faces
-//    mesh_.garbage_collection();
-//}
-
-void MeshProcessing::delete_long_edges (){
-    double mean_length = 0.0;
-    int num = 0;
-=======
 void MeshProcessing::delete_long_edges_faces (){
     double mean_length = 0;
     int num_edges_1 = 0;
     double gamma = 4;
->>>>>>> 338e98c20857468c9d30c475c012d4d0e87e3e66
     for(auto e:mesh_.edges()){
         mean_length += mesh_.edge_length(e);
         num_edges_1 += 1;
@@ -276,11 +250,6 @@ void MeshProcessing::delete_long_edges_faces (){
             }
         }
     }
-<<<<<<< HEAD
-    mean_length/=num;
-    std::cout << "mean length" << mean_length << std::endl;
-=======
->>>>>>> 338e98c20857468c9d30c475c012d4d0e87e3e66
 
     for(int i=0; i<faces_to_delete.size(); i++){
         mesh_.delete_face(faces_to_delete[i]);
@@ -295,13 +264,6 @@ void MeshProcessing::delete_big_faces (){
     int num_edges_1 = 0;
     double gamma = 2;
     for(auto e:mesh_.edges()){
-<<<<<<< HEAD
-        if(mesh_.edge_length(e)>mean_length*25){
-            /* WHAT TO DO HERE ? */
-            std::cout << "removed edge length: " << mesh_.edge_length(e) << std::endl;
-            mesh_.delete_edge(e);
-
-=======
         mean_length += mesh_.edge_length(e);
         num_edges_1 += 1;
     }
@@ -318,7 +280,6 @@ void MeshProcessing::delete_big_faces (){
                 faces_to_delete_idx.push_back(f.idx());
                 faces_to_delete.push_back(f);
             }
->>>>>>> 338e98c20857468c9d30c475c012d4d0e87e3e66
         }
     }
 
