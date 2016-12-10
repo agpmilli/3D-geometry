@@ -222,6 +222,7 @@ void MeshProcessing::separate_head (){
     }
 }
 
+
 void MeshProcessing::delete_long_edges_faces (){
     double mean_length = 0;
     int num_edges_1 = 0;
