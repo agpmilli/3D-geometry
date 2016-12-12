@@ -228,9 +228,11 @@ void MeshProcessing::create_fracture (){
     double noseY = 0;
     double noseZ = 0;
     double maxY = 0;
+    double minZ = 0;
     double gamma = 3;
-    double lambda = 2;
+    double lambda = 0.05;
     std::vector<Mesh::Vertex> vertices_in_fracture;
+    std::vector<Mesh::Vertex> vertices_around_fracture;
 
     double mean_length = 0;
     int num_edges_1 = 0;
@@ -246,6 +248,9 @@ void MeshProcessing::create_fracture (){
     // Find the middle of the mesh coordinate-wise
     for (auto v:mesh_.vertices()){
         auto position = mesh_.position(v);
+        if(position[2]<minZ){
+            minZ = position[2];
+        }
         if(position[2]>noseZ){
             noseX = position[0];
             noseY = position[1];
@@ -256,8 +261,6 @@ void MeshProcessing::create_fracture (){
         }
     }
 
-    std::cout << "difference maxY - noseY : " << maxY - noseY << std::endl;
-
     for(auto e:mesh_.edges()){
         if(mesh_.edge_length(e) > gamma * mean_length){
             vertices_in_fracture.push_back(mesh_.vertex(e,0));
@@ -266,16 +269,34 @@ void MeshProcessing::create_fracture (){
             i++;
         }
     }
-    std::cout << "vertices in fracture : " << i << std::endl;
 
+    double threshold = 2.0;
+    for(auto v:mesh_.vertices()){
+        auto positionv = mesh_.position(v);
+        for(auto vf:vertices_in_fracture){
+            auto positionvf = mesh_.position(vf);
+            if((positionv[2] < positionvf[2]+threshold) & (positionv[2] > positionvf[2]-threshold)){
+                if((positionv[1] < positionvf[1]+threshold) & (positionv[1] > positionvf[1]-threshold)){
+                    if((positionv[0] < positionvf[0]+threshold) & (positionv[0] > positionvf[0]-threshold)){
+                        vertices_around_fracture.push_back(v);
+                    }
+                }
+            }
+        }
+    }
     for(auto v:vertices_in_fracture){
+        vertices_around_fracture.push_back(v);
+    }
+
+    for(auto v:vertices_around_fracture){
         auto position = mesh_.position(v);
-        double h_fracture = fmod(position[1], 5);
+        double h_fracture = fmod(position[1], 2) + fmod(position[2]+minZ,2);
+        std::cout << h_fracture << std::endl;
         // TO LOOK AND CHANGE
-        if(h_fracture<2.5){
-            position[0] += lambda * fmod(position[1], 2.5);
+        if(h_fracture<2){
+            position[0] += lambda * h_fracture;
         } else{
-            position[0] -= lambda * fmod(position[1], 2.5);
+            position[0] -= lambda * h_fracture;
         }
         mesh_.position(v)[0] = position[0];
     }

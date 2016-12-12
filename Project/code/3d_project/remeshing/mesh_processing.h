@@ -22,7 +22,7 @@ typedef Eigen::Matrix<uint32_t, Eigen::Dynamic, Eigen::Dynamic> MatrixXu;
 namespace mesh_processing {
 
 using std::string;
-enum REMESHING_TYPE : int { AVERAGE = 0, CURV = 1, HEIGHT = 2 };
+enum REMESHING_TYPE : int { AVERAGE = 0, CURV = 1, HEIGHT = 2};
 
 class MeshProcessing {
 
