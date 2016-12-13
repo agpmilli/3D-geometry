@@ -53,6 +53,12 @@ public:
     void circularHole();
     void delete_faces_vertex();
 
+    void make_skull_pattern_faces();
+    void make_skull_pattern_edges();
+    Mesh::Vertex get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<Mesh::Face, Mesh::Vertex>> v);
+    void MeshProcessing::delete_everything();
+    void MeshProcessing::create_test_face();
+
     void split_long_edges ();
     void collapse_short_edges ();
     void equalize_valences ();

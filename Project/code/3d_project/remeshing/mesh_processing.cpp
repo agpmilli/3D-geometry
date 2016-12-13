@@ -222,6 +222,170 @@ void MeshProcessing::separate_head (){
     }
 }
 
+//computes dual graph by adding edges
+void MeshProcessing::make_skull_pattern_edges (){
+    std::vector<std::tuple<Mesh::Face,Mesh::Vertex>> fs_and_ps;
+    std::tuple<Mesh::Face,Mesh::Vertex> f_and_p;
+    std::vector<Mesh::Vertex> old_vertices;
+    std::vector<Mesh::Vertex> new_vertices;
+    std::vector<Mesh::Edge> old_edges;
+
+    // save old vertices
+    for(auto v: mesh_.vertices()){
+        old_vertices.push_back(v);
+    }
+    //save old edges
+    for(auto e:mesh_.edges()){
+        old_edges.push_back(e);
+    }
+
+    std::cout << "number of vertices before: " << mesh_.n_vertices() << std::endl;
+    // create new vertices: for each face f create a vertex in the middle of the face
+    for(auto f:mesh_.faces()){
+        double x = 0.0;
+        double z = 0.0;
+        double y = 0.0;
+
+        for(auto v:mesh_.vertices(f)){
+            x += mesh_.position(v)[0];
+            y += mesh_.position(v)[1];
+            z += mesh_.position(v)[2];
+        }
+        x /= 3.0;
+        y /= 3.0;
+        z /= 3.0;
+        Point p(x, y, z);
+        auto v = mesh_.add_vertex(p);
+        new_vertices.push_back(v);
+        f_and_p = std::make_tuple(f, v);
+        fs_and_ps.push_back(f_and_p);
+    }
+
+    //iterate on every edge and create its dual edge
+    //this was my previous idea but not working since add_edge is not implemented in this version of surface_mesh
+    std::cout << "number of edges before adding dual edges: " << mesh_.n_edges() << std::endl;
+   for(auto e:old_edges){
+       // get e's endpoint to get its adjacent faces f1 and f2
+       auto v1 = mesh_.vertex(e,0);
+       auto v2 = mesh_.vertex(e,1);
+       auto h1 = mesh_.find_halfedge(v1, v2);
+       auto h2 = mesh_.find_halfedge(v2, v1);
+       auto f1 = mesh_.face(h1);
+       auto f2 = mesh_.face(h2);
+
+       // get the points p1 and p2 inside f1 and f2
+       auto y = get_point_from_tuple_vector(f1, fs_and_ps);
+       auto x = get_point_from_tuple_vector(f2, fs_and_ps);
+       auto e = mesh_.add_edge(x, y);
+   }
+   std::cout << "number of edges after adding dual edges: " << mesh_.n_edges() << std::endl;
+   for(auto e:old_edges){
+       mesh_.delete_edge(e);
+   }
+   mesh_.garbage_collection();
+   std::cout << "number of edges removing primal edges: " << mesh_.n_edges() << std::endl;
+   for(auto e: mesh_.edges()){
+       //std::cout << "edge length: " << mesh_.edge_length(e) << std::endl;
+   }
+
+}
+
+
+//computes the dual graph by adding faces
+//currently this is crashing for unknown reason
+//also note that the viewer is only designed to display triangles
+void MeshProcessing::make_skull_pattern_faces (){
+    std::vector<std::tuple<Mesh::Face,Mesh::Vertex>> fs_and_ps;
+    std::tuple<Mesh::Face,Mesh::Vertex> f_and_p;
+    std::vector<Mesh::Vertex> old_vertices;
+    std::vector<Mesh::Vertex> new_vertices;
+
+    // save old vertices
+    for(auto v: mesh_.vertices()){
+        old_vertices.push_back(v);
+    }
+
+
+    std::cout << "number of vertices before: " << mesh_.n_vertices() << std::endl;
+    // create new vertices: for each face f create a vertex in the middle of the face
+    for(auto f:mesh_.faces()){
+        double x = 0.0;
+        double z = 0.0;
+        double y = 0.0;
+
+        for(auto v:mesh_.vertices(f)){
+            x += mesh_.position(v)[0];
+            y += mesh_.position(v)[1];
+            z += mesh_.position(v)[2];
+        }
+        x /= 3.0;
+        y /= 3.0;
+        z /= 3.0;
+        Point p(x, y, z);
+        auto v = mesh_.add_vertex(p);
+        new_vertices.push_back(v);
+        f_and_p = std::make_tuple(f, v);
+        fs_and_ps.push_back(f_and_p);
+    }
+    std::cout << "number of vertices after: " << mesh_.n_vertices() << std::endl;
+    std::cout << "old vertices size:" << old_vertices.size() << std::endl;
+    std::cout << "new vertices size:" << new_vertices.size() << std::endl;
+
+    // iterate over each vertex v, then use a face_around_vertex iterator
+    // to find the vertex v_i in each face around v. Then create a new face with the v_i
+    std::vector<Mesh::Vertex> quad_vertices;
+    for(auto v:old_vertices){
+        std::vector<Mesh::Vertex> quad_vertices;
+        for(auto f:mesh_.faces(v)){
+            auto vertex = get_point_from_tuple_vector(f, fs_and_ps);
+            if(std::find(new_vertices.begin(), new_vertices.end(), vertex) == new_vertices.end()){
+                std::cout << "not ok" << std::endl;
+            }
+            quad_vertices.push_back(vertex);
+        }
+        if(quad_vertices.size() < 3){
+            mesh_.add_face(quad_vertices);
+        }
+    }
+}
+
+void MeshProcessing::delete_everything(){
+    for(auto f:mesh_.faces()){
+        mesh_.delete_face(f);
+    }
+    //mesh_.garbage_collection();
+    std::cout << "n_v, n_e, n_f:" << mesh_.n_vertices()<<", "<< mesh_.n_edges()<<", "<< mesh_.n_faces() << std::endl;
+}
+
+void MeshProcessing::create_test_face(){
+    auto v1 = mesh_.add_vertex(Point(0, 0, 100));
+    auto v2 = mesh_.add_vertex(Point(0, 10, 100));
+    auto v3 = mesh_.add_vertex(Point(10, 10, 100));
+    auto v4 = mesh_.add_vertex(Point(10, 0, 100));
+    auto v5 = mesh_.add_vertex(Point(1, 15, 100));
+    std::vector<Mesh::Vertex> vec;
+    vec.push_back(v1);
+    vec.push_back(v2);
+    vec.push_back(v3);
+    vec.push_back(v4);
+    //vec.push_back(v5);
+    mesh_.add_face(vec);
+    std::cout << "n vertices" << mesh_.n_vertices() << std::endl;
+}
+
+//if the given face is in the vector it returns its corresponding point. else it returns null
+Mesh::Vertex MeshProcessing::get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<Mesh::Face,Mesh::Vertex>> v){
+    auto it = std::find_if(v.begin(), v.end(), [&f](const std::tuple<Mesh::Face, Mesh::Vertex> &tuple) {return std::get<0>(tuple) == f;});
+    if(it != v.end()){
+        //std::cout << "the point was found!" << std::endl;
+        return std::get<1>(*it);
+    }
+    else{
+        //std::cout << "no point corresponding to this face!" << std::endl;
+        Point p(0,0,0);
+        return mesh_.add_vertex(p);
+    }
+}
 
 void MeshProcessing::delete_long_edges_faces (){
     double mean_length = 0;

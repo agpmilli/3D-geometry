@@ -937,6 +937,9 @@ public: //----------------------------------------------- add new vertex / face
     /// \sa add_triangle, add_face
     Face add_quad(Vertex v1, Vertex v2, Vertex v3, Vertex v4);
 
+    Edge add_edge(const Vertex& start, const Vertex& end);
+
+
     //@}
 
 

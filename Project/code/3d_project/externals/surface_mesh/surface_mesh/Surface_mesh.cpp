@@ -272,6 +272,15 @@ add_vertex(const Point& p)
     return v;
 }
 
+Surface_mesh::Edge
+Surface_mesh::
+add_edge(const Vertex& start, const Vertex& end)
+{
+    //eprops_.push_back();
+    Halfedge e = new_edge(start, end);
+    return edge(e);
+}
+
 
 //-----------------------------------------------------------------------------
 
