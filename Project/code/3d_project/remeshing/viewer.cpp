@@ -459,9 +459,17 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     Widget* panelEffect = new Widget(popup);
     panelEffect->setLayout(new GroupLayout());
 
-    b = new Button(panelEffect, "Separate top of the head");
+    b = new Button(panelEffect, "Separate top of the head (melting-like)");
     b->setCallback([this]() {
-        mesh_->separate_head();
+        mesh_->separate_head_melting();
+        mesh_->meshProcess();
+        this->mesh_->compute_mesh_properties();
+        this->refresh_mesh();
+    });
+
+    b = new Button(panelEffect, "Separate top of the head (log curve)");
+    b->setCallback([this]() {
+        mesh_->separate_head_log();
         mesh_->meshProcess();
         this->mesh_->compute_mesh_properties();
         this->refresh_mesh();

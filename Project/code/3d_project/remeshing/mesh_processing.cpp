@@ -188,15 +188,22 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
     std::cout << "Calc target length done" << std::endl;
 }
 
-void MeshProcessing::separate_head (){
+void MeshProcessing::separate_head_melting (){
+    /*
+     * Separate the head from a certain height (height of the nose - threshold defined below) in a melting way.
+     */
+
+    // Initiate coordinates of the nose
     double noseX = 0;
     double noseY = 0;
     double noseZ = 0;
 
+    // Parameters that define the height and the thickness of the separation
     double gamma = 0.35;
     double lambda = 0.2;
+    double threshold = 20;
 
-    // Find the middle of the mesh coordinate-wise
+    // Find the coordinates of the nose to find the point where we will separate the head
     for (auto v:mesh_.vertices()){
         auto position = mesh_.position(v);
         if(position[2]>noseZ){
@@ -206,16 +213,67 @@ void MeshProcessing::separate_head (){
         }
     }
 
+    // Compute the height where we separate the head
+    auto height = noseY - threshold;
+
+    // Compute the new coordinates for vertices higher than a certain value (height)
+    for ( auto v: mesh_.vertices()){
+        auto position = mesh_.position(v);
+        // Find if the current vertex is higher than a certain height
+        if(position[1] > height){
+            // Find if the current vertex is on the left or on the right of the nose
+            if(position[0] > noseX){
+                // Compute the new X and Y coordinates for this vertex
+                position[0] += gamma * pow((position[1] - height)/6,2);
+                position[1] -= lambda * pow((position[1] - height)/7,2);
+            }else{
+                position[0] -= gamma * pow((position[1] - height)/6,2);
+                position[1] -= lambda * pow((position[1] - height)/7,2);
+            }
+            mesh_.position(v)[0] = position[0];
+            mesh_.position(v)[1] = position[1];
+        }
+    }
+}
+
+void MeshProcessing::separate_head_log (){
+    /*
+     * Separate the head from a certain height (height of the nose - threshold defined below) using logarithmic function
+     */
+
+    // Initiate coordinates of the nose
+    double noseX = 0;
+    double noseY = 0;
+    double noseZ = 0;
+
+    // Parameters that define the height and the thickness of the separation
+    double gamma = 1.5;
+    double threshold = 20;
+
+    // Find the coordinates of the nose to find the point where we will separate the head
+    for (auto v:mesh_.vertices()){
+        auto position = mesh_.position(v);
+        if(position[2]>noseZ){
+            noseX = position[0];
+            noseY = position[1];
+            noseZ = position[2];
+        }
+    }
+
+    // Compute the height where we separate the head
+    auto height = noseY - threshold;
+
     // Compute the new coordinates for vertices higher than a certain value (in our case middle of the mesh)
     for ( auto v: mesh_.vertices()){
         auto position = mesh_.position(v);
-        if(position[1] > noseY){
+        // Find if the current vertex is higher than a certain height
+        if(position[1] > height){
+            // Find if the current vertex is on the left or on the right of the nose
             if(position[0] > noseX){
-                position[0] += gamma * pow((position[1] - noseY)/6,2);
-                position[1] -= lambda * pow((position[1] - noseY)/7,2);
+                // Compute the new X coordinates for this vertex
+                position[0] += gamma * log((position[1] - height)+1);
             }else{
-                position[0] -= gamma * pow((position[1] - noseY)/6,2);
-                position[1] -= lambda * pow((position[1] - noseY)/7,2);
+                position[0] -= gamma * log((position[1] - height)+1);
             }
             mesh_.position(v)[0] = position[0];
             mesh_.position(v)[1] = position[1];
@@ -224,28 +282,40 @@ void MeshProcessing::separate_head (){
 }
 
 void MeshProcessing::create_fracture (){
+    /*
+     * Create a kind of fracture where we separated the head
+     */
+
+    // Initiate coordinates of the nose
     double noseX = 0;
     double noseY = 0;
     double noseZ = 0;
-    double maxY = 0;
+
+    // Initiate the max of Y-coordinate and the min of Z-coordinate (used later)
     double minZ = 0;
+
+    // Parameter that define the min length of an edge to be added to the fracture
     double gamma = 3;
+
+    // Parameter that define the distance between points in the fracture and certain neighbors we want to get
+    double distance = 2.0;
+
+    // Parameter that define the fracture width
     double lambda = 0.05;
+
+    // Initiate the mean length of current mesh edges
+    double mean_length = 0;
+
     std::vector<Mesh::Vertex> vertices_in_fracture;
     std::vector<Mesh::Vertex> vertices_around_fracture;
 
-    double mean_length = 0;
-    int num_edges_1 = 0;
-
-    int i = 0;
-
+    // Compute the mean length of an edge in the current mesh
     for(auto e:mesh_.edges()){
         mean_length += mesh_.edge_length(e);
-        num_edges_1 += 1;
     }
-    mean_length/=num_edges_1;
+    mean_length/=mesh_.n_edges();
 
-    // Find the middle of the mesh coordinate-wise
+    // Find the nose of geralt coordinate-wise and minZ
     for (auto v:mesh_.vertices()){
         auto position = mesh_.position(v);
         if(position[2]<minZ){
@@ -256,69 +326,80 @@ void MeshProcessing::create_fracture (){
             noseY = position[1];
             noseZ = position[2];
         }
-        if(position[1] > maxY){
-            maxY = position[1];
-        }
     }
 
+    // Add vertices that are endpoints of long edges to the vertices_in_fracture vector
     for(auto e:mesh_.edges()){
         if(mesh_.edge_length(e) > gamma * mean_length){
             vertices_in_fracture.push_back(mesh_.vertex(e,0));
-            i++;
             vertices_in_fracture.push_back(mesh_.vertex(e,1));
-            i++;
         }
     }
 
-    double threshold = 2.0;
+    // Add vertices that are near the vertices already in the vertices_in_fracture vector and add them to vertices_around_fracture vector
     for(auto v:mesh_.vertices()){
         auto positionv = mesh_.position(v);
         for(auto vf:vertices_in_fracture){
             auto positionvf = mesh_.position(vf);
-            if((positionv[2] < positionvf[2]+threshold) & (positionv[2] > positionvf[2]-threshold)){
-                if((positionv[1] < positionvf[1]+threshold) & (positionv[1] > positionvf[1]-threshold)){
-                    if((positionv[0] < positionvf[0]+threshold) & (positionv[0] > positionvf[0]-threshold)){
+            if((positionv[2] < positionvf[2]+distance) & (positionv[2] > positionvf[2]-distance)){
+                if((positionv[1] < positionvf[1]+distance) & (positionv[1] > positionvf[1]-distance)){
+                    if((positionv[0] < positionvf[0]+distance) & (positionv[0] > positionvf[0]-distance)){
                         vertices_around_fracture.push_back(v);
                     }
                 }
             }
         }
     }
+
+    // Add vertices_in_fracture to vertices_around_fracture
     for(auto v:vertices_in_fracture){
         vertices_around_fracture.push_back(v);
     }
 
+    // For every vertex in vertices_around_fracture, compute their new X position using fmod to create a sort of fracture
     for(auto v:vertices_around_fracture){
         auto position = mesh_.position(v);
-        double h_fracture = fmod(position[1], 2) + fmod(position[2]+minZ,2);
-        std::cout << h_fracture << std::endl;
-        // TO LOOK AND CHANGE
-        if(h_fracture<2){
-            position[0] += lambda * h_fracture;
+        // The fracture depend on the Y and Z coordinate of the vertex
+        double fracture_param = fmod(position[1], 2) + fmod(position[2]+minZ,2);
+        if(fracture_param<2){
+            position[0] += lambda * fracture_param;
         } else{
-            position[0] -= lambda * h_fracture;
+            position[0] -= lambda * fracture_param;
         }
         mesh_.position(v)[0] = position[0];
     }
 }
 
 void MeshProcessing::delete_long_edges_faces (){
+    /*
+     * Delete the long edges in the mesh
+     */
+
+    // Initiate the mean length of an edge in the mesh
     double mean_length = 0;
-    int num_edges_1 = 0;
+
+    // Parameter that define the min length of an edge to be deleted
     double gamma = 3;
+
+    // Compute the mean length of an edge in the current mesh
     for(auto e:mesh_.edges()){
         mean_length += mesh_.edge_length(e);
-        num_edges_1 += 1;
     }
-    mean_length/=num_edges_1;
+    mean_length/=mesh_.n_edges();
+
 
     std::vector<Mesh::Face> faces_to_delete;
     Mesh::Edge_iterator e_it=mesh_.edges_begin();
     Mesh::Edge_iterator e_end = mesh_.edges_end();
+
+    // For every edge
     for (e_it; e_it!=e_end; ++e_it){
+        // Find if its length is bigger than a certain length
         if(mesh_.edge_length(*e_it) > gamma * mean_length){
+            // If yes we find the corresponding halfedges and faces
             auto h1 = mesh_.find_halfedge(mesh_.vertex(*e_it,0), mesh_.vertex(*e_it,1));
             auto h2 = mesh_.find_halfedge(mesh_.vertex(*e_it,1), mesh_.vertex(*e_it,0));
+            // If they are valid we add them to the faces_to_delete vector
             Mesh::Face face1 = mesh_.face(h1);
             if(face1.is_valid()){
                 faces_to_delete.push_back(face1);
@@ -330,6 +411,7 @@ void MeshProcessing::delete_long_edges_faces (){
         }
     }
 
+    // For every face in the faces_to_delete vector we delete it
     for(int i=0; i<faces_to_delete.size(); i++){
         mesh_.delete_face(faces_to_delete[i]);
     }
