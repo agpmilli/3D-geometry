@@ -413,7 +413,7 @@ add_face(const std::vector<Vertex>& vertices)
     {
         if ( !is_boundary(vertices[i]) )
         {
-            // std::cerr << "Surface_meshT::add_face: complex vertex\n";
+             std::cerr << "Surface_meshT::add_face: complex vertex\n";
             return Face();
         }
 
@@ -422,7 +422,7 @@ add_face(const std::vector<Vertex>& vertices)
 
         if (!is_new[i] && !is_boundary(halfedges[i]))
         {
-            // std::cerr << "Surface_meshT::add_face: complex edge\n";
+             std::cerr << "Surface_meshT::add_face: complex edge\n";
             return Face();
         }
     }
@@ -458,7 +458,7 @@ add_face(const std::vector<Vertex>& vertices)
                 // ok ?
                 if (boundary_next == inner_next)
                 {
-                    // std::cerr << "Surface_meshT::add_face: patch re-linking failed\n";
+                     std::cerr << "Surface_meshT::add_face: patch re-linking failed\n";
                     return Face();
                 }
 

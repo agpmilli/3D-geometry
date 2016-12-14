@@ -58,6 +58,7 @@ public:
     Mesh::Vertex get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<Mesh::Face, Mesh::Vertex>> v);
     void MeshProcessing::delete_everything();
     void MeshProcessing::create_test_face();
+    void MeshProcessing::build_cylinder(surface_mesh::Point p_a, surface_mesh::Point p_b, double r);
 
     void split_long_edges ();
     void collapse_short_edges ();
