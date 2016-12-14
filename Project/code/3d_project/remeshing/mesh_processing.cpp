@@ -274,9 +274,10 @@ void MeshProcessing::make_skull_pattern_edges (){
        auto f2 = mesh_.face(h2);
 
        // get the points p1 and p2 inside f1 and f2
-       auto y = get_point_from_tuple_vector(f1, fs_and_ps);
-       auto x = get_point_from_tuple_vector(f2, fs_and_ps);
-       auto e = mesh_.add_edge(x, y);
+       auto y = mesh_.position(get_point_from_tuple_vector(f1, fs_and_ps));
+       auto x = mesh_.position(get_point_from_tuple_vector(f2, fs_and_ps));
+       //create a cylinder between x and y
+       build_cylinder(x, y, 0.01);
    }
    std::cout << "number of edges after adding dual edges: " << mesh_.n_edges() << std::endl;
    for(auto e:old_edges){
@@ -284,8 +285,10 @@ void MeshProcessing::make_skull_pattern_edges (){
    }
    mesh_.garbage_collection();
    std::cout << "number of edges removing primal edges: " << mesh_.n_edges() << std::endl;
+
+
    for(auto e: mesh_.edges()){
-       //std::cout << "edge length: " << mesh_.edge_length(e) << std::endl;
+
    }
 
 }
@@ -297,8 +300,8 @@ void MeshProcessing::make_skull_pattern_edges (){
 // a1 is the top-left, then it goes clockwise
 void MeshProcessing::build_cylinder(Point p_a, Point p_b, double r){
     //adding vertices around the given points
-    std::cout << "n faces before: " << mesh_.n_faces() << std::endl;
-    std::cout << p_a[0] << p_a[1] << p_a[2] << std::endl;
+    //std::cout << "n faces before: " << mesh_.n_faces() << std::endl;
+
 
 //    Point ab = b-a;
 //    double plan_a = p_a[0];
@@ -343,7 +346,7 @@ void MeshProcessing::build_cylinder(Point p_a, Point p_b, double r){
     mesh_.add_triangle(v_b1, v_b4, v_a1);
     mesh_.add_triangle(v_b4, v_a4, v_a1);
 
-    std::cout << "n faces after: " << mesh_.n_faces() << std::endl;
+   // std::cout << "n faces after: " << mesh_.n_faces() << std::endl;
 }
 
 
