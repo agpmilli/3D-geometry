@@ -533,13 +533,6 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
         this->refresh_mesh();
     });
 
-    b = new Button(panelSkullEffect, "make skull pattern with faces");
-    b->setCallback([this]() {
-        mesh_->make_skull_pattern_faces();
-        mesh_->meshProcess();
-        this->mesh_->compute_mesh_properties();
-        this->refresh_mesh();
-    });
     b = new Button(panelSkullEffect, "make skull pattern with edges");
     b->setCallback([this]() {
         mesh_->make_skull_pattern_edges();
@@ -547,21 +540,6 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
         this->mesh_->compute_mesh_properties();
         this->refresh_mesh();
     });
-    b = new Button(panelSkullEffect, "delete everything");
-    b->setCallback([this]() {
-        mesh_->delete_everything();
-        mesh_->meshProcess();
-        this->mesh_->compute_mesh_properties();
-        this->refresh_mesh();
-    });
-    b = new Button(panelSkullEffect, "create test face");
-    b->setCallback([this]() {
-        mesh_->create_test_face();
-        mesh_->meshProcess();
-        this->mesh_->compute_mesh_properties();
-        this->refresh_mesh();
-    });
-
 
 
     performLayout();

@@ -177,13 +177,14 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
             n++;
         }
 
-        user_specified_target_length = 10.0;
+        user_specified_target_length = 0.12;
 
         // rescale the target length of each vertex so that the mean of the new target lengths equals the user specified target length
         for(auto v: mesh_.vertices()){
             // compute new target length
             target_new_length[v] = n*user_specified_target_length*target_length[v]/sum;
-            target_length[v] = target_new_length[v] + 1.0;
+            //target_length[v] = target_new_length[v] + 1.0;
+            target_length[v] = target_new_length[v];
         }
 
     }
@@ -224,16 +225,10 @@ void MeshProcessing::separate_head (){
 
 //computes dual graph by adding edges
 void MeshProcessing::make_skull_pattern_edges (){
-    std::vector<std::tuple<Mesh::Face,Mesh::Vertex>> fs_and_ps;
-    std::tuple<Mesh::Face,Mesh::Vertex> f_and_p;
-    std::vector<Mesh::Vertex> old_vertices;
-    std::vector<Mesh::Vertex> new_vertices;
+    std::vector<std::tuple<Mesh::Face,Point>> fs_and_ps;
+    std::tuple<Mesh::Face,Point> f_and_p;
     std::vector<Mesh::Edge> old_edges;
 
-    // save old vertices
-    for(auto v: mesh_.vertices()){
-        old_vertices.push_back(v);
-    }
     //save old edges
     for(auto e:mesh_.edges()){
         old_edges.push_back(e);
@@ -243,8 +238,8 @@ void MeshProcessing::make_skull_pattern_edges (){
     // create new vertices: for each face f create a vertex in the middle of the face
     for(auto f:mesh_.faces()){
         double x = 0.0;
-        double z = 0.0;
         double y = 0.0;
+        double z = 0.0;
 
         for(auto v:mesh_.vertices(f)){
             x += mesh_.position(v)[0];
@@ -255,17 +250,13 @@ void MeshProcessing::make_skull_pattern_edges (){
         y /= 3.0;
         z /= 3.0;
         Point p(x, y, z);
-        auto v = mesh_.add_vertex(p);
-        new_vertices.push_back(v);
-        f_and_p = std::make_tuple(f, v);
+        f_and_p = std::make_tuple(f, p);
         fs_and_ps.push_back(f_and_p);
     }
 
-    //iterate on every edge and create its dual edge
-    //this was my previous idea but not working since add_edge is not implemented in this version of surface_mesh
-    std::cout << "number of edges before adding dual edges: " << mesh_.n_edges() << std::endl;
+   // iterate on every edge and build a cylinder on every dual edge
    for(auto e:old_edges){
-       // get e's endpoint to get its adjacent faces f1 and f2
+       //get e's endpoint to get its adjacent faces f1 and f2
        auto v1 = mesh_.vertex(e,0);
        auto v2 = mesh_.vertex(e,1);
        auto h1 = mesh_.find_halfedge(v1, v2);
@@ -274,23 +265,19 @@ void MeshProcessing::make_skull_pattern_edges (){
        auto f2 = mesh_.face(h2);
 
        // get the points p1 and p2 inside f1 and f2
-       auto y = mesh_.position(get_point_from_tuple_vector(f1, fs_and_ps));
-       auto x = mesh_.position(get_point_from_tuple_vector(f2, fs_and_ps));
+       auto x = get_point_from_tuple_vector(f1, fs_and_ps);
+       auto y = get_point_from_tuple_vector(f2, fs_and_ps);
+
        //create a cylinder between x and y
-       build_cylinder(x, y, 0.01);
+       if(!(x[0] == NULL)){
+        build_cylinder(x, y, 0.01);
+       }
    }
-   std::cout << "number of edges after adding dual edges: " << mesh_.n_edges() << std::endl;
+   // delete primal graph
    for(auto e:old_edges){
        mesh_.delete_edge(e);
    }
    mesh_.garbage_collection();
-   std::cout << "number of edges removing primal edges: " << mesh_.n_edges() << std::endl;
-
-
-   for(auto e: mesh_.edges()){
-
-   }
-
 }
 
 // this method builds a cylinder between v1 and v2
@@ -299,16 +286,14 @@ void MeshProcessing::make_skull_pattern_edges (){
 // the radius is the distance between the center of the square and a corner
 // a1 is the top-left, then it goes clockwise
 void MeshProcessing::build_cylinder(Point p_a, Point p_b, double r){
+//  Point ab = b-a;
+//  double plan_a = p_a[0];
+//  double plan_b = p_a[1];
+//  double plan_c = p_a[2];
+//  double plan_d = ab[0] * plan_a + ab[1] * plan_b + ab[2] * plan_c;
+
+
     //adding vertices around the given points
-    //std::cout << "n faces before: " << mesh_.n_faces() << std::endl;
-
-
-//    Point ab = b-a;
-//    double plan_a = p_a[0];
-//    double plan_b = p_a[1];
-//    double plan_c = p_a[2];
-//    double plan_d = ab[0] * plan_a + ab[1] * plan_b + ab[2] * plan_c;
-
     Point a1(p_a[0]-r, p_a[1]+r, p_a[2]);
     Point a2(p_a[0]+r, p_a[1]+r, p_a[2]);
     Point a3(p_a[0]+r, p_a[1]-r, p_a[2]);
@@ -349,91 +334,17 @@ void MeshProcessing::build_cylinder(Point p_a, Point p_b, double r){
    // std::cout << "n faces after: " << mesh_.n_faces() << std::endl;
 }
 
-
-//computes the dual graph by adding faces
-//currently this is crashing for unknown reason
-//also note that the viewer is only designed to display triangles
-void MeshProcessing::make_skull_pattern_faces (){
-    std::vector<std::tuple<Mesh::Face,Mesh::Vertex>> fs_and_ps;
-    std::tuple<Mesh::Face,Mesh::Vertex> f_and_p;
-    std::vector<Mesh::Vertex> old_vertices;
-    std::vector<Mesh::Vertex> new_vertices;
-
-    // save old vertices
-    for(auto v: mesh_.vertices()){
-        old_vertices.push_back(v);
-    }
-
-
-    std::cout << "number of vertices before: " << mesh_.n_vertices() << std::endl;
-    // create new vertices: for each face f create a vertex in the middle of the face
-    for(auto f:mesh_.faces()){
-        double x = 0.0;
-        double z = 0.0;
-        double y = 0.0;
-
-        for(auto v:mesh_.vertices(f)){
-            x += mesh_.position(v)[0];
-            y += mesh_.position(v)[1];
-            z += mesh_.position(v)[2];
-        }
-        x /= 3.0;
-        y /= 3.0;
-        z /= 3.0;
-        Point p(x, y, z);
-        auto v = mesh_.add_vertex(p);
-        new_vertices.push_back(v);
-        f_and_p = std::make_tuple(f, v);
-        fs_and_ps.push_back(f_and_p);
-    }
-    std::cout << "number of vertices after: " << mesh_.n_vertices() << std::endl;
-    std::cout << "old vertices size:" << old_vertices.size() << std::endl;
-    std::cout << "new vertices size:" << new_vertices.size() << std::endl;
-
-    // iterate over each vertex v, then use a face_around_vertex iterator
-    // to find the vertex v_i in each face around v. Then create a new face with the v_i
-    std::vector<Mesh::Vertex> quad_vertices;
-    for(auto v:old_vertices){
-        std::vector<Mesh::Vertex> quad_vertices;
-        for(auto f:mesh_.faces(v)){
-            auto vertex = get_point_from_tuple_vector(f, fs_and_ps);
-            if(std::find(new_vertices.begin(), new_vertices.end(), vertex) == new_vertices.end()){
-                std::cout << "not ok" << std::endl;
-            }
-            quad_vertices.push_back(vertex);
-        }
-        if(quad_vertices.size() < 3){
-            mesh_.add_face(quad_vertices);
-        }
-    }
-}
-
-void MeshProcessing::delete_everything(){
-    for(auto f:mesh_.faces()){
-        mesh_.delete_face(f);
-    }
-    //mesh_.garbage_collection();
-    std::cout << "n_v, n_e, n_f:" << mesh_.n_vertices()<<", "<< mesh_.n_edges()<<", "<< mesh_.n_faces() << std::endl;
-}
-
-void MeshProcessing::create_test_face(){
-    Point a(10.0, 10.0 ,10.0);
-    Point b(5.0, 5.0, 5.0);
-    double r = 5.0;
-    build_cylinder(a, b, r);
-}
-
 //if the given face is in the vector it returns its corresponding point. else it returns null
-Mesh::Vertex MeshProcessing::get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<Mesh::Face,Mesh::Vertex>> v){
-    auto it = std::find_if(v.begin(), v.end(), [&f](const std::tuple<Mesh::Face, Mesh::Vertex> &tuple) {return std::get<0>(tuple) == f;});
-    if(it != v.end()){
+Point MeshProcessing::get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<Mesh::Face,Point>> p){
+    auto it = std::find_if(p.begin(), p.end(), [&f](const std::tuple<Mesh::Face, Point> &tuple) {return std::get<0>(tuple) == f;});
+    if(it != p.end()){
         //std::cout << "the point was found!" << std::endl;
         return std::get<1>(*it);
     }
     else{
         //std::cout << "no point corresponding to this face!" << std::endl;
-        Point p(0,0,0);
-        return mesh_.add_vertex(p);
+        Point p(NULL,NULL,NULL);
+        return p;
     }
 }
 
