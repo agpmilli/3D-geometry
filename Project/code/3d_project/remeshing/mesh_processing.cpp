@@ -446,66 +446,6 @@ double MeshProcessing::compute_area_face (Mesh::Face face){
     return sqrt(p * (p-l1) * (p-l2) * (p-l3));
 }
 
-
-
-void MeshProcessing::circularHole(){
-    double length = 10.0;
-    Mesh::Vertex vertex_chosen;
-    int vertex_number = std::rand() % mesh_.n_vertices();
-    std::vector<Mesh::Face> faces_to_delete;
-    for(auto v:mesh_.vertices()){
-        if(v.idx() == vertex_number){
-         vertex_chosen = v;
-        }
-    }
-    auto x = mesh_.position(vertex_chosen);
-    for(auto v:mesh_.vertices()){
-        if(v.idx() != vertex_chosen.idx()){
-            auto y = mesh_.position(v);
-            double distance1 = sqrt(pow(x[0]-y[0],2.0)+pow(x[1]-y[1],2.0)+pow(x[2]-y[2],2.0));
-
-            if(distance1 < length){
-                for(auto v2:mesh_.vertices(v)){
-                    auto z = mesh_.position(v2);
-                    double distance2 = sqrt(pow(x[0]-y[0],2.0)+pow(x[1]-y[1],2.0)+pow(x[2]-y[2],2.0));
-                    if(distance2 < length){
-                        auto h = mesh_.find_halfedge(v,v2);
-                        auto f = mesh_.face(h);
-                        if(f.is_valid()){
-                            faces_to_delete.push_back(f);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    for(int i=0; i<faces_to_delete.size(); i++){
-        mesh_.delete_face(faces_to_delete[i]);
-    }
-    // clean the deleted edges/vertices/faces
-    mesh_.garbage_collection();
-}
-
-void MeshProcessing::delete_faces_vertex(){
-    std::vector<Mesh::Face> faces_to_delete;
-    for(auto v:mesh_.vertices()){
-        if(v.idx() % 1000 == 0){
-            for(auto f:mesh_.faces(v)){
-                if(f.is_valid()){
-                    faces_to_delete.push_back(f);
-                }
-            }
-        }
-    }
-    for(int i=0; i<faces_to_delete.size(); i++){
-        mesh_.delete_face(faces_to_delete[i]);
-
-    }
-    // clean the deleted edges/vertices/faces
-    mesh_.garbage_collection();
-}
-
 void MeshProcessing::split_long_edges (){
     Mesh::Vertex   v0, v1, v;
     bool            finished;
