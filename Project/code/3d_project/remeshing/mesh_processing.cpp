@@ -280,6 +280,14 @@ void MeshProcessing::make_skull_pattern_edges (){
    mesh_.garbage_collection();
 }
 
+void MeshProcessing::create_single_cylinder(){
+    Point a(10.0, 10.0, 10.0);
+    Point b(10.0, 10.0, 5.0);
+    double r = 5.0;
+    build_cylinder(a, b, r);
+
+}
+
 // this method builds a cylinder between v1 and v2
 // constructs 4 vertices around p1 and 4 others around p2
 // build a "parallepipede rectangle" with the 8 points
@@ -292,6 +300,13 @@ void MeshProcessing::build_cylinder(Point p_a, Point p_b, double r){
 //  double plan_c = p_a[2];
 //  double plan_d = ab[0] * plan_a + ab[1] * plan_b + ab[2] * plan_c;
 
+
+    //swapping points to avoid normals pointing inside the cylinder
+    if(p_b[2] > p_a[2]){
+        Point temp = p_a;
+        p_a = p_b;
+        p_b = temp;
+    }
 
     //adding vertices around the given points
     Point a1(p_a[0]-r, p_a[1]+r, p_a[2]);

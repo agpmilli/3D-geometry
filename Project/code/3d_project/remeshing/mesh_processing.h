@@ -54,6 +54,7 @@ public:
     void delete_faces_vertex();
 
     void make_skull_pattern_edges();
+    void create_single_cylinder();
     surface_mesh::Point get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<surface_mesh::Surface_mesh::Face, surface_mesh::Point> > v);
     void MeshProcessing::build_cylinder(surface_mesh::Point p_a, surface_mesh::Point p_b, double r);
 
