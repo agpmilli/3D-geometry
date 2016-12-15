@@ -548,6 +548,14 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
         this->refresh_mesh();
     });
 
+    b = new Button(panelSkullEffect, "create isocahedron");
+    b->setCallback([this]() {
+        mesh_->create_isocahedron();
+        mesh_->meshProcess();
+        this->mesh_->compute_mesh_properties();
+        this->refresh_mesh();
+    });
+
 
     performLayout();
 

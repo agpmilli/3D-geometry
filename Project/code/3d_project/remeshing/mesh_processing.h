@@ -58,6 +58,10 @@ public:
     surface_mesh::Point get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<surface_mesh::Surface_mesh::Face, surface_mesh::Point> > v);
     void MeshProcessing::build_cylinder(surface_mesh::Point p_a, surface_mesh::Point p_b, double r);
 
+    void create_isocahedron();
+    surface_mesh::Point middle_point(surface_mesh::Point a, surface_mesh::Point b);
+    surface_mesh::Point push_to_radius(surface_mesh::Point point,double radius);
+
     void split_long_edges ();
     void collapse_short_edges ();
     void equalize_valences ();
