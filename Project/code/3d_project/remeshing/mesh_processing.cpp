@@ -366,10 +366,8 @@ Point MeshProcessing::get_point_from_tuple_vector(Mesh::Face f, std::vector<std:
     }
 }
 
-void MeshProcessing::create_isocahedron(){
+void MeshProcessing::create_isocahedron(double r, Point centerPoint){
 
-    Point centerPoint = {100,100,100};
-    double r = 100;
     std::vector<std::array<Point,3>> face_vectors;
     std::vector<std::array<Point,3>> new_face_vectors;
 
@@ -378,47 +376,33 @@ void MeshProcessing::create_isocahedron(){
     //phi is the golden ratio with radius r
     double phi = golden_ratio*r;
 
-    double nb_iteration = 5;
+    double nb_iteration = 1;
 
     // Construct the 20 first faces with vertices of the form (0, +- phi, -+1), (+-1, 0, -+phi), (+- phi, -+1, 0)
 
-    face_vectors.push_back({Point(r, 0, phi),Point(phi, -r, 0), Point(0, -phi, r)});
-    face_vectors.push_back({Point(-r, 0, phi),Point(r, 0, phi),Point(0, -phi, r)});
-    face_vectors.push_back({Point(-r, 0, phi),Point(0, -phi, r),Point(-phi, -r, 0)});
-    face_vectors.push_back({Point(0, -phi, r),Point(-phi, -r, 0), Point(0, -phi, -r)});
-    face_vectors.push_back({Point(0, -phi, -r), Point(0, -phi, r), Point(phi, -r, 0)});
+    face_vectors.push_back({Point(r, 0, phi), Point(0, -phi, r),Point(phi, -r, 0)});
+    face_vectors.push_back({Point(-r, 0, phi),Point(0, -phi, r),Point(r, 0, phi)});
+    face_vectors.push_back({Point(-r, 0, phi),Point(-phi, -r, 0),Point(0, -phi, r)});
+    face_vectors.push_back({Point(0, -phi, r), Point(-phi, -r, 0), Point(0, -phi, -r)});
+    face_vectors.push_back({Point(0, -phi, -r), Point(phi, -r, 0), Point(0, -phi, r)});
 
-    face_vectors.push_back({Point(0, phi, r), Point(-phi, r, 0), Point(0, phi, -r)});
-    face_vectors.push_back({Point(0, phi, r), Point(0, phi, -r), Point(phi, r, 0)});
+    face_vectors.push_back({Point(0, phi, r), Point(0, phi, -r), Point(-phi, r, 0)});
+    face_vectors.push_back({Point(0, phi, r), Point(phi, r, 0), Point(0, phi, -r)});
     face_vectors.push_back({Point(0, phi, -r), Point(phi, r, 0), Point(r, 0, -phi)});
     face_vectors.push_back({Point(0, phi, -r), Point(r, 0, -phi), Point(-r, 0, -phi)});
     face_vectors.push_back({Point(0, phi, -r), Point(-r, 0, -phi), Point(-phi, r, 0)});
 
-    face_vectors.push_back({Point(-r, 0, phi), Point(0, phi, r), Point(r, 0, phi)});
+    face_vectors.push_back({Point(-r, 0, phi), Point(r, 0, phi), Point(0, phi, r)});
     face_vectors.push_back({Point(-r, 0, phi), Point(0, phi, r), Point(-phi, r, 0)});
     face_vectors.push_back({Point(-r, 0, phi), Point(-phi, r, 0), Point(-phi, -r, 0)});
-    face_vectors.push_back({Point(-phi, r, 0), Point(-phi, -r, 0), Point(-r, 0, -phi)});
+    face_vectors.push_back({Point(-phi, r, 0), Point(-r, 0, -phi), Point(-phi, -r, 0)});
     face_vectors.push_back({Point(-phi, -r, 0), Point(-r, 0, -phi), Point(0, -phi, -r)});
-    face_vectors.push_back({Point(-r, 0, -phi), Point(0, -phi, -r), Point(r, 0, -phi)});
+    face_vectors.push_back({Point(-r, 0, -phi), Point(r, 0, -phi), Point(0, -phi, -r)});
     face_vectors.push_back({Point(0, -phi, -r), Point(r, 0, -phi), Point(phi, -r, 0)});
-    face_vectors.push_back({Point(r, 0, -phi), Point(phi, -r, 0), Point(phi, r, 0)});
+    face_vectors.push_back({Point(r, 0, -phi), Point(phi, r, 0), Point(phi, -r, 0)});
     face_vectors.push_back({Point(phi, -r, 0), Point(phi, r, 0), Point(r, 0, phi)});
-    face_vectors.push_back({Point(phi, r, 0), Point(r, 0, phi), Point(0, phi, r)});
+    face_vectors.push_back({Point(phi, r, 0), Point(0, phi, r), Point(r, 0, phi)});
 
-    for(auto face:face_vectors){
-
-        face[0][0] += centerPoint[0];
-        face[0][1] += centerPoint[1];
-        face[0][2] += centerPoint[2];
-
-        face[1][0] += centerPoint[0];
-        face[1][1] += centerPoint[1];
-        face[1][2] += centerPoint[2];
-
-        face[2][0] += centerPoint[0];
-        face[2][1] += centerPoint[1];
-        face[2][2] += centerPoint[2];
-    }
 
     for (int i = 0; i<nb_iteration; i++) {
 
@@ -439,6 +423,18 @@ void MeshProcessing::create_isocahedron(){
     }
 
     for(auto f:face_vectors){
+
+        f[0][0] += centerPoint[0];
+        f[0][1] += centerPoint[1];
+        f[0][2] += centerPoint[2];
+
+        f[1][0] += centerPoint[0];
+        f[1][1] += centerPoint[1];
+        f[1][2] += centerPoint[2];
+
+        f[2][0] += centerPoint[0];
+        f[2][1] += centerPoint[1];
+        f[2][2] += centerPoint[2];
 
         auto v1 = mesh_.add_vertex(f[0]);
         auto v2 = mesh_.add_vertex(f[1]);
