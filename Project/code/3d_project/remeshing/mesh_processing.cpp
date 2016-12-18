@@ -296,7 +296,8 @@ void MeshProcessing::create_spheres_on_vertices(std::vector<Point> dual_intersec
         if(i % 100 == 0){
             std::cout << "creating sphere " << i << " of " << dual_intersections.size() << "..." << std::endl;
         }
-        create_isocahedron(0.01, p);
+        auto radius = 0.005 * p[1];
+        create_isocahedron(radius, p);
         i++;
     }
 }
@@ -388,7 +389,7 @@ void MeshProcessing::create_isocahedron(double r, Point centerPoint){
     //phi is the golden ratio with radius r
     double phi = golden_ratio*r;
 
-    double nb_iteration = 5;
+    double nb_iteration = 0;
 
     // Construct the 20 first faces with vertices of the form (0, +- phi, -+1), (+-1, 0, -+phi), (+- phi, -+1, 0)
 
@@ -1113,7 +1114,7 @@ void MeshProcessing::load_mesh(const string &filename) {
         std::cerr << "Mesh not found, exiting." << std::endl;
         exit(-1);
     }
-    save_filename = filename.substr(0, filename.size()-4);
+    save_filename = filename;
 
     cout << "Mesh "<< filename << " loaded." << endl;
     cout << "# of vertices : " << mesh_.n_vertices() << endl;
@@ -1142,8 +1143,7 @@ void MeshProcessing::load_mesh(const string &filename) {
 }
 
 void MeshProcessing::save_mesh() {
-    string prefix = "../data/";
-    string name = prefix + save_filename + "_" + std::to_string(save_count)+ ".off";
+    string name = save_filename + "_" + std::to_string(save_count)+ ".off";
 
     std::ofstream outfile (name);
 
