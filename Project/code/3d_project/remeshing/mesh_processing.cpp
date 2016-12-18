@@ -14,6 +14,9 @@
 #include <set>
 #include <iostream>
 #include <fstream>
+#include <math.h>
+#include <array>
+
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -355,6 +358,100 @@ Point MeshProcessing::get_point_from_tuple_vector(Mesh::Face f, std::vector<std:
         Point p(NULL,NULL,NULL);
         return p;
     }
+}
+
+void MeshProcessing::create_isocahedron(double r, Point centerPoint){
+
+    std::vector<std::array<Point,3>> face_vectors;
+    std::vector<std::array<Point,3>> new_face_vectors;
+
+    // The golden ratio will be used to calculate the first 12 vertices of an icosahedron
+    double golden_ratio = (1+(sqrt(5)))/2.0;
+    //phi is the golden ratio with radius r
+    double phi = golden_ratio*r;
+
+    double nb_iteration = 1;
+
+    // Construct the 20 first faces with vertices of the form (0, +- phi, -+1), (+-1, 0, -+phi), (+- phi, -+1, 0)
+
+    face_vectors.push_back({Point(r, 0, phi), Point(0, -phi, r),Point(phi, -r, 0)});
+    face_vectors.push_back({Point(-r, 0, phi),Point(0, -phi, r),Point(r, 0, phi)});
+    face_vectors.push_back({Point(-r, 0, phi),Point(-phi, -r, 0),Point(0, -phi, r)});
+    face_vectors.push_back({Point(0, -phi, r), Point(-phi, -r, 0), Point(0, -phi, -r)});
+    face_vectors.push_back({Point(0, -phi, -r), Point(phi, -r, 0), Point(0, -phi, r)});
+
+    face_vectors.push_back({Point(0, phi, r), Point(0, phi, -r), Point(-phi, r, 0)});
+    face_vectors.push_back({Point(0, phi, r), Point(phi, r, 0), Point(0, phi, -r)});
+    face_vectors.push_back({Point(0, phi, -r), Point(phi, r, 0), Point(r, 0, -phi)});
+    face_vectors.push_back({Point(0, phi, -r), Point(r, 0, -phi), Point(-r, 0, -phi)});
+    face_vectors.push_back({Point(0, phi, -r), Point(-r, 0, -phi), Point(-phi, r, 0)});
+
+    face_vectors.push_back({Point(-r, 0, phi), Point(r, 0, phi), Point(0, phi, r)});
+    face_vectors.push_back({Point(-r, 0, phi), Point(0, phi, r), Point(-phi, r, 0)});
+    face_vectors.push_back({Point(-r, 0, phi), Point(-phi, r, 0), Point(-phi, -r, 0)});
+    face_vectors.push_back({Point(-phi, r, 0), Point(-r, 0, -phi), Point(-phi, -r, 0)});
+    face_vectors.push_back({Point(-phi, -r, 0), Point(-r, 0, -phi), Point(0, -phi, -r)});
+    face_vectors.push_back({Point(-r, 0, -phi), Point(r, 0, -phi), Point(0, -phi, -r)});
+    face_vectors.push_back({Point(0, -phi, -r), Point(r, 0, -phi), Point(phi, -r, 0)});
+    face_vectors.push_back({Point(r, 0, -phi), Point(phi, r, 0), Point(phi, -r, 0)});
+    face_vectors.push_back({Point(phi, -r, 0), Point(phi, r, 0), Point(r, 0, phi)});
+    face_vectors.push_back({Point(phi, r, 0), Point(0, phi, r), Point(r, 0, phi)});
+
+
+    for (int i = 0; i<nb_iteration; i++) {
+
+        for(auto f:face_vectors){
+            Point a = push_to_radius(middle_point(f[0],f[1]),r);
+            Point b = push_to_radius(middle_point(f[1],f[2]),r);
+            Point c = push_to_radius(middle_point(f[0],f[2]),r);
+
+            new_face_vectors.push_back({f[0],a,c});
+            new_face_vectors.push_back({a,f[1],b});
+            new_face_vectors.push_back({c,b,f[2]});
+            new_face_vectors.push_back({a, b, c});
+        }
+        face_vectors.clear();
+        face_vectors = new_face_vectors;
+        new_face_vectors.clear();
+
+    }
+
+    for(auto f:face_vectors){
+
+        f[0][0] += centerPoint[0];
+        f[0][1] += centerPoint[1];
+        f[0][2] += centerPoint[2];
+
+        f[1][0] += centerPoint[0];
+        f[1][1] += centerPoint[1];
+        f[1][2] += centerPoint[2];
+
+        f[2][0] += centerPoint[0];
+        f[2][1] += centerPoint[1];
+        f[2][2] += centerPoint[2];
+
+        auto v1 = mesh_.add_vertex(f[0]);
+        auto v2 = mesh_.add_vertex(f[1]);
+        auto v3 = mesh_.add_vertex(f[2]);
+
+        mesh_.add_triangle(v1,v2,v3);
+    }
+
+}
+
+Point MeshProcessing::middle_point(Point a, Point b){
+
+    double x = (a[0]+b[0])/2.0;
+    double y = (a[1]+b[1])/2.0;
+    double z = (a[2]+b[2])/2.0;
+
+    return Point(x,y,z);
+}
+
+Point MeshProcessing::push_to_radius(Point point, double radius) {
+
+    double ratio = radius/norm(point);
+    return point*ratio*2;
 }
 
 void MeshProcessing::delete_long_edges_faces (){
