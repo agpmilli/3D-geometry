@@ -388,7 +388,7 @@ void MeshProcessing::create_isocahedron(double r, Point centerPoint){
     //phi is the golden ratio with radius r
     double phi = golden_ratio*r;
 
-    double nb_iteration = 1;
+    double nb_iteration = 5;
 
     // Construct the 20 first faces with vertices of the form (0, +- phi, -+1), (+-1, 0, -+phi), (+- phi, -+1, 0)
 
@@ -419,9 +419,9 @@ void MeshProcessing::create_isocahedron(double r, Point centerPoint){
     for (int i = 0; i<nb_iteration; i++) {
 
         for(auto f:face_vectors){
-            Point a = push_to_radius(middle_point(f[0],f[1]),r);
-            Point b = push_to_radius(middle_point(f[1],f[2]),r);
-            Point c = push_to_radius(middle_point(f[0],f[2]),r);
+            Point a = middle_point(f[0],f[1]);
+            Point b = middle_point(f[1],f[2]);
+            Point c = middle_point(f[0],f[2]);
 
             new_face_vectors.push_back({f[0],a,c});
             new_face_vectors.push_back({a,f[1],b});
@@ -436,17 +436,21 @@ void MeshProcessing::create_isocahedron(double r, Point centerPoint){
 
     for(auto f:face_vectors){
 
-        f[0][0] += centerPoint[0];
-        f[0][1] += centerPoint[1];
-        f[0][2] += centerPoint[2];
+        Point a = push_to_radius(f[0],r);
+        Point b = push_to_radius(f[1],r);
+        Point c = push_to_radius(f[2],r);
 
-        f[1][0] += centerPoint[0];
-        f[1][1] += centerPoint[1];
-        f[1][2] += centerPoint[2];
+        f[0][0] = a[0] + centerPoint[0];
+        f[0][1] = a[1] + centerPoint[1];
+        f[0][2] = a[2] + centerPoint[2];
 
-        f[2][0] += centerPoint[0];
-        f[2][1] += centerPoint[1];
-        f[2][2] += centerPoint[2];
+        f[1][0] = b[0] + centerPoint[0];
+        f[1][1] = b[1] + centerPoint[1];
+        f[1][2] = b[2] + centerPoint[2];
+
+        f[2][0] = c[0] + centerPoint[0];
+        f[2][1] = c[1] + centerPoint[1];
+        f[2][2] = c[2] + centerPoint[2];
 
         auto v1 = mesh_.add_vertex(f[0]);
         auto v2 = mesh_.add_vertex(f[1]);
@@ -469,7 +473,7 @@ Point MeshProcessing::middle_point(Point a, Point b){
 Point MeshProcessing::push_to_radius(Point point, double radius) {
 
     double ratio = radius/norm(point);
-    return point*ratio*2;
+    return point*ratio;
 }
 
 void MeshProcessing::delete_long_edges_faces (){

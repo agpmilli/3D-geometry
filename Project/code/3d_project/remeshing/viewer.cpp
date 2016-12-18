@@ -533,7 +533,7 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
 
     b = new Button(panelSkullEffect, "create single sphere");
     b->setCallback([this]() {
-        mesh_->create_isocahedron(20, Point(10,10,10));
+        mesh_->create_isocahedron(100, Point(20,20,20));
         mesh_->meshProcess();
         this->mesh_->compute_mesh_properties();
         this->refresh_mesh();
