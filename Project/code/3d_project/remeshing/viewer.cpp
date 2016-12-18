@@ -509,29 +509,12 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     });
 
     new Label(window_, "Skull-Effects", "sans-bold");
-    popupBtn = new PopupButton(window_, "Hole");
+    popupBtn = new PopupButton(window_, "Dual Graph");
     popup = popupBtn->popup();
     popup->setLayout(new GroupLayout());
 
     Widget* panelSkullEffect = new Widget(popup);
     panelSkullEffect->setLayout(new GroupLayout());
-
-
-    b = new Button(panelSkullEffect, "Create a big hole");
-    b->setCallback([this]() {
-        mesh_->circularHole();
-        mesh_->meshProcess();
-        this->mesh_->compute_mesh_properties();
-        this->refresh_mesh();
-    });
-
-    b = new Button(panelSkullEffect, "Create some small holes");
-    b->setCallback([this]() {
-        mesh_->delete_faces_vertex();
-        mesh_->meshProcess();
-        this->mesh_->compute_mesh_properties();
-        this->refresh_mesh();
-    });
 
     b = new Button(panelSkullEffect, "make skull pattern with edges");
     b->setCallback([this]() {

@@ -50,9 +50,6 @@ public:
     void delete_big_faces();
     double compute_area_face (Mesh::Face face);
 
-    void circularHole();
-    void delete_faces_vertex();
-
     void make_skull_pattern_edges();
     void create_single_cylinder();
     surface_mesh::Point get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<surface_mesh::Surface_mesh::Face, surface_mesh::Point> > v);

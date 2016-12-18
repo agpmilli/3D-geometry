@@ -294,12 +294,6 @@ void MeshProcessing::create_single_cylinder(){
 // the radius is the distance between the center of the square and a corner
 // a1 is the top-left, then it goes clockwise
 void MeshProcessing::build_cylinder(Point p_a, Point p_b, double r){
-//  Point ab = b-a;
-//  double plan_a = p_a[0];
-//  double plan_b = p_a[1];
-//  double plan_c = p_a[2];
-//  double plan_d = ab[0] * plan_a + ab[1] * plan_b + ab[2] * plan_c;
-
 
     //swapping points to avoid normals pointing inside the cylinder
     if(p_b[2] > p_a[2]){
