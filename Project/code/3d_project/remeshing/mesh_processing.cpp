@@ -169,7 +169,7 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
             length = mesh_.position(v)[1];
 
             // update target length with the height of current vertex + min value (to avoid negative target length)
-            target_length[v] = length+(std::abs(min_height));
+            target_length[v] = pow(length,2)+(std::abs(min_height));
         }
 
         // rescale desired length:
@@ -180,7 +180,7 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
             n++;
         }
 
-        user_specified_target_length = 0.12;
+        user_specified_target_length = 0.15;
 
         // rescale the target length of each vertex so that the mean of the new target lengths equals the user specified target length
         for(auto v: mesh_.vertices()){
@@ -231,6 +231,7 @@ void MeshProcessing::make_skull_pattern_edges (){
     std::vector<std::tuple<Mesh::Face,Point>> fs_and_ps;
     std::tuple<Mesh::Face,Point> f_and_p;
     std::vector<Mesh::Edge> old_edges;
+    std::vector<Point> dual_intersections;
 
     //save old edges
     for(auto e:mesh_.edges()){
@@ -255,6 +256,7 @@ void MeshProcessing::make_skull_pattern_edges (){
         Point p(x, y, z);
         f_and_p = std::make_tuple(f, p);
         fs_and_ps.push_back(f_and_p);
+        dual_intersections.push_back(p);
     }
 
    // iterate on every edge and build a cylinder on every dual edge
@@ -273,7 +275,7 @@ void MeshProcessing::make_skull_pattern_edges (){
 
        //create a cylinder between x and y
        if(!(x[0] == NULL)){
-        build_cylinder(x, y, 0.01);
+        build_cylinder(x, y, 0.015);
        }
    }
    // delete primal graph
@@ -281,6 +283,22 @@ void MeshProcessing::make_skull_pattern_edges (){
        mesh_.delete_edge(e);
    }
    mesh_.garbage_collection();
+
+   //create a sphere on each dual intersection
+   create_spheres_on_vertices(dual_intersections);
+}
+
+void MeshProcessing::create_spheres_on_vertices(std::vector<Point> dual_intersections){
+    // put a sphere on each vertex
+    std::cout << "creating spheres" << std::endl;
+    int i = 0;
+    for(auto p: dual_intersections){
+        if(i % 100 == 0){
+            std::cout << "creating sphere " << i << " of " << dual_intersections.size() << "..." << std::endl;
+        }
+        create_isocahedron(0.01, p);
+        i++;
+    }
 }
 
 void MeshProcessing::create_single_cylinder(){

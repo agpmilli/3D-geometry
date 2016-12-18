@@ -58,6 +58,7 @@ public:
     void create_isocahedron(double r, surface_mesh::Point centerPoint);
     surface_mesh::Point middle_point(surface_mesh::Point a, surface_mesh::Point b);
     surface_mesh::Point push_to_radius(surface_mesh::Point point,double radius);
+    void create_spheres_on_vertices(std::vector<surface_mesh::Point> dual_intersections);
 
     void split_long_edges ();
     void collapse_short_edges ();
