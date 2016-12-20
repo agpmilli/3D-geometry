@@ -404,8 +404,10 @@ void MeshProcessing::create_isocahedron(double r, Point centerPoint){
     face_vectors.push_back({Point(phi, r, 0), Point(0, phi, r), Point(r, 0, phi)});
 
 
+    // We split each triangles into 4 subtriangles as much as we want our circle to be smooth
     for (int i = 0; i<nb_iteration; i++) {
 
+        //finding the middle points of each side of the triangle
         for(auto f:face_vectors){
             Point a = middle_point(f[0],f[1]);
             Point b = middle_point(f[1],f[2]);
@@ -424,6 +426,7 @@ void MeshProcessing::create_isocahedron(double r, Point centerPoint){
 
     for(auto f:face_vectors){
 
+        // we rescale each point to the radius and we add the triangle for each face
         Point a = push_to_radius(f[0],r);
         Point b = push_to_radius(f[1],r);
         Point c = push_to_radius(f[2],r);
@@ -469,6 +472,8 @@ void MeshProcessing::create_rectangle(Point a, Point b, double radius) {
 
     std::vector<Point> rectangle_points;
 
+    // We firt find the four perpendicular points around the distance vector between a and b
+
     Point edge_vector = b-a;
     Point perp_point1 = {1, 1, 0};
     if (edge_vector[2] != 0) {
@@ -478,10 +483,14 @@ void MeshProcessing::create_rectangle(Point a, Point b, double radius) {
     Point perp_point3 = cross(perp_point1, edge_vector);
     Point perp_point4 = -perp_point3;
 
+    // We normalize those points and store them in a vector
+
     rectangle_points.push_back(perp_point1*radius/norm(perp_point1));
     rectangle_points.push_back(perp_point2*radius/norm(perp_point2));
     rectangle_points.push_back(perp_point3*radius/norm(perp_point3));
     rectangle_points.push_back(perp_point4*radius/norm(perp_point4));
+
+    // We add the four vertexes around points a and b
 
     auto va1 = mesh_.add_vertex(rectangle_points[0]+a);
     auto va2 = mesh_.add_vertex(rectangle_points[1]+a);
@@ -493,6 +502,7 @@ void MeshProcessing::create_rectangle(Point a, Point b, double radius) {
     auto vb3 = mesh_.add_vertex(rectangle_points[2]+b);
     auto vb4 = mesh_.add_vertex(rectangle_points[3]+b);
 
+    // We create the faces to form the tube for each edges
     mesh_.add_triangle(va1,vb1,va3);
     mesh_.add_triangle(vb1,vb3,va3);
 
