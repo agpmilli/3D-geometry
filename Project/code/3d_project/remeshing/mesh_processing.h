@@ -1,13 +1,11 @@
 //=============================================================================
 //
-//   Code framework for the lecture
+//   Course Project
 //
 //   "Digital 3D Geometry Processing"
 //
-//   Gaspard Zoss
+//   Alain Milliet, Raphaël Steinmann and Thomas Batschelet
 //
-//   Copyright (C) 2016 by Computer Graphics and Geometry Laboratory,
-//         EPF Lausanne
 //
 //-----------------------------------------------------------------------------
 #ifndef MESH_PROCESSING_H
@@ -51,16 +49,12 @@ public:
     double compute_area_face (Mesh::Face face);
 
     void make_skull_pattern_edges();
-    void create_single_cylinder();
     surface_mesh::Point get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<surface_mesh::Surface_mesh::Face, surface_mesh::Point> > v);
     void MeshProcessing::build_cylinder(surface_mesh::Point p_a, surface_mesh::Point p_b, double r);
-
     void create_isocahedron(double r, surface_mesh::Point centerPoint);
     surface_mesh::Point middle_point(surface_mesh::Point a, surface_mesh::Point b);
     surface_mesh::Point push_to_radius(surface_mesh::Point point,double radius);
     void create_spheres_on_vertices(std::vector<surface_mesh::Point> dual_intersections);
-
-    void create_rectangle(surface_mesh::Point a, surface_mesh::Point b, double radius);
 
     void split_long_edges ();
     void collapse_short_edges ();

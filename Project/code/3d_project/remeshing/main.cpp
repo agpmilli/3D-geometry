@@ -1,13 +1,11 @@
 //=============================================================================
 //
-//   Code framework for the lecture
+//   Course Project
 //
 //   "Digital 3D Geometry Processing"
 //
-//   Gaspard Zoss
+//   Alain Milliet, Raphaël Steinmann and Thomas Batschelet
 //
-//   Copyright (C) 2016 by Computer Graphics and Geometry Laboratory,
-//         EPF Lausanne
 //
 //-----------------------------------------------------------------------------
 #include "viewer.h"

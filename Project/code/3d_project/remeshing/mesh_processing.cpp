@@ -1,13 +1,11 @@
 //=============================================================================
 //
-//   Code framework for the lecture
+//   Course Project
 //
 //   "Digital 3D Geometry Processing"
 //
-//   Gaspard Zoss
+//   Alain Milliet, Raphaël Steinmann and Thomas Batschelet
 //
-//   Copyright (C) 2016 by Computer Graphics and Geometry Laboratory,
-//         EPF Lausanne
 //
 //-----------------------------------------------------------------------------
 #include "mesh_processing.h"
@@ -275,7 +273,7 @@ void MeshProcessing::make_skull_pattern_edges (){
 
        //create a cylinder between x and y
        if(!(x[0] == NULL)){
-        build_cylinder(x, y, 0.015);
+           build_cylinder(x, y, 0.015);
        }
    }
    // delete primal graph
@@ -300,69 +298,6 @@ void MeshProcessing::create_spheres_on_vertices(std::vector<Point> dual_intersec
         create_isocahedron(radius, p);
         i++;
     }
-}
-
-void MeshProcessing::create_single_cylinder(){
-    Point a(10.0, 10.0, 10.0);
-    Point b(10.0, 10.0, 5.0);
-    double r = 5.0;
-    build_cylinder(a, b, r);
-
-}
-
-// this method builds a cylinder between v1 and v2
-// constructs 4 vertices around p1 and 4 others around p2
-// build a "parallepipede rectangle" with the 8 points
-// the radius is the distance between the center of the square and a corner
-// a1 is the top-left, then it goes clockwise
-void MeshProcessing::build_cylinder(Point p_a, Point p_b, double r){
-
-    //swapping points to avoid normals pointing inside the cylinder
-    if(p_b[2] > p_a[2]){
-        Point temp = p_a;
-        p_a = p_b;
-        p_b = temp;
-    }
-
-    //adding vertices around the given points
-    Point a1(p_a[0]-r, p_a[1]+r, p_a[2]);
-    Point a2(p_a[0]+r, p_a[1]+r, p_a[2]);
-    Point a3(p_a[0]+r, p_a[1]-r, p_a[2]);
-    Point a4(p_a[0]-r, p_a[1]-r, p_a[2]);
-    auto v_a1 = mesh_.add_vertex(a1);
-    auto v_a2 = mesh_.add_vertex(a2);
-    auto v_a3 = mesh_.add_vertex(a3);
-    auto v_a4 = mesh_.add_vertex(a4);
-    Point b1(p_b[0]-r, p_b[1]+r, p_b[2]);
-    Point b2(p_b[0]+r, p_b[1]+r, p_b[2]);
-    Point b3(p_b[0]+r, p_b[1]-r, p_b[2]);
-    Point b4(p_b[0]-r, p_b[1]-r, p_b[2]);
-    auto v_b1 = mesh_.add_vertex(b1);
-    auto v_b2 = mesh_.add_vertex(b2);
-    auto v_b3 = mesh_.add_vertex(b3);
-    auto v_b4 = mesh_.add_vertex(b4);
-
-    //adding faces to create the cylinder
-    //base A
-    mesh_.add_triangle(v_a3, v_a2, v_a1);
-    mesh_.add_triangle(v_a4, v_a3, v_a1);
-    //base B
-    mesh_.add_triangle(v_b2, v_b3, v_b1);
-    mesh_.add_triangle(v_b3, v_b4, v_b1);
-    //A1A2-B1B2
-    mesh_.add_triangle(v_b2, v_b1, v_a2);
-    mesh_.add_triangle(v_b1, v_a1, v_a2);
-    //A2A3-B2B3
-    mesh_.add_triangle(v_b3, v_b2, v_a3);
-    mesh_.add_triangle(v_b2, v_a2, v_a3);
-    //A3A4-B3B4
-    mesh_.add_triangle(v_b4, v_b3, v_a4);
-    mesh_.add_triangle(v_b3, v_a3, v_a4);
-    //A4A1-B4B1
-    mesh_.add_triangle(v_b1, v_b4, v_a1);
-    mesh_.add_triangle(v_b4, v_a4, v_a1);
-
-   // std::cout << "n faces after: " << mesh_.n_faces() << std::endl;
 }
 
 //if the given face is in the vector it returns its corresponding point. else it returns null
@@ -480,8 +415,12 @@ Point MeshProcessing::push_to_radius(Point point, double radius) {
     return point*ratio;
 }
 
-
-void MeshProcessing::create_rectangle(Point a, Point b, double radius) {
+// this method builds a cylinder between v1 and v2
+// constructs 4 vertices around p1 and 4 others around p2
+// build a "parallepipede rectangle" with the 8 points
+// the radius is the distance between the center of the square and a corner
+// a1 is the top-left, then it goes clockwise
+void MeshProcessing::build_cylinder(Point a, Point b, double radius) {
 
     std::vector<Point> rectangle_points;
 
