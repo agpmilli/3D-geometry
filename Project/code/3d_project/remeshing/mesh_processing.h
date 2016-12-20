@@ -62,6 +62,8 @@ public:
     surface_mesh::Point middle_point(surface_mesh::Point a, surface_mesh::Point b);
     surface_mesh::Point push_to_radius(surface_mesh::Point point,double radius);
 
+    void create_rectangle(surface_mesh::Point a, surface_mesh::Point b, double radius);
+
     void split_long_edges ();
     void collapse_short_edges ();
     void equalize_valences ();

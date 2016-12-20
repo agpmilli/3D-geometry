@@ -464,6 +464,50 @@ Point MeshProcessing::push_to_radius(Point point, double radius) {
     return point*ratio;
 }
 
+
+void MeshProcessing::create_rectangle(Point a, Point b, double radius) {
+
+    std::vector<Point> rectangle_points;
+
+    Point edge_vector = b-a;
+    Point perp_point1 = {1, 1, 0};
+    if (edge_vector[2] != 0) {
+        perp_point1[2] = (-edge_vector[0]*perp_point1[0] - edge_vector[1]*perp_point1[1]) / edge_vector[2];
+        }
+    Point perp_point2 = -perp_point1;
+    Point perp_point3 = cross(perp_point1, edge_vector);
+    Point perp_point4 = -perp_point3;
+
+    rectangle_points.push_back(perp_point1*radius/norm(perp_point1));
+    rectangle_points.push_back(perp_point2*radius/norm(perp_point2));
+    rectangle_points.push_back(perp_point3*radius/norm(perp_point3));
+    rectangle_points.push_back(perp_point4*radius/norm(perp_point4));
+
+    auto va1 = mesh_.add_vertex(rectangle_points[0]+a);
+    auto va2 = mesh_.add_vertex(rectangle_points[1]+a);
+    auto va3 = mesh_.add_vertex(rectangle_points[2]+a);
+    auto va4 = mesh_.add_vertex(rectangle_points[3]+a);
+
+    auto vb1 = mesh_.add_vertex(rectangle_points[0]+b);
+    auto vb2 = mesh_.add_vertex(rectangle_points[1]+b);
+    auto vb3 = mesh_.add_vertex(rectangle_points[2]+b);
+    auto vb4 = mesh_.add_vertex(rectangle_points[3]+b);
+
+    mesh_.add_triangle(va1,vb1,va3);
+    mesh_.add_triangle(vb1,vb3,va3);
+
+    mesh_.add_triangle(va1,va4,vb1);
+    mesh_.add_triangle(vb1,va4,vb4);
+
+    mesh_.add_triangle(va4,va2,vb4);
+    mesh_.add_triangle(va2,vb2,vb4);
+
+    mesh_.add_triangle(va2,vb3,vb2);
+    mesh_.add_triangle(va2,va3,vb3);
+
+}
+
+
 void MeshProcessing::delete_long_edges_faces (){
     double mean_length = 0;
     int num_edges_1 = 0;
