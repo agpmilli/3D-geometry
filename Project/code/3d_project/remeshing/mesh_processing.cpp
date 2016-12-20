@@ -169,7 +169,7 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
             length = mesh_.position(v)[1];
 
             // update target length with the height of current vertex + min value (to avoid negative target length)
-            target_length[v] = length+(std::abs(min_height));
+            target_length[v] = pow(length,2)+(std::abs(min_height));
         }
 
         // rescale desired length:
@@ -180,7 +180,7 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
             n++;
         }
 
-        user_specified_target_length = 0.12;
+        user_specified_target_length = 0.15;
 
         // rescale the target length of each vertex so that the mean of the new target lengths equals the user specified target length
         for(auto v: mesh_.vertices()){
@@ -231,6 +231,7 @@ void MeshProcessing::make_skull_pattern_edges (){
     std::vector<std::tuple<Mesh::Face,Point>> fs_and_ps;
     std::tuple<Mesh::Face,Point> f_and_p;
     std::vector<Mesh::Edge> old_edges;
+    std::vector<Point> dual_intersections;
 
     //save old edges
     for(auto e:mesh_.edges()){
@@ -255,6 +256,7 @@ void MeshProcessing::make_skull_pattern_edges (){
         Point p(x, y, z);
         f_and_p = std::make_tuple(f, p);
         fs_and_ps.push_back(f_and_p);
+        dual_intersections.push_back(p);
     }
 
    // iterate on every edge and build a cylinder on every dual edge
@@ -273,7 +275,7 @@ void MeshProcessing::make_skull_pattern_edges (){
 
        //create a cylinder between x and y
        if(!(x[0] == NULL)){
-        build_cylinder(x, y, 0.01);
+        build_cylinder(x, y, 0.015);
        }
    }
    // delete primal graph
@@ -281,6 +283,23 @@ void MeshProcessing::make_skull_pattern_edges (){
        mesh_.delete_edge(e);
    }
    mesh_.garbage_collection();
+
+   //create a sphere on each dual intersection
+   create_spheres_on_vertices(dual_intersections);
+}
+
+void MeshProcessing::create_spheres_on_vertices(std::vector<Point> dual_intersections){
+    // put a sphere on each vertex
+    std::cout << "creating spheres" << std::endl;
+    int i = 0;
+    for(auto p: dual_intersections){
+        if(i % 100 == 0){
+            std::cout << "creating sphere " << i << " of " << dual_intersections.size() << "..." << std::endl;
+        }
+        auto radius = 0.005 * p[1];
+        create_isocahedron(radius, p);
+        i++;
+    }
 }
 
 void MeshProcessing::create_single_cylinder(){
@@ -297,12 +316,6 @@ void MeshProcessing::create_single_cylinder(){
 // the radius is the distance between the center of the square and a corner
 // a1 is the top-left, then it goes clockwise
 void MeshProcessing::build_cylinder(Point p_a, Point p_b, double r){
-//  Point ab = b-a;
-//  double plan_a = p_a[0];
-//  double plan_b = p_a[1];
-//  double plan_c = p_a[2];
-//  double plan_d = ab[0] * plan_a + ab[1] * plan_b + ab[2] * plan_c;
-
 
     //swapping points to avoid normals pointing inside the cylinder
     if(p_b[2] > p_a[2]){
@@ -376,7 +389,7 @@ void MeshProcessing::create_isocahedron(double r, Point centerPoint){
     //phi is the golden ratio with radius r
     double phi = golden_ratio*r;
 
-    double nb_iteration = 5;
+    double nb_iteration = 0;
 
     // Construct the 20 first faces with vertices of the form (0, +- phi, -+1), (+-1, 0, -+phi), (+- phi, -+1, 0)
 
@@ -599,66 +612,6 @@ double MeshProcessing::compute_area_face (Mesh::Face face){
     auto p = l1 + l2 + l3;
     p/=2;
     return sqrt(p * (p-l1) * (p-l2) * (p-l3));
-}
-
-
-
-void MeshProcessing::circularHole(){
-    double length = 10.0;
-    Mesh::Vertex vertex_chosen;
-    int vertex_number = std::rand() % mesh_.n_vertices();
-    std::vector<Mesh::Face> faces_to_delete;
-    for(auto v:mesh_.vertices()){
-        if(v.idx() == vertex_number){
-         vertex_chosen = v;
-        }
-    }
-    auto x = mesh_.position(vertex_chosen);
-    for(auto v:mesh_.vertices()){
-        if(v.idx() != vertex_chosen.idx()){
-            auto y = mesh_.position(v);
-            double distance1 = sqrt(pow(x[0]-y[0],2.0)+pow(x[1]-y[1],2.0)+pow(x[2]-y[2],2.0));
-
-            if(distance1 < length){
-                for(auto v2:mesh_.vertices(v)){
-                    auto z = mesh_.position(v2);
-                    double distance2 = sqrt(pow(x[0]-y[0],2.0)+pow(x[1]-y[1],2.0)+pow(x[2]-y[2],2.0));
-                    if(distance2 < length){
-                        auto h = mesh_.find_halfedge(v,v2);
-                        auto f = mesh_.face(h);
-                        if(f.is_valid()){
-                            faces_to_delete.push_back(f);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    for(int i=0; i<faces_to_delete.size(); i++){
-        mesh_.delete_face(faces_to_delete[i]);
-    }
-    // clean the deleted edges/vertices/faces
-    mesh_.garbage_collection();
-}
-
-void MeshProcessing::delete_faces_vertex(){
-    std::vector<Mesh::Face> faces_to_delete;
-    for(auto v:mesh_.vertices()){
-        if(v.idx() % 1000 == 0){
-            for(auto f:mesh_.faces(v)){
-                if(f.is_valid()){
-                    faces_to_delete.push_back(f);
-                }
-            }
-        }
-    }
-    for(int i=0; i<faces_to_delete.size(); i++){
-        mesh_.delete_face(faces_to_delete[i]);
-
-    }
-    // clean the deleted edges/vertices/faces
-    mesh_.garbage_collection();
 }
 
 void MeshProcessing::split_long_edges (){
@@ -1215,7 +1168,7 @@ void MeshProcessing::load_mesh(const string &filename) {
         std::cerr << "Mesh not found, exiting." << std::endl;
         exit(-1);
     }
-    save_filename = filename.substr(0, filename.size()-4);
+    save_filename = filename;
 
     cout << "Mesh "<< filename << " loaded." << endl;
     cout << "# of vertices : " << mesh_.n_vertices() << endl;
@@ -1244,8 +1197,7 @@ void MeshProcessing::load_mesh(const string &filename) {
 }
 
 void MeshProcessing::save_mesh() {
-    string prefix = "../data/";
-    string name = prefix + save_filename + "_" + std::to_string(save_count)+ ".off";
+    string name = save_filename + "_" + std::to_string(save_count)+ ".off";
 
     std::ofstream outfile (name);
 

@@ -50,9 +50,6 @@ public:
     void delete_big_faces();
     double compute_area_face (Mesh::Face face);
 
-    void circularHole();
-    void delete_faces_vertex();
-
     void make_skull_pattern_edges();
     void create_single_cylinder();
     surface_mesh::Point get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<surface_mesh::Surface_mesh::Face, surface_mesh::Point> > v);
@@ -61,6 +58,7 @@ public:
     void create_isocahedron(double r, surface_mesh::Point centerPoint);
     surface_mesh::Point middle_point(surface_mesh::Point a, surface_mesh::Point b);
     surface_mesh::Point push_to_radius(surface_mesh::Point point,double radius);
+    void create_spheres_on_vertices(std::vector<surface_mesh::Point> dual_intersections);
 
     void create_rectangle(surface_mesh::Point a, surface_mesh::Point b, double radius);
 
