@@ -456,26 +456,26 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     popup = popupBtn->popup();
     popup->setLayout(new GroupLayout());
 
-    Widget* panelEffect = new Widget(popup);
-    panelEffect->setLayout(new GroupLayout());
+    Widget* panelGeralt = new Widget(popup);
+    panelGeralt->setLayout(new GroupLayout());
 
-    b = new Button(panelEffect, "Separate top of the head (melting-like)");
+    b = new Button(panelGeralt, "Separate top of the head (melting-like)");
     b->setCallback([this]() {
-        mesh_->separate_head_melting();
+        mesh_->separate_head_melting(this->gammaGeraltTextBox->value(), this->thresholdGeraltTextBox->value());
         mesh_->meshProcess();
         this->mesh_->compute_mesh_properties();
         this->refresh_mesh();
     });
 
-    b = new Button(panelEffect, "Separate top of the head (log curve)");
+    b = new Button(panelGeralt, "Separate top of the head (log curve)");
     b->setCallback([this]() {
-        mesh_->separate_head_log();
+        mesh_->separate_head_log(this->gammaGeraltTextBox->value(), this->thresholdGeraltTextBox->value());
         mesh_->meshProcess();
         this->mesh_->compute_mesh_properties();
         this->refresh_mesh();
     });
 
-    b = new Button(panelEffect, "Create fracture");
+    b = new Button(panelGeralt, "Create fracture");
     b->setCallback([this]() {
         mesh_->create_fracture();
         mesh_->meshProcess();
@@ -483,20 +483,33 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
         this->refresh_mesh();
     });
 
-    b = new Button(panelEffect, "Delete long edges faces");
+    b = new Button(panelGeralt, "Delete long edges faces");
     b->setCallback([this]() {
         mesh_->delete_long_edges_faces();
         this->mesh_->compute_mesh_properties();
         this->refresh_mesh();
     });
 
-    new Label(window_, "Skull-Effects", "sans-bold");
-    popupBtn = new PopupButton(window_, "Hole");
-    popup = popupBtn->popup();
-    popup->setLayout(new GroupLayout());
-
-    Widget* panelSkullEffect = new Widget(popup);
-    panelSkullEffect->setLayout(new GroupLayout());
+    panelGeralt = new Widget(popup);
+    GridLayout *layoutGeralt = new GridLayout(Orientation::Horizontal, 2,
+                                        Alignment::Middle, 15, 5);
+    layoutGeralt->setColAlignment({ Alignment::Maximum, Alignment::Fill });
+    layoutGeralt->setSpacing(0, 10);
+    panelGeralt->setLayout(layoutGeralt);
+    new Label(panelGeralt, "Size of separation:", "sans-bold");
+    gammaGeraltTextBox = new FloatBox<float>(panelGeralt, 1.5);
+    gammaGeraltTextBox->setEditable(true);
+    gammaGeraltTextBox->setFixedSize(Vector2i(50, 20));
+    gammaGeraltTextBox->setDefaultValue("1.5");
+    gammaGeraltTextBox->setFontSize(16);
+    gammaGeraltTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
+    new Label(panelGeralt, "Height of separation:", "sans-bold");
+    thresholdGeraltTextBox = new FloatBox<float>(panelGeralt, 20);
+    thresholdGeraltTextBox->setEditable(true);
+    thresholdGeraltTextBox->setFixedSize(Vector2i(50, 20));
+    thresholdGeraltTextBox->setDefaultValue("20");
+    thresholdGeraltTextBox->setFontSize(16);
+    thresholdGeraltTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
 
     performLayout();
 

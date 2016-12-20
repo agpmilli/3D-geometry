@@ -188,7 +188,7 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
     std::cout << "Calc target length done" << std::endl;
 }
 
-void MeshProcessing::separate_head_melting (){
+void MeshProcessing::separate_head_melting (double gamma, double threshold){
     /*
      * Separate the head from a certain height (height of the nose - threshold defined below) in a melting way.
      */
@@ -198,10 +198,8 @@ void MeshProcessing::separate_head_melting (){
     double noseY = 0;
     double noseZ = 0;
 
-    // Parameters that define the height and the thickness of the separation
-    double gamma = 0.35;
+    // Parameters that define the falling parameters
     double lambda = 0.2;
-    double threshold = 20;
 
     // Find the coordinates of the nose to find the point where we will separate the head
     for (auto v:mesh_.vertices()){
@@ -236,7 +234,7 @@ void MeshProcessing::separate_head_melting (){
     }
 }
 
-void MeshProcessing::separate_head_log (){
+void MeshProcessing::separate_head_log (double gamma, double threshold){
     /*
      * Separate the head from a certain height (height of the nose - threshold defined below) using logarithmic function
      */
@@ -245,10 +243,6 @@ void MeshProcessing::separate_head_log (){
     double noseX = 0;
     double noseY = 0;
     double noseZ = 0;
-
-    // Parameters that define the height and the thickness of the separation
-    double gamma = 1.5;
-    double threshold = 20;
 
     // Find the coordinates of the nose to find the point where we will separate the head
     for (auto v:mesh_.vertices()){
@@ -884,7 +878,7 @@ void MeshProcessing::load_mesh(const string &filename) {
         std::cerr << "Mesh not found, exiting." << std::endl;
         exit(-1);
     }
-    save_filename = filename.substr(0, filename.size()-4);
+    save_filename = filename;
 
     cout << "Mesh "<< filename << " loaded." << endl;
     cout << "# of vertices : " << mesh_.n_vertices() << endl;
@@ -913,8 +907,7 @@ void MeshProcessing::load_mesh(const string &filename) {
 }
 
 void MeshProcessing::save_mesh() {
-    string prefix = "../data/";
-    string name = prefix + save_filename + "_" + std::to_string(save_count)+ ".off";
+    string name = save_filename + "_" + std::to_string(save_count)+ ".off";
 
     std::ofstream outfile (name);
 

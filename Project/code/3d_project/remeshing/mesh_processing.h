@@ -46,8 +46,8 @@ public:
     void calc_target_length (const REMESHING_TYPE &remeshing_type);
 
     void create_fracture();
-    void separate_head_melting();
-    void separate_head_log();
+    void separate_head_melting(double gamma, double threshold);
+    void separate_head_log(double gamma, double threshold);
     void delete_long_edges_faces();
 
     void split_long_edges ();

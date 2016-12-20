@@ -117,4 +117,8 @@ private:
     IntBox<int>* iterationEnhancementTextBox;
     IntBox<int>* iterationSmoothTextBox;
 
+    FloatBox<float>* gammaGeraltTextBox;
+    FloatBox<float>* thresholdGeraltTextBox;
+
+
 };
