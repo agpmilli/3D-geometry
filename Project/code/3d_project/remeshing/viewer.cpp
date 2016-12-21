@@ -461,7 +461,7 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
 
     b = new Button(panelGeralt, "Separate top of the head (melting-like)");
     b->setCallback([this]() {
-        mesh_->separate_head_melting(this->gammaGeraltTextBox->value(), this->thresholdGeraltTextBox->value());
+        mesh_->separate_head_melting(this->gammaGeraltTextBox->value(), this->lambdaGeraltTextBox->value(), this->thresholdGeraltTextBox->value());
         mesh_->meshProcess();
         this->mesh_->compute_mesh_properties();
         this->refresh_mesh();
@@ -496,7 +496,7 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     layoutGeralt->setColAlignment({ Alignment::Maximum, Alignment::Fill });
     layoutGeralt->setSpacing(0, 10);
     panelGeralt->setLayout(layoutGeralt);
-    new Label(panelGeralt, "Size of separation:", "sans-bold");
+    new Label(panelGeralt, "Width of separation:", "sans-bold");
     gammaGeraltTextBox = new FloatBox<float>(panelGeralt, 1.5);
     gammaGeraltTextBox->setEditable(true);
     gammaGeraltTextBox->setFixedSize(Vector2i(50, 20));
@@ -510,6 +510,29 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     thresholdGeraltTextBox->setDefaultValue("20");
     thresholdGeraltTextBox->setFontSize(16);
     thresholdGeraltTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
+    new Label(panelGeralt, "Falling parameter (only melting):", "sans-bold");
+    lambdaGeraltTextBox = new FloatBox<float>(panelGeralt, 0.2);
+    lambdaGeraltTextBox->setEditable(true);
+    lambdaGeraltTextBox->setFixedSize(Vector2i(50, 20));
+    lambdaGeraltTextBox->setDefaultValue("0.2");
+    lambdaGeraltTextBox->setFontSize(16);
+    lambdaGeraltTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
+
+    new Label(window_, "Skull-Effects", "sans-bold");
+    popupBtn = new PopupButton(window_, "Dual Graph");
+    popup = popupBtn->popup();
+    popup->setLayout(new GroupLayout());
+
+    Widget* panelSkullEffect = new Widget(popup);
+    panelSkullEffect->setLayout(new GroupLayout());
+
+    b = new Button(panelSkullEffect, "Make skull pattern with edges");
+    b->setCallback([this]() {
+        mesh_->make_skull_pattern_edges();
+        mesh_->meshProcess();
+        this->mesh_->compute_mesh_properties();
+        this->refresh_mesh();
+    });
 
     performLayout();
 

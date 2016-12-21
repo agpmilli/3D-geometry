@@ -15,6 +15,7 @@
 #include <iostream>
 #include <fstream>
 #include <math.h>
+#include <array>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -188,11 +189,16 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
     std::cout << "Calc target length done" << std::endl;
 }
 
-void MeshProcessing::separate_head_melting (double gamma, double threshold){
-    /*
-     * Separate the head from a certain height (height of the nose - threshold defined below) in a melting way.
-     */
-
+/**
+ * @brief Separate the head using the position of the vertices (melting way)
+ * @param gamma used to compute the new x-coordinate of the vertices we move
+ * @param lambda used to compute the new y-coordinate of the vertices we move
+ * @param threshold used to define the height where the cutting starts
+ *
+ * Find the center of the head (nose), go through the vertices in the mesh that are higher than the nose +- a threshold and depending on their x-position in function of x-nose,
+ * recompute their x and y coordinate using gamma and lambda
+ */
+void MeshProcessing::separate_head_melting (double gamma, double lambda, double threshold){
     // Initiate coordinates of the nose
     double noseX = 0;
     double noseY = 0;
@@ -234,11 +240,15 @@ void MeshProcessing::separate_head_melting (double gamma, double threshold){
     }
 }
 
+/**
+ * @brief Separate the head using the position of the vertices (logarithmic way)
+ * @param gamma used to compute the width of the separation
+ * @param threshold used to define the height where the cutting starts
+ *
+ * Find the center of the head (nose), go through the vertices in the mesh that are higher than the nose +- a threshold and depending on their x-position in function of x-nose,
+ * move them to the right or to the left using a logarithmic function.
+ */
 void MeshProcessing::separate_head_log (double gamma, double threshold){
-    /*
-     * Separate the head from a certain height (height of the nose - threshold defined below) using logarithmic function
-     */
-
     // Initiate coordinates of the nose
     double noseX = 0;
     double noseY = 0;
@@ -275,11 +285,12 @@ void MeshProcessing::separate_head_log (double gamma, double threshold){
     }
 }
 
+/**
+ * @brief Create a kind of fracture where we separated the head
+ *
+ * Find the vertices in and around the fracture and depending on their y- and z-coordinates modify their x-coordinate accordingly (using modulo)
+ */
 void MeshProcessing::create_fracture (){
-    /*
-     * Create a kind of fracture where we separated the head
-     */
-
     // Initiate coordinates of the nose
     double noseX = 0;
     double noseY = 0;
@@ -364,11 +375,13 @@ void MeshProcessing::create_fracture (){
     }
 }
 
+/**
+ * @brief Delete the faces containing long edges in the mesh
+ *
+ * Goes through edges in the mesh and test their edge_length value,
+ * if greater than a threshold we find the corresponding faces and delete them.
+ */
 void MeshProcessing::delete_long_edges_faces (){
-    /*
-     * Delete the long edges in the mesh
-     */
-
     // Initiate the mean length of an edge in the mesh
     double mean_length = 0;
 
@@ -413,6 +426,252 @@ void MeshProcessing::delete_long_edges_faces (){
     // clean the deleted edges/vertices/faces
     mesh_.garbage_collection();
 }
+
+//computes dual graph by adding edges
+void MeshProcessing::make_skull_pattern_edges (){
+    std::vector<std::tuple<Mesh::Face,Point>> fs_and_ps;
+    std::tuple<Mesh::Face,Point> f_and_p;
+    std::vector<Mesh::Edge> old_edges;
+    std::vector<Point> dual_intersections;
+
+    //save old edges
+    for(auto e:mesh_.edges()){
+        old_edges.push_back(e);
+    }
+
+    std::cout << "number of vertices before: " << mesh_.n_vertices() << std::endl;
+    // create new vertices: for each face f create a vertex in the middle of the face
+    for(auto f:mesh_.faces()){
+        double x = 0.0;
+        double y = 0.0;
+        double z = 0.0;
+
+        for(auto v:mesh_.vertices(f)){
+            x += mesh_.position(v)[0];
+            y += mesh_.position(v)[1];
+            z += mesh_.position(v)[2];
+        }
+        x /= 3.0;
+        y /= 3.0;
+        z /= 3.0;
+        Point p(x, y, z);
+        f_and_p = std::make_tuple(f, p);
+        fs_and_ps.push_back(f_and_p);
+        dual_intersections.push_back(p);
+    }
+
+   // iterate on every edge and build a cylinder on every dual edge
+   for(auto e:old_edges){
+       //get e's endpoint to get its adjacent faces f1 and f2
+       auto v1 = mesh_.vertex(e,0);
+       auto v2 = mesh_.vertex(e,1);
+       auto h1 = mesh_.find_halfedge(v1, v2);
+       auto h2 = mesh_.find_halfedge(v2, v1);
+       auto f1 = mesh_.face(h1);
+       auto f2 = mesh_.face(h2);
+
+       // get the points p1 and p2 inside f1 and f2
+       auto x = get_point_from_tuple_vector(f1, fs_and_ps);
+       auto y = get_point_from_tuple_vector(f2, fs_and_ps);
+
+       //create a cylinder between x and y
+       if(!(x[0] == NULL)){
+           build_cylinder(x, y, 0.015);
+       }
+   }
+   // delete primal graph
+   for(auto e:old_edges){
+       mesh_.delete_edge(e);
+   }
+   mesh_.garbage_collection();
+
+   //create a sphere on each dual intersection
+   create_spheres_on_vertices(dual_intersections);
+}
+
+// this method builds a cylinder between v1 and v2
+// constructs 4 vertices around p1 and 4 others around p2
+// build a "parallepipede rectangle" with the 8 points
+// the radius is the distance between the center of the square and a corner
+// a1 is the top-left, then it goes clockwise
+void MeshProcessing::build_cylinder(Point a, Point b, double radius) {
+
+    std::vector<Point> rectangle_points;
+
+    // We firt find the four perpendicular points around the distance vector between a and b
+
+    Point edge_vector = b-a;
+    Point perp_point1 = {1, 1, 0};
+    if (edge_vector[2] != 0) {
+        perp_point1[2] = (-edge_vector[0]*perp_point1[0] - edge_vector[1]*perp_point1[1]) / edge_vector[2];
+        }
+    Point perp_point2 = -perp_point1;
+    Point perp_point3 = cross(perp_point1, edge_vector);
+    Point perp_point4 = -perp_point3;
+
+    // We normalize those points and store them in a vector
+
+    rectangle_points.push_back(perp_point1*radius/norm(perp_point1));
+    rectangle_points.push_back(perp_point2*radius/norm(perp_point2));
+    rectangle_points.push_back(perp_point3*radius/norm(perp_point3));
+    rectangle_points.push_back(perp_point4*radius/norm(perp_point4));
+
+    // We add the four vertexes around points a and b
+
+    auto va1 = mesh_.add_vertex(rectangle_points[0]+a);
+    auto va2 = mesh_.add_vertex(rectangle_points[1]+a);
+    auto va3 = mesh_.add_vertex(rectangle_points[2]+a);
+    auto va4 = mesh_.add_vertex(rectangle_points[3]+a);
+
+    auto vb1 = mesh_.add_vertex(rectangle_points[0]+b);
+    auto vb2 = mesh_.add_vertex(rectangle_points[1]+b);
+    auto vb3 = mesh_.add_vertex(rectangle_points[2]+b);
+    auto vb4 = mesh_.add_vertex(rectangle_points[3]+b);
+
+    // We create the faces to form the tube for each edges
+    mesh_.add_triangle(va1,vb1,va3);
+    mesh_.add_triangle(vb1,vb3,va3);
+
+    mesh_.add_triangle(va1,va4,vb1);
+    mesh_.add_triangle(vb1,va4,vb4);
+
+    mesh_.add_triangle(va4,va2,vb4);
+    mesh_.add_triangle(va2,vb2,vb4);
+
+    mesh_.add_triangle(va2,vb3,vb2);
+    mesh_.add_triangle(va2,va3,vb3);
+
+}
+
+void MeshProcessing::create_isocahedron(double r, Point centerPoint){
+
+    std::vector<std::array<Point,3>> face_vectors;
+    std::vector<std::array<Point,3>> new_face_vectors;
+
+    // The golden ratio will be used to calculate the first 12 vertices of an icosahedron
+    double golden_ratio = (1+(sqrt(5)))/2.0;
+    //phi is the golden ratio with radius r
+    double phi = golden_ratio*r;
+
+    double nb_iteration = 0;
+
+    // Construct the 20 first faces with vertices of the form (0, +- phi, -+1), (+-1, 0, -+phi), (+- phi, -+1, 0)
+
+    face_vectors.push_back({Point(r, 0, phi), Point(0, -phi, r),Point(phi, -r, 0)});
+    face_vectors.push_back({Point(-r, 0, phi),Point(0, -phi, r),Point(r, 0, phi)});
+    face_vectors.push_back({Point(-r, 0, phi),Point(-phi, -r, 0),Point(0, -phi, r)});
+    face_vectors.push_back({Point(0, -phi, r), Point(-phi, -r, 0), Point(0, -phi, -r)});
+    face_vectors.push_back({Point(0, -phi, -r), Point(phi, -r, 0), Point(0, -phi, r)});
+
+    face_vectors.push_back({Point(0, phi, r), Point(0, phi, -r), Point(-phi, r, 0)});
+    face_vectors.push_back({Point(0, phi, r), Point(phi, r, 0), Point(0, phi, -r)});
+    face_vectors.push_back({Point(0, phi, -r), Point(phi, r, 0), Point(r, 0, -phi)});
+    face_vectors.push_back({Point(0, phi, -r), Point(r, 0, -phi), Point(-r, 0, -phi)});
+    face_vectors.push_back({Point(0, phi, -r), Point(-r, 0, -phi), Point(-phi, r, 0)});
+
+    face_vectors.push_back({Point(-r, 0, phi), Point(r, 0, phi), Point(0, phi, r)});
+    face_vectors.push_back({Point(-r, 0, phi), Point(0, phi, r), Point(-phi, r, 0)});
+    face_vectors.push_back({Point(-r, 0, phi), Point(-phi, r, 0), Point(-phi, -r, 0)});
+    face_vectors.push_back({Point(-phi, r, 0), Point(-r, 0, -phi), Point(-phi, -r, 0)});
+    face_vectors.push_back({Point(-phi, -r, 0), Point(-r, 0, -phi), Point(0, -phi, -r)});
+    face_vectors.push_back({Point(-r, 0, -phi), Point(r, 0, -phi), Point(0, -phi, -r)});
+    face_vectors.push_back({Point(0, -phi, -r), Point(r, 0, -phi), Point(phi, -r, 0)});
+    face_vectors.push_back({Point(r, 0, -phi), Point(phi, r, 0), Point(phi, -r, 0)});
+    face_vectors.push_back({Point(phi, -r, 0), Point(phi, r, 0), Point(r, 0, phi)});
+    face_vectors.push_back({Point(phi, r, 0), Point(0, phi, r), Point(r, 0, phi)});
+
+
+    // We split each triangles into 4 subtriangles as much as we want our circle to be smooth
+    for (int i = 0; i<nb_iteration; i++) {
+
+        //finding the middle points of each side of the triangle
+        for(auto f:face_vectors){
+            Point a = middle_point(f[0],f[1]);
+            Point b = middle_point(f[1],f[2]);
+            Point c = middle_point(f[0],f[2]);
+
+            new_face_vectors.push_back({f[0],a,c});
+            new_face_vectors.push_back({a,f[1],b});
+            new_face_vectors.push_back({c,b,f[2]});
+            new_face_vectors.push_back({a, b, c});
+        }
+        face_vectors.clear();
+        face_vectors = new_face_vectors;
+        new_face_vectors.clear();
+
+    }
+
+    for(auto f:face_vectors){
+
+        // we rescale each point to the radius and we add the triangle for each face
+        Point a = push_to_radius(f[0],r);
+        Point b = push_to_radius(f[1],r);
+        Point c = push_to_radius(f[2],r);
+
+        f[0][0] = a[0] + centerPoint[0];
+        f[0][1] = a[1] + centerPoint[1];
+        f[0][2] = a[2] + centerPoint[2];
+
+        f[1][0] = b[0] + centerPoint[0];
+        f[1][1] = b[1] + centerPoint[1];
+        f[1][2] = b[2] + centerPoint[2];
+
+        f[2][0] = c[0] + centerPoint[0];
+        f[2][1] = c[1] + centerPoint[1];
+        f[2][2] = c[2] + centerPoint[2];
+
+        auto v1 = mesh_.add_vertex(f[0]);
+        auto v2 = mesh_.add_vertex(f[1]);
+        auto v3 = mesh_.add_vertex(f[2]);
+
+        mesh_.add_triangle(v1,v2,v3);
+    }
+
+}
+
+void MeshProcessing::create_spheres_on_vertices(std::vector<Point> dual_intersections){
+    // put a sphere on each vertex
+    std::cout << "creating spheres" << std::endl;
+    int i = 0;
+    for(auto p: dual_intersections){
+        if(i % 100 == 0){
+            std::cout << "creating sphere " << i << " of " << dual_intersections.size() << "..." << std::endl;
+        }
+        auto radius = 0.005 * p[1];
+        create_isocahedron(radius, p);
+        i++;
+    }
+}
+
+//if the given face is in the vector it returns its corresponding point. else it returns null
+Point MeshProcessing::get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<Mesh::Face,Point>> p){
+    auto it = std::find_if(p.begin(), p.end(), [&f](const std::tuple<Mesh::Face, Point> &tuple) {return std::get<0>(tuple) == f;});
+    if(it != p.end()){
+        //std::cout << "the point was found!" << std::endl;
+        return std::get<1>(*it);
+    }
+    else{
+        //std::cout << "no point corresponding to this face!" << std::endl;
+        Point p(NULL,NULL,NULL);
+        return p;
+    }
+}
+
+Point MeshProcessing::middle_point(Point a, Point b){
+
+    double x = (a[0]+b[0])/2.0;
+    double y = (a[1]+b[1])/2.0;
+    double z = (a[2]+b[2])/2.0;
+
+    return Point(x,y,z);
+}
+
+Point MeshProcessing::push_to_radius(Point point, double radius) {
+
+    double ratio = radius/norm(point);
+    return point*ratio;
+}
+
 
 void MeshProcessing::split_long_edges (){
     Mesh::Vertex   v0, v1, v;

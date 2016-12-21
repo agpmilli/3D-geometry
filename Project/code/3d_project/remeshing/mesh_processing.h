@@ -46,9 +46,17 @@ public:
     void calc_target_length (const REMESHING_TYPE &remeshing_type);
 
     void create_fracture();
-    void separate_head_melting(double gamma, double threshold);
+    void separate_head_melting(double gamma, double lambda, double threshold);
     void separate_head_log(double gamma, double threshold);
     void delete_long_edges_faces();
+
+    void make_skull_pattern_edges();
+    surface_mesh::Point get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<surface_mesh::Surface_mesh::Face, surface_mesh::Point> > v);
+    void MeshProcessing::build_cylinder(surface_mesh::Point p_a, surface_mesh::Point p_b, double r);
+    void create_isocahedron(double r, surface_mesh::Point centerPoint);
+    surface_mesh::Point middle_point(surface_mesh::Point a, surface_mesh::Point b);
+    surface_mesh::Point push_to_radius(surface_mesh::Point point,double radius);
+    void create_spheres_on_vertices(std::vector<surface_mesh::Point> dual_intersections);
 
     void split_long_edges ();
     void collapse_short_edges ();

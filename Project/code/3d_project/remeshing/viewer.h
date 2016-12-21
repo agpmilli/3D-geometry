@@ -119,6 +119,7 @@ private:
 
     FloatBox<float>* gammaGeraltTextBox;
     FloatBox<float>* thresholdGeraltTextBox;
+    FloatBox<float>* lambdaGeraltTextBox;
 
 
 };
