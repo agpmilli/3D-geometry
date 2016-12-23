@@ -398,8 +398,16 @@ void MeshProcessing::build_cylinder(Point a, Point b, double radius) {
 
 }
 
+/**
+ @brief this method builds a isocahedron at a given point
+ @param r the radius of the polygon
+ @param centerPoint the center coordinates
+ constructs a polygon or sphere depending on the nbOfIteration given, with its
+ center given in parameter of radius r.
+ **/
 void MeshProcessing::create_isocahedron(double r, Point centerPoint){
 
+    // Vectors of 3 Points arrays that are part of each face of the mesh
     std::vector<std::array<Point,3>> face_vectors;
     std::vector<std::array<Point,3>> new_face_vectors;
 
@@ -407,10 +415,10 @@ void MeshProcessing::create_isocahedron(double r, Point centerPoint){
     double golden_ratio = (1+(sqrt(5)))/2.0;
     //phi is the golden ratio with radius r
     double phi = golden_ratio*r;
-
+    // Change this value to smooth the polygon as much as necessary to make it a sphere
     double nb_iteration = 0;
 
-    // Construct the 20 first faces with vertices of the form (0, +- phi, -+1), (+-1, 0, -+phi), (+- phi, -+1, 0)
+    // Construct the 20 first faces with vertices of the form (0, +- phi, -+1), (+-1, 0, -+phi)and (+- phi, -+1, 0)
 
     face_vectors.push_back({Point(r, 0, phi), Point(0, -phi, r),Point(phi, -r, 0)});
     face_vectors.push_back({Point(-r, 0, phi),Point(0, -phi, r),Point(r, 0, phi)});
@@ -445,6 +453,7 @@ void MeshProcessing::create_isocahedron(double r, Point centerPoint){
             Point b = middle_point(f[1],f[2]);
             Point c = middle_point(f[0],f[2]);
 
+            // and pushing them in the new face vector
             new_face_vectors.push_back({f[0],a,c});
             new_face_vectors.push_back({a,f[1],b});
             new_face_vectors.push_back({c,b,f[2]});
@@ -458,11 +467,12 @@ void MeshProcessing::create_isocahedron(double r, Point centerPoint){
 
     for(auto f:face_vectors){
 
-        // we rescale each point to the radius and we add the triangle for each face
+        // We rescale each point of the faces to match the radius
         Point a = push_to_radius(f[0],r);
         Point b = push_to_radius(f[1],r);
         Point c = push_to_radius(f[2],r);
 
+        // We place them correctly according to center points
         f[0][0] = a[0] + centerPoint[0];
         f[0][1] = a[1] + centerPoint[1];
         f[0][2] = a[2] + centerPoint[2];
@@ -526,8 +536,15 @@ Point MeshProcessing::get_point_from_tuple_vector(Mesh::Face f, std::vector<std:
     }
 }
 
+/**
+  @brief returns the middle point of two giver points
+  @param a, b the two points
+  @param p vector containing tuples (Face f, Point p)
+*Given two points calculate its middle point
+**/
 Point MeshProcessing::middle_point(Point a, Point b){
 
+    // Calculate the middle coordinates point of each edge
     double x = (a[0]+b[0])/2.0;
     double y = (a[1]+b[1])/2.0;
     double z = (a[2]+b[2])/2.0;
@@ -535,6 +552,12 @@ Point MeshProcessing::middle_point(Point a, Point b){
     return Point(x,y,z);
 }
 
+/**
+  @brief rescales the norm of the given point to match the radius
+  @param point the point to be rescaled
+  @param radius the length that we want our point to be scaled
+*Given a radius, rescales the point accordingly
+**/
 Point MeshProcessing::push_to_radius(Point point, double radius) {
 
     double ratio = radius/norm(point);
