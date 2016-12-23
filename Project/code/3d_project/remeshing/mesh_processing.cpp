@@ -341,12 +341,14 @@ void MeshProcessing::make_skull_pattern_edges (){
    //create a sphere on each dual intersection
    create_spheres_on_vertices(dual_intersections);
 }
-
-// this method builds a cylinder between v1 and v2
-// constructs 4 vertices around p1 and 4 others around p2
-// build a "parallepipede rectangle" with the 8 points
-// the radius is the distance between the center of the square and a corner
-// a1 is the top-left, then it goes clockwise
+/**
+ @brief this method builds a cylinder between two points
+ @param a, b the centers of each base of the cylinder
+ constructs 4 vertices around a and 4 others around b
+ build a "parallepipede rectangle" with the 8 points
+ the radius is the distance between the center of the square and a corner
+ a1 is the top-left, then it goes clockwise
+ **/
 void MeshProcessing::build_cylinder(Point a, Point b, double radius) {
 
     std::vector<Point> rectangle_points;
@@ -482,6 +484,12 @@ void MeshProcessing::create_isocahedron(double r, Point centerPoint){
 
 }
 
+/**
+* @brief creates spheres on positions given in argument
+* @param dual_intersections the coordinates of each vertex of the dual graph
+* This method takes as argument a vector of Points that contain the coordinates of the dual graph's intersections
+* For each intersection it creates a sphere its location
+**/
 void MeshProcessing::create_spheres_on_vertices(std::vector<Point> dual_intersections){
     // put a sphere on each vertex
     std::cout << "creating spheres" << std::endl;
@@ -497,6 +505,14 @@ void MeshProcessing::create_spheres_on_vertices(std::vector<Point> dual_intersec
 }
 
 //if the given face is in the vector it returns its corresponding point. else it returns null
+/**
+  @brief lets us retrieve the dual vertex associated to a given primal face
+  @param f the primal face
+  @param p vector containing tuples (Face f, Point p)
+* Given a face f_i and a vector of tuples (Face f, Point p), this method returns p_i if the the vector contains
+* (f_i, p_i), or a point will NULL coordinates otherwise
+* This allows us to retrieve the dual vertex associated to a primal face
+**/
 Point MeshProcessing::get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<Mesh::Face,Point>> p){
     auto it = std::find_if(p.begin(), p.end(), [&f](const std::tuple<Mesh::Face, Point> &tuple) {return std::get<0>(tuple) == f;});
     if(it != p.end()){
