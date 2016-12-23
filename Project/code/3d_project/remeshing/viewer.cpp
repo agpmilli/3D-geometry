@@ -301,7 +301,7 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     });
     b = new Button(popup, "Geralt no hair");
     b->setCallback([this]() {
-        mesh_->load_mesh("../data/geralt_cut_filled.off");
+        mesh_->load_mesh("../data/geralt_no_hair.off");
         this->refresh_mesh();
         this->refresh_trackball_center();
     });
@@ -477,7 +477,7 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     performLayout();
 
     initShaders();
-    mesh_ = new mesh_processing::MeshProcessing("../data/geralt_cut_filled.off");
+    mesh_ = new mesh_processing::MeshProcessing("../data/geralt_no_hair.off");
     this->refresh_mesh();
     this->refresh_trackball_center();
 }
