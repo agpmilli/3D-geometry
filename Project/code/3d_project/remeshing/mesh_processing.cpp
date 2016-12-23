@@ -43,151 +43,7 @@ MeshProcessing::~MeshProcessing() {
     // TODO
 }
 
-void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
-                             const int &num_iterations) {
-    calc_weights ();
-    calc_target_length (remeshing_type);
-
-    // main remeshing loop
-    for (int i = 0; i < num_iterations; ++i){
-        split_long_edges ();
-        collapse_short_edges ();
-        equalize_valences ();
-        tangential_relaxation ();
-        std::cout << "remesh number " << i << " done" << std::endl;
-    }
-}
-
-void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
-    Scalar                   length;
-    Scalar                   mean_length;
-    Scalar                   user_specified_target_length;
-
-    Mesh::Vertex_property<Scalar> curvature = mesh_.vertex_property<Scalar>("v:unicurvature", 0);
-    Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
-    Mesh::Vertex_property<Scalar> target_new_length  = mesh_.vertex_property<Scalar>("v:newlength", 0);
-
-    // compute mean edge length for future use
-    mean_length = 0.0;
-    int n = 0;
-    for(auto e: mesh_.edges()){
-        if(e.is_valid()){
-            mean_length += mesh_.edge_length(e);
-            n++;
-        }
-    }
-    mean_length /= n;
-
-    // Scaled average edge length
-    if (remeshing_type == AVERAGE){
-        // assign target length for each vertex v
-        for(auto v:mesh_.vertices()){
-            target_length[v] = mean_length;
-        }
-    }
-
-    // Curvature-based adaptive remeshing
-    else if (remeshing_type == CURV){
-        // instantiate min curvature to 0.0
-        double min_curv = 0.0;
-        for(auto v:mesh_.vertices()){
-            if(!mesh_.is_boundary(v)){
-                // find min curvature
-                if(curvature[v] < min_curv){
-                    min_curv = curvature[v];
-                }
-            }
-        }
-
-        // assign target length for each vertex v
-        for(auto v:mesh_.vertices()){
-            length = 1.0;
-            if(!mesh_.is_boundary(v)){
-                // get curvature of current vertex
-                length = curvature[v];
-            }
-            // update target length with the curvature of current vertex + min value (to avoid negative target length)
-            target_length[v] = length+(std::abs(min_curv));
-        }
-
-
-        // smooth desired length (using uniform smooth)
-        for (int i = 0; i < 5; i++) {
-            for(auto v: mesh_.vertices()){
-                if(!mesh_.is_boundary(v)){
-                    unsigned int N = mesh_.valence(v);
-                    double sum = 0.0;
-                    // iterate over all neighbors of v
-                    for(auto neighbor: mesh_.vertices(v)){
-                        sum += target_length[neighbor];
-                    }
-                    double update = (sum/(double)N) - target_length[v];
-                    // compute the new target length
-                    target_length[v] = target_length[v] + 0.5 * update;
-                }
-            }
-        }
-
-        // rescale desired length:
-        double sum = 0.0;
-        int n = 0;
-        for(auto v: mesh_.vertices()){
-            sum += target_length[v];
-            n++;
-        }
-
-        user_specified_target_length = mean_length;
-
-        // rescale the target length of each vertex so that the mean of the new target lengths equals the user specified target length
-        for(auto v: mesh_.vertices()){
-            // compute new target length
-            target_new_length[v] = n*user_specified_target_length*target_length[v]/sum;
-            target_length[v] = target_new_length[v];
-        }
-    }
-
-    // Height-based
-    else if (remeshing_type == HEIGHT){
-        // instantiate min height to 0.0
-        double min_height = 0.0;
-        for(auto v:mesh_.vertices()){
-            if(!mesh_.is_boundary(v)){
-                // find min height
-                if(mesh_.position(v)[1] < min_height){
-                    min_height = mesh_.position(v)[1];
-                }
-            }
-        }
-
-        // assign target length for each vertex v
-        for(auto v:mesh_.vertices()){
-            // get height of current vertex
-            length = mesh_.position(v)[1];
-
-            // update target length with the height of current vertex + min value (to avoid negative target length)
-            target_length[v] = length+(std::abs(min_height));
-        }
-
-        // rescale desired length:
-        double sum = 0.0;
-        int n = 0;
-        for(auto v: mesh_.vertices()){
-            sum += target_length[v];
-            n++;
-        }
-
-        user_specified_target_length = 10.0;
-
-        // rescale the target length of each vertex so that the mean of the new target lengths equals the user specified target length
-        for(auto v: mesh_.vertices()){
-            // compute new target length
-            target_new_length[v] = n*user_specified_target_length*target_length[v]/sum;
-            target_length[v] = target_new_length[v] + 1.0;
-        }
-
-    }
-    std::cout << "Calc target length done" << std::endl;
-}
+// ============================== METHODS IMPLEMENTED FOR THE PROJECT ============================== //
 
 /**
  * @brief Separate the head using the position of the vertices (melting way)
@@ -203,9 +59,6 @@ void MeshProcessing::separate_head_melting (double gamma, double lambda, double 
     double noseX = 0;
     double noseY = 0;
     double noseZ = 0;
-
-    // Parameters that define the falling parameters
-    double lambda = 0.2;
 
     // Find the coordinates of the nose to find the point where we will separate the head
     for (auto v:mesh_.vertices()){
@@ -673,6 +526,154 @@ Point MeshProcessing::push_to_radius(Point point, double radius) {
 }
 
 
+// ============================== METHODS FROM LAB6 ============================== //
+void MeshProcessing::remesh (const REMESHING_TYPE &remeshing_type,
+                             const int &num_iterations) {
+    calc_weights ();
+    calc_target_length (remeshing_type);
+
+    // main remeshing loop
+    for (int i = 0; i < num_iterations; ++i){
+        split_long_edges ();
+        collapse_short_edges ();
+        equalize_valences ();
+        tangential_relaxation ();
+        std::cout << "remesh number " << i << " done" << std::endl;
+    }
+}
+
+void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
+    Scalar                   length;
+    Scalar                   mean_length;
+    Scalar                   user_specified_target_length;
+
+    Mesh::Vertex_property<Scalar> curvature = mesh_.vertex_property<Scalar>("v:unicurvature", 0);
+    Mesh::Vertex_property<Scalar> target_length = mesh_.vertex_property<Scalar>("v:length", 0);
+    Mesh::Vertex_property<Scalar> target_new_length  = mesh_.vertex_property<Scalar>("v:newlength", 0);
+
+    // compute mean edge length for future use
+    mean_length = 0.0;
+    int n = 0;
+    for(auto e: mesh_.edges()){
+        if(e.is_valid()){
+            mean_length += mesh_.edge_length(e);
+            n++;
+        }
+    }
+    mean_length /= n;
+
+    // Scaled average edge length
+    if (remeshing_type == AVERAGE){
+        // assign target length for each vertex v
+        for(auto v:mesh_.vertices()){
+            target_length[v] = mean_length;
+        }
+    }
+
+    // Curvature-based adaptive remeshing
+    else if (remeshing_type == CURV){
+        // instantiate min curvature to 0.0
+        double min_curv = 0.0;
+        for(auto v:mesh_.vertices()){
+            if(!mesh_.is_boundary(v)){
+                // find min curvature
+                if(curvature[v] < min_curv){
+                    min_curv = curvature[v];
+                }
+            }
+        }
+
+        // assign target length for each vertex v
+        for(auto v:mesh_.vertices()){
+            length = 1.0;
+            if(!mesh_.is_boundary(v)){
+                // get curvature of current vertex
+                length = curvature[v];
+            }
+            // update target length with the curvature of current vertex + min value (to avoid negative target length)
+            target_length[v] = length+(std::abs(min_curv));
+        }
+
+
+        // smooth desired length (using uniform smooth)
+        for (int i = 0; i < 5; i++) {
+            for(auto v: mesh_.vertices()){
+                if(!mesh_.is_boundary(v)){
+                    unsigned int N = mesh_.valence(v);
+                    double sum = 0.0;
+                    // iterate over all neighbors of v
+                    for(auto neighbor: mesh_.vertices(v)){
+                        sum += target_length[neighbor];
+                    }
+                    double update = (sum/(double)N) - target_length[v];
+                    // compute the new target length
+                    target_length[v] = target_length[v] + 0.5 * update;
+                }
+            }
+        }
+
+        // rescale desired length:
+        double sum = 0.0;
+        int n = 0;
+        for(auto v: mesh_.vertices()){
+            sum += target_length[v];
+            n++;
+        }
+
+        user_specified_target_length = mean_length;
+
+        // rescale the target length of each vertex so that the mean of the new target lengths equals the user specified target length
+        for(auto v: mesh_.vertices()){
+            // compute new target length
+            target_new_length[v] = n*user_specified_target_length*target_length[v]/sum;
+            target_length[v] = target_new_length[v];
+        }
+    }
+
+    // Height-based
+    else if (remeshing_type == HEIGHT){
+        // instantiate min height to 0.0
+        double min_height = 0.0;
+        for(auto v:mesh_.vertices()){
+            if(!mesh_.is_boundary(v)){
+                // find min height
+                if(mesh_.position(v)[1] < min_height){
+                    min_height = mesh_.position(v)[1];
+                }
+            }
+        }
+
+        // assign target length for each vertex v
+        for(auto v:mesh_.vertices()){
+            // get height of current vertex
+            length = mesh_.position(v)[1];
+
+            // update target length with the height of current vertex + min value (to avoid negative target length)
+            target_length[v] = length+(std::abs(min_height));
+        }
+
+        // rescale desired length:
+        double sum = 0.0;
+        int n = 0;
+        for(auto v: mesh_.vertices()){
+            sum += target_length[v];
+            n++;
+        }
+
+        user_specified_target_length = 10.0;
+
+        // rescale the target length of each vertex so that the mean of the new target lengths equals the user specified target length
+        for(auto v: mesh_.vertices()){
+            // compute new target length
+            target_new_length[v] = n*user_specified_target_length*target_length[v]/sum;
+            target_length[v] = target_new_length[v] + 1.0;
+        }
+
+    }
+    std::cout << "Calc target length done" << std::endl;
+}
+
+
 void MeshProcessing::split_long_edges (){
     Mesh::Vertex   v0, v1, v;
     bool            finished;
@@ -1001,60 +1002,6 @@ void MeshProcessing::smooth(unsigned int n_iters) {
 
 
     // update face and vertex normals
-    mesh_.update_face_normals();
-    mesh_.update_vertex_normals();
-}
-
-void MeshProcessing::uniform_laplacian_enhance_feature(int enhancement_smoothing_iterations,
-                                               float enhancement_coef) {
-    // Feature enhancement using the uniform Laplacian operator:
-    // 1) perform uniform Laplacian smoothing for enhancement_smoothing_iterations iterations
-    // 2) update the vertex positions according to the difference between the original and the smoothed mesh,
-    //    using enhancement_coef as the value of alpha in the feature enhancement formula
-
-    std::vector<Point> vs_before;
-
-    for(auto v: mesh_.vertices()){
-            // save the position of the vertices before the smoothing
-            vs_before.push_back(mesh_.position(v));
-    }
-
-    // perform uniform Laplacian smoothing for enhancement_smoothing_iterations iterations
-    uniform_smooth(enhancement_smoothing_iterations);
-    int i = 0;
-    for(auto v: mesh_.vertices()){
-        // compute the new position of the current vertex
-        mesh_.position(v) = mesh_.position(v) + enhancement_coef * (vs_before[i] - mesh_.position(v));
-        i+=1;
-    }
-
-    mesh_.update_face_normals();
-    mesh_.update_vertex_normals();
-}
-
-void MeshProcessing::laplace_beltrami_enhance_feature(int enhancement_smoothing_iterations,
-                                              float enhancement_coef) {
-
-    // Feature enhancement using the Laplace-Beltrami operator:
-    // 1) perform Laplace-Beltrami smoothing for enhancement_smoothing_iterations iterations
-    // 2) update the vertex positions according to the difference between the original and the smoothed mesh,
-    //    using enhancement_coef as the value of alpha in the feature enhancement formula
-
-    std::vector<Point> vs_before;
-    for(auto v: mesh_.vertices()){
-            // save the position of the vertices before the smoothing
-            vs_before.push_back(mesh_.position(v));
-    }
-
-    // perform Laplace-Beltrami smoothing for enhancement_smoothing_iterations iterations
-    smooth(enhancement_smoothing_iterations);
-    int i = 0;
-    for(auto v: mesh_.vertices()){
-            // compute the new position of the current vertex
-            mesh_.position(v) = mesh_.position(v) + enhancement_coef * (vs_before[i] - mesh_.position(v));
-            i+=1;
-    }
-
     mesh_.update_face_normals();
     mesh_.update_vertex_normals();
 }

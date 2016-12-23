@@ -71,9 +71,6 @@ public:
     void uniform_smooth(unsigned int n_iters);
     void smooth(unsigned int n_iters);
 
-    void uniform_laplacian_enhance_feature(int enhancement_smoothing_iterations, float enhancement_coef);
-    void laplace_beltrami_enhance_feature(int enhancement_smoothing_iterations, float enhancement_coef);
-
 private:
     void calc_weights();
     void calc_edges_weights();

@@ -340,22 +340,6 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     b->setChangeCallback([this](bool wireframe) {
         this->wireframe_ =! this->wireframe_;
     });
-    b = new Button(window_, "Normals");
-    b->setFlags(Button::ToggleButton);
-    b->setChangeCallback([this](bool normals) {
-        this->normals_ =! this->normals_;
-    });
-
-    b = new Button(window_, "Valence");
-    b->setFlags(Button::ToggleButton);
-    b->setChangeCallback([this](bool valence) {
-        if (valence) {
-            this->color_mode = VALENCE;
-        } else {
-            this->color_mode = NORMAL;
-        }
-        this->popupCurvature->setPushed(false);
-    });
 
     new Label(window_, "Remeshing Type", "sans-bold");
     vector<string> remeshing_type = {"Average", "Curvature", "Height"};
@@ -407,50 +391,6 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     iterationSmoothTextBox->setFontSize(16);
     iterationSmoothTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
 
-    popupBtn = new PopupButton(window_, "Enhancement");
-    popup = popupBtn->popup();
-    popup->setLayout(new GroupLayout());
-
-    Widget* panelEnhancement = new Widget(popup);
-    panelEnhancement->setLayout(new GroupLayout());
-
-
-    b = new Button(panelEnhancement, "Uniform Laplacian");
-    b->setCallback([this]() {
-        mesh_->uniform_laplacian_enhance_feature(this->iterationEnhancementTextBox->value(),
-                                          this->coefTextBox->value());
-        mesh_->meshProcess();
-        this->refresh_mesh();
-    });
-    b = new Button(panelEnhancement, "Laplace-Beltrami");
-    b->setCallback([this]() {
-        mesh_->laplace_beltrami_enhance_feature(this->iterationEnhancementTextBox->value(),
-                                          this->coefTextBox->value());
-        mesh_->meshProcess();
-        this->refresh_mesh();
-    });
-
-    panelEnhancement = new Widget(popup);
-    GridLayout *layoutEnhancement = new GridLayout(Orientation::Horizontal, 2,
-                                        Alignment::Middle, 15, 5);
-    layoutEnhancement->setColAlignment({ Alignment::Maximum, Alignment::Fill });
-    layoutEnhancement->setSpacing(0, 10);
-    panelEnhancement->setLayout(layoutEnhancement);
-    new Label(panelEnhancement, "Number of iterations:", "sans-bold");
-    iterationEnhancementTextBox = new IntBox<int>(panelEnhancement, 10);
-    iterationEnhancementTextBox->setEditable(true);
-    iterationEnhancementTextBox->setFixedSize(Vector2i(50, 20));
-    iterationEnhancementTextBox->setDefaultValue("10");
-    iterationEnhancementTextBox->setFontSize(16);
-    iterationEnhancementTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
-    new Label(panelEnhancement, "Coefficient:", "sans-bold");
-    coefTextBox = new FloatBox<float>(panelEnhancement, 2.0);
-    coefTextBox->setEditable(true);
-    coefTextBox->setFixedSize(Vector2i(50, 20));
-    coefTextBox->setDefaultValue("2.0");
-    coefTextBox->setFontSize(16);
-    coefTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
-
     new Label(window_, "Geralt-Effects", "sans-bold");
     popupBtn = new PopupButton(window_, "Mesh Cut");
     popup = popupBtn->popup();
@@ -496,21 +436,21 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
     layoutGeralt->setColAlignment({ Alignment::Maximum, Alignment::Fill });
     layoutGeralt->setSpacing(0, 10);
     panelGeralt->setLayout(layoutGeralt);
-    new Label(panelGeralt, "Width of separation:", "sans-bold");
-    gammaGeraltTextBox = new FloatBox<float>(panelGeralt, 1.5);
+    new Label(panelGeralt, "lambda :", "sans-bold");
+    gammaGeraltTextBox = new FloatBox<float>(panelGeralt, 3);
     gammaGeraltTextBox->setEditable(true);
     gammaGeraltTextBox->setFixedSize(Vector2i(50, 20));
-    gammaGeraltTextBox->setDefaultValue("1.5");
+    gammaGeraltTextBox->setDefaultValue("3");
     gammaGeraltTextBox->setFontSize(16);
     gammaGeraltTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
-    new Label(panelGeralt, "Height of separation:", "sans-bold");
+    new Label(panelGeralt, "threshold :", "sans-bold");
     thresholdGeraltTextBox = new FloatBox<float>(panelGeralt, 20);
     thresholdGeraltTextBox->setEditable(true);
     thresholdGeraltTextBox->setFixedSize(Vector2i(50, 20));
     thresholdGeraltTextBox->setDefaultValue("20");
     thresholdGeraltTextBox->setFontSize(16);
     thresholdGeraltTextBox->setFormat("[-]?[0-9]*\\.?[0-9]+");
-    new Label(panelGeralt, "Falling parameter (only melting):", "sans-bold");
+    new Label(panelGeralt, "gamma (only used for melting):", "sans-bold");
     lambdaGeraltTextBox = new FloatBox<float>(panelGeralt, 0.2);
     lambdaGeraltTextBox->setEditable(true);
     lambdaGeraltTextBox->setFixedSize(Vector2i(50, 20));
