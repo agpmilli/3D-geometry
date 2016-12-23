@@ -50,7 +50,7 @@ public:
     void separate_head_log(double gamma, double threshold);
     void delete_long_edges_faces();
 
-    void make_skull_pattern_edges();
+    void skull_dual_graph_pattern();
     surface_mesh::Point get_point_from_tuple_vector(Mesh::Face f, std::vector<std::tuple<surface_mesh::Surface_mesh::Face, surface_mesh::Point> > v);
     void build_cylinder(surface_mesh::Point p_a, surface_mesh::Point p_b, double r);
     void create_isocahedron(double r, surface_mesh::Point centerPoint);

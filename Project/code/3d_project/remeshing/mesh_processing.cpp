@@ -280,8 +280,11 @@ void MeshProcessing::delete_long_edges_faces (){
     mesh_.garbage_collection();
 }
 
-//computes dual graph by adding edges
-void MeshProcessing::make_skull_pattern_edges (){
+/**
+* @brief this method creates the dual "hole-pattern" on the skull
+* the pipeline is explained inside the function and in the report
+**/
+void MeshProcessing::skull_dual_graph_pattern (){
     std::vector<std::tuple<Mesh::Face,Point>> fs_and_ps;
     std::tuple<Mesh::Face,Point> f_and_p;
     std::vector<Mesh::Edge> old_edges;
@@ -292,8 +295,8 @@ void MeshProcessing::make_skull_pattern_edges (){
         old_edges.push_back(e);
     }
 
-    std::cout << "number of vertices before: " << mesh_.n_vertices() << std::endl;
-    // create new vertices: for each face f create a vertex in the middle of the face
+    // create new vertices: for each face f compute the coordinates of the face's center p and store it
+    // also store a tuple (f, p)
     for(auto f:mesh_.faces()){
         double x = 0.0;
         double y = 0.0;
@@ -688,7 +691,7 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
             length = mesh_.position(v)[1];
 
             // update target length with the height of current vertex + min value (to avoid negative target length)
-            target_length[v] = length+(std::abs(min_height));
+            target_length[v] = pow(length,2)+(std::abs(min_height));
         }
 
         // rescale desired length:
@@ -699,13 +702,14 @@ void MeshProcessing::calc_target_length (const REMESHING_TYPE &remeshing_type){
             n++;
         }
 
-        user_specified_target_length = 10.0;
+        user_specified_target_length = 0.15;
 
         // rescale the target length of each vertex so that the mean of the new target lengths equals the user specified target length
         for(auto v: mesh_.vertices()){
             // compute new target length
             target_new_length[v] = n*user_specified_target_length*target_length[v]/sum;
-            target_length[v] = target_new_length[v] + 1.0;
+            //target_length[v] = target_new_length[v] + 1.0;
+            target_length[v] = target_new_length[v];
         }
 
     }

@@ -468,7 +468,7 @@ Viewer::Viewer() : nanogui::Screen(Eigen::Vector2i(1024, 768), "DGP Viewer") {
 
     b = new Button(panelSkullEffect, "Make skull pattern with edges");
     b->setCallback([this]() {
-        mesh_->make_skull_pattern_edges();
+        mesh_->skull_dual_graph_pattern();
         mesh_->meshProcess();
         this->mesh_->compute_mesh_properties();
         this->refresh_mesh();
