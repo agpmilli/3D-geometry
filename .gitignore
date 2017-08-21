@@ -38,3 +38,15 @@ CMakeLists.txt.user
 
 # mesh objects
 *.obj
+
+# folders
+/Ex2
+/Ex3
+/Ex4
+/Ex5
+/Ex6
+/dgp2016-exercise2
+/dgp2016-exercise3
+/dgp2016-exercise4
+/dgp2016-exercise5
+/dgp2016-exercise6
